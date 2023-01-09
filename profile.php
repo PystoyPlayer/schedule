@@ -10,10 +10,10 @@
     <meta property="og:image" content="https://lonto.xyz/images/IMG_1510.jpg">
     <meta property="og:url" content="https://lonto.xyz">
     <title>404</title>
-    <link rel="stylesheet" href="nicepage.css" media="screen">
-<link rel="stylesheet" href="404.css" media="screen">
-    <script class="u-script" type="text/javascript" src="jquery.js" defer=""></script>
-    <script class="u-script" type="text/javascript" src="nicepage.js" defer=""></script>
+    <link rel="stylesheet" href="resources/css/nicepage.css" media="screen">
+    <link rel="stylesheet" href="resources/css/404.css" media="screen">
+    <script class="u-script" type="text/javascript" src="resources/js/jquery.js" defer=""></script>
+    <script class="u-script" type="text/javascript" src="resources/js/nicepage.js" defer=""></script>
     <link rel="canonical" href="https://lonto.xyz">
     <link rel="icon" href="images/favicon.png">
     <link id="u-theme-google-font" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,500,500i,600,600i,700,700i,800,800i">
