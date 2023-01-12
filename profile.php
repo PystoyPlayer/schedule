@@ -1,3 +1,7 @@
+<?php
+    session_start();
+?>
+
 <!DOCTYPE html>
 <html style="font-size: 16px;" lang="ru"><head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -74,7 +78,7 @@ borders: top right bottom left !important
                       <div class="u-container-style u-group u-image u-radius-10 u-shape-round lazyload u-image-2" data-image-width="600" data-image-height="600" data-bg="url(&quot;images/unnamed.jpg&quot;)">
                         <div class="u-container-layout u-container-layout-4"></div>
                       </div>
-                      <p class="u-text u-text-custom-color-5 u-text-default u-text-1">mkarlenev</p>
+                      <p class="u-text u-text-custom-color-5 u-text-default u-text-1"><?= $_SESSION['user']['nickname']  ?></p>
                       <p class="u-align-center u-text u-text-2">Работа не волк, работа ворк</p><span class="u-file-icon u-icon u-text-custom-color-2 u-icon-1"><img src="images/3536661-51e00ffd.png" alt=""></span><span class="u-file-icon u-icon u-icon-2"><img src="images/3536582.png" alt=""></span><span class="u-file-icon u-icon u-icon-3"><img src="images/3991722.png" alt=""></span>
                     </div>
                   </div>
