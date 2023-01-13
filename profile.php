@@ -43,12 +43,12 @@
         <a href="https://t.me/SubVost" class="u-image u-logo u-image-2" data-image-width="640" data-image-height="640" title="SubVost">
           <img src="images/11.png" class="u-logo-image u-logo-image-2">
         </a>
-        <p class="u-text u-text-default u-text-1">Войти&nbsp; &nbsp;|</p><span class="u-icon u-palette-1-base u-icon-2"><svg class="u-svg-link" preserveAspectRatio="xMidYMin slice" viewBox="0 0 56.966 56.966" style=""><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#svg-a2af"></use></svg><svg class="u-svg-content" viewBox="0 0 56.966 56.966" x="0px" y="0px" id="svg-a2af" style="enable-background:new 0 0 56.966 56.966;"><path d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23
+          <p class="u-text u-text-default u-text-1"><a href="authorization.php">Войти</a>&nbsp; &nbsp;|</p><span class="u-icon u-palette-1-base u-icon-2"><svg class="u-svg-link" preserveAspectRatio="xMidYMin slice" viewBox="0 0 56.966 56.966" style=""><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#svg-a2af"></use></svg><svg class="u-svg-content" viewBox="0 0 56.966 56.966" x="0px" y="0px" id="svg-a2af" style="enable-background:new 0 0 56.966 56.966;"><path d="M55.146,51.887L41.588,37.786c3.486-4.144,5.396-9.358,5.396-14.786c0-12.682-10.318-23-23-23s-23,10.318-23,23
 	s10.318,23,23,23c4.761,0,9.298-1.436,13.177-4.162l13.661,14.208c0.571,0.593,1.339,0.92,2.162,0.92
 	c0.779,0,1.518-0.297,2.079-0.837C56.255,54.982,56.293,53.08,55.146,51.887z M23.984,6c9.374,0,17,7.626,17,17s-7.626,17-17,17
 	s-17-7.626-17-17S14.61,6,23.984,6z"></path></svg></span>
         <p class="u-text u-text-default-lg u-text-default-md u-text-default-sm u-text-default-xs u-text-2">
-          <a class="u-active-none u-border-none u-btn u-button-link u-button-style u-hover-none u-none u-text-active-custom-color-5 u-text-body-alt-color u-text-hover-grey-25 u-btn-1" href="profile">Профиль</a>
+          <a class="u-active-none u-border-none u-btn u-button-link u-button-style u-hover-none u-none u-text-active-custom-color-5 u-text-body-alt-color u-text-hover-grey-25 u-btn-1" href="index.php">Главная</a>
         </p>
         <p class="u-text u-text-default-lg u-text-default-md u-text-default-sm u-text-default-xs u-text-3">
           <a class="u-active-none u-border-none u-btn u-button-link u-button-style u-hover-none u-none u-text-active-custom-color-5 u-text-body-alt-color u-text-hover-grey-25 u-btn-2" href="anime">Тайтл</a>
@@ -75,11 +75,14 @@ borders: top right bottom left !important
                   </div>
                   <div class="u-bottom-left-radius-10 u-bottom-right-radius-10 u-container-style u-expanded-width u-grey-10 u-group u-shape-round u-group-2">
                     <div class="u-container-layout u-valign-top u-container-layout-3">
-                      <div class="u-container-style u-group u-image u-radius-10 u-shape-round lazyload u-image-2" data-image-width="600" data-image-height="600" data-bg="url(&quot;images/unnamed.jpg&quot;)">
-                        <div class="u-container-layout u-container-layout-4"></div>
+                      <div class="u-container-style u-group u-image u-radius-10 u-shape-round lazyload u-image-2" data-image-width="600" data-image-height="600" data-bg="<?= $_SESSION['user']['avatar'] ?>">
+                        <div class="u-container-layout u-container-layout-4">
+                            <img class="profile_photo" src="<?= $_SESSION['user']['avatar'] ?>" alt="">
+                        </div>
                       </div>
                       <p class="u-text u-text-custom-color-5 u-text-default u-text-1"><?= $_SESSION['user']['nickname']  ?></p>
                       <p class="u-align-center u-text u-text-2">Работа не волк, работа ворк</p><span class="u-file-icon u-icon u-text-custom-color-2 u-icon-1"><img src="images/3536661-51e00ffd.png" alt=""></span><span class="u-file-icon u-icon u-icon-2"><img src="images/3536582.png" alt=""></span><span class="u-file-icon u-icon u-icon-3"><img src="images/3991722.png" alt=""></span>
+                      <p><a href="vendor/logout.php">Выйти</a></p>
                     </div>
                   </div>
                 </div>
