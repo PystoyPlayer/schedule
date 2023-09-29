@@ -1,0 +1,145 @@
+<html>
+<head>
+    <title>График выхода серий (МСК)</title>
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.5;
+            background-color: #181818;
+            color: #d1d1d1;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            text-align: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #ffffff;
+            user-select: all;
+            -moz-user-select: all;
+            -webkit-user-select: all;
+            -ms-user-select: all;
+        }
+        h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            margin-top: 20px;
+            color: #dddddd;
+        }
+        ul {
+            list-style-type: none;
+            padding-left: 30px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 2px;
+            color: #dddddd;
+        }
+        .schedule-item {
+            display: flex;
+            align-items: baseline;
+            cursor: pointer;
+            transition: background-color 0.3s ease-in-out;
+            margin-bottom: 5px;
+        }
+        .schedule-item:hover {
+            background-color: rgba(170, 170, 170, 0.3);
+        }
+        .time {
+            min-width: 30px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            cursor: default;
+            background-color: rgba(170, 170, 170, 0.3);
+            color: #dddddd;
+            margin-right: 10px;
+        }
+        .empty-day {
+            color: #dddddd;
+        }
+        .empty-item {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        .schedule-item:hover .time::after {
+            content: '';
+            display: none;
+        }
+        .schedule-item:hover .time {
+            cursor: pointer;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div>
+        <script>
+            document.write('<h1>График выхода серий (МСК)</h1>');
+
+            var days = [
+                { day: 'Понедельник', schedule: [
+                    { time: '12:20', title: 'Предсмертный список зомби [4K]' }
+                ] },
+                { day: 'Вторник', schedule: [] },
+                { day: 'Среда', schedule: [
+                    { time: '18:00', title: 'Загадочные приключения [4K]' }
+                ] },
+                { day: 'Четверг', schedule: [
+                    { time: '10:30', title: 'Secret series' },
+                    { time: '14:45', title: 'Hidden series' }
+                ] },
+                { day: 'Пятница', schedule: [] },
+                { day: 'Суббота', schedule: [] },
+                { day: 'Воскресенье', schedule: [] },
+                { day: 'Без графика', schedule: [
+                    { title: 'Мой счастливый брак (лето)' }
+                ] }
+            ];
+
+            days.forEach(function(day) {
+                var dayInfo = day.day;
+                var schedule = day.schedule;
+
+                if (schedule.length > 0) {
+                    document.writeln('<h2>' + dayInfo + ':</h2>');
+                    schedule.forEach(function(info) {
+                        var timeCode = info.time;
+
+                        var title = info.title;
+                        var listItem;
+                        if (timeCode) {
+                            listItem = '<li class="time">' + timeCode + '</li><li>' + title + '</li>';
+                        } else {
+                            listItem = '<li>' + title + '</li>';
+                        }
+                        document.writeln('<ul class="schedule-item" onclick="copyText(event)"><li>' + listItem + '</li></ul>');
+                    });
+                } else {
+                    document.writeln('<h2 class="empty-day">' + dayInfo + ':</h2>');
+                    document.writeln('<ul class="schedule-item empty-item"><li class="empty-text">Пусто</li></ul>');
+                }
+                if (day !== days[days.length - 1]) {
+                    document.writeln('<br>');
+                }
+            });
+
+            function copyText(event) {
+                var target = event.currentTarget;
+                var timeElement = target.querySelector('.time');
+                var timeCode = timeElement ? timeElement.textContent.replace(/ - $/, '') + ' - ' : '';
+                var title = target.querySelector('li:last-child').textContent.trim();
+                var clipboardText = timeCode + title;
+                navigator.clipboard.writeText(clipboardText);
+            }
+        </script>
+    </div>
+</body>
+</html>
