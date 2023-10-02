@@ -1,7 +1,7 @@
 <html>
 <head>
     <title>График выхода серий (МСК)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Добавленная строка -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
@@ -34,14 +34,14 @@
             list-style-type: none;
             padding-left: 0;
             margin-top: 0;
-            margin-bottom: 20px;
+            margin-bottom: 7px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
         }
         li {
-            margin-bottom: 2px;
+            margin-bottom: 5px;
             color: #dddddd;
         }
         .schedule-item {
@@ -51,8 +51,11 @@
             transition: background-color 0.3s ease-in-out;
             margin-bottom: 3px;
             width: 100%;
-            padding-left: 15px;
+            padding-left: 17px;
             box-sizing: border-box;
+        }
+        .schedule-item .title {
+            margin-left: 5px;
         }
         .time {
             min-width: 30px;
@@ -65,7 +68,7 @@
             cursor: default;
             background-color: rgba(170, 170, 170, 0.3);
             color: #dddddd;
-            margin-right: 8px;
+            margin-right: 5px;
         }
         .empty-day {
             color: #ffffff;
@@ -90,35 +93,66 @@
             document.write('');
 
             var days = [
-                { day: 'Понедельник', schedule: [
-                    { time: '12:20', title: 'Предсмертный список зомби [4K]' }
-                ] },
-                { day: 'Вторник', schedule: [] },
-                { day: 'Среда', schedule: [
-                    { time: '18:00', title: 'Загадочные приключения [4K]' }
-                ] },
-                { day: 'Четверг', schedule: [
-                    { time: '10:30', title: 'Secret series' },
-                    { time: '14:45', title: 'Hidden series' }
-                ] },
-                { day: 'Пятница', schedule: [] },
-                { day: 'Суббота', schedule: [] },
-                { day: 'Воскресенье', schedule: [] },
+                {day: 'Понедельник', schedule: [
+                    { time: '17:15', title: 'Миги и Дали' },
+                    { time: '17:45', title: 'Рон Камонохаши: невменяемый детектив' },
+                    { time: '19:15', title: 'Стесняшка' },
+                    { time: '19:45', title: 'Я предпочитаю злодейку' },
+                    { time: '20:15', title: 'Обычный мужчина средних лет и его журнал активности в VRMMO [4K]' }
+                ]},
+                { day: 'Вторник', schedule: [
+                    { time: '17:15', title: 'Всемогущая магия святой 2' }
+                ]},
+                {day: 'Среда', schedule: [
+                    { time: '16:15', title: 'Прибрал к рукам девушку, потерявшую жениха, и теперь учу её всяким плохим вещам' },
+                    { time: '20:00', title: 'Восхождение в тени 2 [4K]' }
+                ]},
+                {day: 'Четверг', schedule: [
+                    { time: '16:15', title: 'Невеста чародея 2. Часть 2' },
+                    { time: '18:15', title: 'Моя дочь, отправившаяся в столицу, захотев стать авантюристом, достигла S-ранга' },
+                    { time: '19:42', title: 'Низкоквалифицированный ниндзя' },
+                    { time: '19:50', title: 'Мой телохранитель' },
+                    { time: '20:20', title: 'Магическая битва 2' },
+                    { time: '21:15', title: 'Бродяга Кэнсин' }
+                ]},
+                { day: 'Пятница', schedule: [
+                    { time: '14:00', title: 'Восхождение героя щита 3' },
+                    { time: '16:30', title: 'Убийца гоблинов 2' },
+                    { time: '18:15', title: 'Фрирен, провожающая в последний путь' },
+                    { time: '19:40', title: 'Аркнайтс: Зимнее уединение' },
+                    { time: '20:15', title: 'Королевство руин' },
+                    { time: '20:45', title: 'Мои девушки 2' }
+                ]},
+                { day: 'Суббота', schedule: [
+                    { time: '12:15', title: 'Дайго из пожарной команды' },
+                    { time: '16:15', title: 'Далёкий паладин 2' },
+                    { time: '17:15', title: 'Семья шпиона 2' },
+                    { time: '17:45', title: 'Мой новый босс глупый' },
+                    { time: '18:45', title: 'Не ешь сырую свинину' },
+                    { time: '19:15', title: 'История империи Тиамун' },
+                    { time: '19:45', title: 'Наш дождливый протокол' },
+                    { time: '20:15', title: 'Я выживу с помощью зелий!' }
+                ]},
+                { day: 'Воскресенье', schedule: [
+                    { time: '12:15', title: 'Рубеж Шангри-Ла: Любитель игрошлака бросает вызов топ-игре' },
+                    { time: '17:43', title: 'Обгон!' },
+                    { time: '17:50', title: 'Семейная жизнь легкомысленной ведьмы' },
+                    { time: '18:45', title: 'Ненасытный Берсерк' },
+                    { time: '20:15', title: 'MF Призрак' },
+                ]},
                 { day: 'Без графика', schedule: [
                     { title: 'Мой счастливый брак (лето)' }
-                ] }
+                ]}
             ];
 
-            days.forEach(function(day) {
+            days.forEach(function (day) {
                 var dayInfo = day.day;
                 var schedule = day.schedule;
-
                 if (schedule.length > 0) {
                     document.writeln('<h2>' + dayInfo + ':</h2>');
-                    schedule.forEach(function(info) {
+                    schedule.forEach(function (info) {
                         var timeCode = info.time;
                         var title = info.title;
-
                         var listItem;
                         if (timeCode) {
                             listItem = '<div class="schedule-item" onclick="copyText(event)"><span class="time">' + timeCode + '</span><span class="title">' + title + '</span></div>';
@@ -145,9 +179,19 @@
                     var timeCode = timeElement.textContent.trim() + ' - ';
                     var clipboardText = timeCode + title.textContent.trim();
                     navigator.clipboard.writeText(clipboardText);
+
+                    title.classList.add('no-highlight');
+                    setTimeout(function () {
+                        title.classList.remove('no-highlight');
+                    }, 2000);
                 } else if (title) {
                     var clipboardText = title.textContent.trim();
                     navigator.clipboard.writeText(clipboardText);
+
+                    title.classList.add('no-highlight');
+                    setTimeout(function () {
+                        title.classList.remove('no-highlight');
+                    }, 2000);
                 }
             }
         </script>
