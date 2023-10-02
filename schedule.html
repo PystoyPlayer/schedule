@@ -50,7 +50,7 @@
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
             margin-bottom: 3px;
-            width: 100%;
+            width: 95%;
             padding-left: 17px;
             box-sizing: border-box;
         }
@@ -58,7 +58,7 @@
             margin-left: 5px;
         }
         .time {
-            min-width: 30px;
+            min-width: fit-content;
             padding: 2px 6px;
             border-radius: 6px;
             user-select: none;
@@ -91,7 +91,6 @@
         <h1>График выхода серий (МСК)</h1>
         <script>
             document.write('');
-
             var days = [
                 {day: 'Понедельник', schedule: [
                     { time: '17:15', title: 'Миги и Дали' },
@@ -99,31 +98,26 @@
                     { time: '19:15', title: 'Стесняшка' },
                     { time: '19:45', title: 'Я предпочитаю злодейку' },
                     { time: '20:15', title: 'Обычный мужчина средних лет и его журнал активности в VRMMO [4K]' }
-                ]},
-                { day: 'Вторник', schedule: [
+                ]},{ day: 'Вторник', schedule: [
                     { time: '17:15', title: 'Всемогущая магия святой 2' }
-                ]},
-                {day: 'Среда', schedule: [
+                ]},{day: 'Среда', schedule: [
                     { time: '16:15', title: 'Прибрал к рукам девушку, потерявшую жениха, и теперь учу её всяким плохим вещам' },
                     { time: '20:00', title: 'Восхождение в тени 2 [4K]' }
-                ]},
-                {day: 'Четверг', schedule: [
+                ]},{day: 'Четверг', schedule: [
                     { time: '16:15', title: 'Невеста чародея 2. Часть 2' },
                     { time: '18:15', title: 'Моя дочь, отправившаяся в столицу, захотев стать авантюристом, достигла S-ранга' },
                     { time: '19:42', title: 'Низкоквалифицированный ниндзя' },
                     { time: '19:50', title: 'Мой телохранитель' },
                     { time: '20:20', title: 'Магическая битва 2' },
                     { time: '21:15', title: 'Бродяга Кэнсин' }
-                ]},
-                { day: 'Пятница', schedule: [
+                ]},{ day: 'Пятница', schedule: [
                     { time: '14:00', title: 'Восхождение героя щита 3' },
                     { time: '16:30', title: 'Убийца гоблинов 2' },
                     { time: '18:15', title: 'Фрирен, провожающая в последний путь' },
                     { time: '19:40', title: 'Аркнайтс: Зимнее уединение' },
                     { time: '20:15', title: 'Королевство руин' },
                     { time: '20:45', title: 'Мои девушки 2' }
-                ]},
-                { day: 'Суббота', schedule: [
+                ]},{ day: 'Суббота', schedule: [
                     { time: '12:15', title: 'Дайго из пожарной команды' },
                     { time: '16:15', title: 'Далёкий паладин 2' },
                     { time: '17:15', title: 'Семья шпиона 2' },
@@ -132,18 +126,15 @@
                     { time: '19:15', title: 'История империи Тиамун' },
                     { time: '19:45', title: 'Наш дождливый протокол' },
                     { time: '20:15', title: 'Я выживу с помощью зелий!' }
-                ]},
-                { day: 'Воскресенье', schedule: [
+                ]},{ day: 'Воскресенье', schedule: [
                     { time: '12:15', title: 'Рубеж Шангри-Ла: Любитель игрошлака бросает вызов топ-игре' },
                     { time: '17:43', title: 'Обгон!' },
                     { time: '17:50', title: 'Семейная жизнь легкомысленной ведьмы' },
                     { time: '18:45', title: 'Ненасытный Берсерк' },
                     { time: '20:15', title: 'MF Призрак' },
-                ]},
-                { day: 'Без графика', schedule: [
+                ]},{ day: 'Без графика', schedule: [
                     { title: 'Мой счастливый брак (лето)' }
-                ]}
-            ];
+                ]}];
 
             days.forEach(function (day) {
                 var dayInfo = day.day;
@@ -156,44 +147,27 @@
                         var listItem;
                         if (timeCode) {
                             listItem = '<div class="schedule-item" onclick="copyText(event)"><span class="time">' + timeCode + '</span><span class="title">' + title + '</span></div>';
-                        } else {
-                            listItem = '<div class="schedule-item" onclick="copyText(event)">' + title + '</div>';
-                        }
-                        document.writeln('<ul>' + listItem + '</ul>');
-                    });
-                } else {
+                        } else {listItem = '<div class="schedule-item" onclick="copyText(event)">' + title + '</div>';}document.writeln('<ul>' + listItem + '</ul>');});
+                    } else {
                     document.writeln('<h2 class="empty-day">' + dayInfo + ':</h2>');
-                    document.writeln('<ul class="schedule-item empty-item"><li class="empty-text">Пусто</li></ul>');
-                }
-                if (day !== days[days.length - 1]) {
-                    document.writeln('<br>');
-                }
-            });
+                    document.writeln('<ul class="schedule-item empty-item"><li class="empty-text">Пусто</li></ul>');}
+                if (day !== days[days.length - 1]) {document.writeln('<br>');}});
 
             function copyText(event) {
                 var target = event.currentTarget;
                 var timeElement = target.querySelector('.time');
                 var title = target.querySelector('.title');
-
                 if (timeElement && title) {
                     var timeCode = timeElement.textContent.trim() + ' - ';
                     var clipboardText = timeCode + title.textContent.trim();
                     navigator.clipboard.writeText(clipboardText);
-
                     title.classList.add('no-highlight');
                     setTimeout(function () {
-                        title.classList.remove('no-highlight');
-                    }, 2000);
-                } else if (title) {
-                    var clipboardText = title.textContent.trim();
+                        title.classList.remove('no-highlight');}, 2000);
+                    } else if (title) {var clipboardText = title.textContent.trim();
                     navigator.clipboard.writeText(clipboardText);
-
                     title.classList.add('no-highlight');
-                    setTimeout(function () {
-                        title.classList.remove('no-highlight');
-                    }, 2000);
-                }
-            }
+                    setTimeout(function () {title.classList.remove('no-highlight');}, 2000);}}
         </script>
     </div>
 </body>
