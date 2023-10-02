@@ -25,34 +25,59 @@
         }
         h2 {
             font-size: 24px;
-            margin-bottom: 10px;
-            margin-top: 20px;
+            margin-bottom: 5px;
+            margin-top: 10px;
             color: #dddddd;
         }
         ul {
             list-style-type: none;
-            padding-left: 30px;
-            margin-top: 5px;
+            padding-left: 0;
+            margin-top: 0;
             margin-bottom: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
         li {
             margin-bottom: 2px;
             color: #dddddd;
         }
+
         .schedule-item {
             display: flex;
             align-items: baseline;
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
-            margin-bottom: 5px;
+            margin-bottom: 3px; /* Измененное значение */
+            width: 100%;
+            padding-left: 15px;
+            box-sizing: border-box;
+        }
+
+
+        .empty-day {
+            color: #ffffff;
+        }
+
+        .empty-item {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .empty-item:hover {
+            background-color: transparent;
         }
         .schedule-item:hover {
+            background-color: rgba(170, 170, 170, 0.3);
+        }
+        .schedule-item:not(.empty-item):hover {
             background-color: rgba(170, 170, 170, 0.3);
         }
         .time {
             min-width: 30px;
             padding: 2px 6px;
-            border-radius: 4px;
+            border-radius: 6px;
             user-select: none;
             -moz-user-select: none;
             -webkit-user-select: none;
@@ -60,29 +85,16 @@
             cursor: default;
             background-color: rgba(170, 170, 170, 0.3);
             color: #dddddd;
-            margin-right: 10px;
-        }
-        .empty-day {
-            color: #dddddd;
-        }
-        .empty-item {
-            pointer-events: none;
-            opacity: 0.5;
-        }
-        .schedule-item:hover .time::after {
-            content: '';
-            display: none;
-        }
-        .schedule-item:hover .time {
-            cursor: pointer;
+            margin-right: 8px;
         }
     </style>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 </head>
 <body>
     <div>
+        <h1>График выхода серий (МСК)</h1>
         <script>
-            document.write('<h1>График выхода серий (МСК)</h1>');
+            document.write('');
 
             var days = [
                 { day: 'Понедельник', schedule: [
@@ -112,15 +124,15 @@
                     document.writeln('<h2>' + dayInfo + ':</h2>');
                     schedule.forEach(function(info) {
                         var timeCode = info.time;
-
                         var title = info.title;
+                        
                         var listItem;
                         if (timeCode) {
-                            listItem = '<li class="time">' + timeCode + '</li><li>' + title + '</li>';
+                            listItem = '<div class="schedule-item" onclick="copyText(event)"><span class="time">' + timeCode + '</span><span class="title">' + title + '</span></div>';
                         } else {
-                            listItem = '<li>' + title + '</li>';
+                            listItem = '<div class="schedule-item" onclick="copyText(event)">' + title + '</div>';
                         }
-                        document.writeln('<ul class="schedule-item" onclick="copyText(event)"><li>' + listItem + '</li></ul>');
+                        document.writeln('<ul>' + listItem + '</ul>');
                     });
                 } else {
                     document.writeln('<h2 class="empty-day">' + dayInfo + ':</h2>');
@@ -134,8 +146,8 @@
             function copyText(event) {
                 var target = event.currentTarget;
                 var timeElement = target.querySelector('.time');
-                var timeCode = timeElement ? timeElement.textContent.replace(/ - $/, '') + ' - ' : '';
-                var title = target.querySelector('li:last-child').textContent.trim();
+                var timeCode = timeElement ? timeElement.textContent.trim() + ' - ' : '';
+                var title = target.querySelector('.title').textContent.trim();
                 var clipboardText = timeCode + title;
                 navigator.clipboard.writeText(clipboardText);
             }
