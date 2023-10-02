@@ -1,6 +1,7 @@
 <html>
 <head>
     <title>График выхода серий (МСК)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Добавленная строка -->
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
@@ -43,36 +44,15 @@
             margin-bottom: 2px;
             color: #dddddd;
         }
-
         .schedule-item {
             display: flex;
             align-items: baseline;
             cursor: pointer;
             transition: background-color 0.3s ease-in-out;
-            margin-bottom: 3px; /* Измененное значение */
+            margin-bottom: 3px;
             width: 100%;
             padding-left: 15px;
             box-sizing: border-box;
-        }
-
-
-        .empty-day {
-            color: #ffffff;
-        }
-
-        .empty-item {
-            pointer-events: none;
-            opacity: 0.5;
-        }
-
-        .empty-item:hover {
-            background-color: transparent;
-        }
-        .schedule-item:hover {
-            background-color: rgba(170, 170, 170, 0.3);
-        }
-        .schedule-item:not(.empty-item):hover {
-            background-color: rgba(170, 170, 170, 0.3);
         }
         .time {
             min-width: 30px;
@@ -86,6 +66,19 @@
             background-color: rgba(170, 170, 170, 0.3);
             color: #dddddd;
             margin-right: 8px;
+        }
+        .empty-day {
+            color: #ffffff;
+        }
+        .empty-item {
+            pointer-events: none;
+            opacity: 0.5;
+        }
+        .empty-item:hover {
+            background-color: transparent;
+        }
+        .schedule-item:not(.empty-item):hover {
+            background-color: rgba(170, 170, 170, 0.3);
         }
     </style>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
@@ -125,7 +118,7 @@
                     schedule.forEach(function(info) {
                         var timeCode = info.time;
                         var title = info.title;
-                        
+
                         var listItem;
                         if (timeCode) {
                             listItem = '<div class="schedule-item" onclick="copyText(event)"><span class="time">' + timeCode + '</span><span class="title">' + title + '</span></div>';
@@ -146,10 +139,16 @@
             function copyText(event) {
                 var target = event.currentTarget;
                 var timeElement = target.querySelector('.time');
-                var timeCode = timeElement ? timeElement.textContent.trim() + ' - ' : '';
-                var title = target.querySelector('.title').textContent.trim();
-                var clipboardText = timeCode + title;
-                navigator.clipboard.writeText(clipboardText);
+                var title = target.querySelector('.title');
+
+                if (timeElement && title) {
+                    var timeCode = timeElement.textContent.trim() + ' - ';
+                    var clipboardText = timeCode + title.textContent.trim();
+                    navigator.clipboard.writeText(clipboardText);
+                } else if (title) {
+                    var clipboardText = title.textContent.trim();
+                    navigator.clipboard.writeText(clipboardText);
+                }
             }
         </script>
     </div>
