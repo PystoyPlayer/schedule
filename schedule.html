@@ -62,6 +62,7 @@
         .schedule-item .title {
             margin-left: 5px;
             padding-right: 15px;
+            transition: opacity 0.5s ease-in-out;
         }
         .time {
             min-width: fit-content;
@@ -99,34 +100,79 @@
     <div>
         <h1>График выхода серий (МСК)</h1>
         <script>
+            function copyText(element, textToCopy) {
+                const clipboardText = textToCopy.trim();
+                if (clipboardText) {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = clipboardText;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    replaceTitleWithCopied(element);
+                    console.log('Text copied to clipboard:', clipboardText);
+                } else {
+                    console.log('No text to copy.');
+                }
+            }
+
+            function replaceTitleWithCopied(element) {
+                const titleElement = element.querySelector('.title');
+                const originalTitle = titleElement.textContent.trim();
+                const animationDuration = 500; // 0.5 seconds
+                titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out`;
+                titleElement.style.opacity = 0;
+
+                setTimeout(() => {
+                    titleElement.textContent = 'Скопировано';
+                    titleElement.style.opacity = 1;
+
+                    setTimeout(() => {
+                        titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out`;
+                        titleElement.style.opacity = 0;
+
+                        setTimeout(() => {
+                            titleElement.textContent = originalTitle;
+                            titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out`;
+                            titleElement.style.opacity = 1;
+                        }, animationDuration);
+                    }, 1000);
+                }, animationDuration);
+            }
+
             document.write('');
-            var days = [
+            const days = [
                 {day: 'Понедельник', schedule: [
                     { time: '17:15', title: 'Миги и Дали' },
                     { time: '17:45', title: 'Рон Камонохаши: невменяемый детектив' },
                     { time: '19:15', title: 'Стесняшка' },
                     { time: '19:45', title: 'Я предпочитаю злодейку' },
                     { time: '20:15', title: 'Обычный мужчина средних лет и его журнал активности в VRMMO [4K]' }
-                ]},{ day: 'Вторник', schedule: [
+                ]},
+                { day: 'Вторник', schedule: [
                     { time: '17:15', title: 'Всемогущая магия святой 2' }
-                ]},{day: 'Среда', schedule: [
+                ]},
+                {day: 'Среда', schedule: [
                     { time: '16:15', title: 'Прибрал к рукам девушку, потерявшую жениха, и теперь учу её всяким плохим вещам' },
                     { time: '20:00', title: 'Восхождение в тени 2 [4K]' }
-                ]},{day: 'Четверг', schedule: [
+                ]},
+                {day: 'Четверг', schedule: [
                     { time: '16:15', title: 'Невеста чародея 2. Часть 2' },
                     { time: '18:15', title: 'Моя дочь, отправившаяся в столицу, захотев стать авантюристом, достигла S-ранга' },
                     { time: '19:42', title: 'Низкоквалифицированный ниндзя' },
                     { time: '19:50', title: 'Мой телохранитель' },
                     { time: '20:20', title: 'Магическая битва 2' },
                     { time: '21:15', title: 'Бродяга Кэнсин' }
-                ]},{ day: 'Пятница', schedule: [
+                ]},
+                { day: 'Пятница', schedule: [
                     { time: '14:00', title: 'Восхождение героя щита 3' },
                     { time: '16:30', title: 'Убийца гоблинов 2' },
                     { time: '18:15', title: 'Фрирен, провожающая в последний путь' },
                     { time: '19:40', title: 'Аркнайтс: Зимнее уединение' },
                     { time: '20:15', title: 'Королевство руин' },
                     { time: '20:45', title: 'Мои девушки 2' }
-                ]},{ day: 'Суббота', schedule: [
+                ]},
+                { day: 'Суббота', schedule: [
                     { time: '12:15', title: 'Дайго из пожарной команды' },
                     { time: '16:15', title: 'Далёкий паладин 2' },
                     { time: '17:15', title: 'Семья шпиона 2' },
@@ -135,55 +181,40 @@
                     { time: '19:15', title: 'История империи Тиамун' },
                     { time: '19:45', title: 'Наш дождливый протокол' },
                     { time: '20:15', title: 'Я выживу с помощью зелий!' }
-                ]},{ day: 'Воскресенье', schedule: [
+                ]},
+                { day: 'Воскресенье', schedule: [
                     { time: '12:15', title: 'Рубеж Шангри-Ла: Любитель игрошлака бросает вызов топ-игре' },
                     { time: '17:43', title: 'Обгон!' },
                     { time: '17:50', title: 'Семейная жизнь легкомысленной ведьмы' },
                     { time: '18:45', title: 'Ненасытный Берсерк' },
-                    { time: '20:15', title: 'MF Призрак' },
-                ]},{ day: 'Без графика', schedule: [
+                    { time: '20:15', title: 'MF Призрак' }
+                ]},
+                { day: 'Без графика', schedule: [
                     { title: 'Мой счастливый брак (лето)' }
-                ]}];
+                ]}
+            ];
 
-            days.forEach(function (day) {
-                var dayInfo = day.day;
-                var schedule = day.schedule;
+            days.forEach(day => {
+                const dayInfo = day.day;
+                const schedule = day.schedule;
                 if (schedule.length > 0) {
-                    document.writeln('<h2>' + dayInfo + ':</h2>');
-                    schedule.forEach(function (info) {
-                        var timeCode = info.time;
-                        var title = info.title;
-                        var listItem;
-                        if (timeCode) {
-                            listItem = '<div class="schedule-item" onclick="copyText(event)"><span class="time">' + timeCode + '</span><span class="title">' + title + '</span></div>';
-                        } else {listItem = '<div class="schedule-item" onclick="copyText(event)">' + title + '</div>';}document.writeln('<ul>' + listItem + '</ul>');});
-                    } else {
-                    document.writeln('<h2 class="empty-day">' + dayInfo + ':</h2>');
-                    document.writeln('<ul class="schedule-item empty-item"><li class="empty-text">Пусто</li></ul>');}
-                if (day !== days[days.length - 1]) {document.writeln('<br>');}});
-
-            function copyText(event) {
-                var target = event.currentTarget;
-                var timeElement = target.querySelector('.time');
-                var title = target.querySelector('.title');
-                var clipboardText = '';
-
-                if (timeElement && title) {
-                    var timeCode = timeElement.textContent.trim() + ' - ';
-                    clipboardText = timeCode + title.textContent.trim();
-                } else if (title) {
-                    clipboardText = title.textContent.trim();
+                    document.writeln(`<h2>${dayInfo}:</h2>`);
+                    schedule.forEach(info => {
+                        const timeCode = info.time;
+                        const title = info.title;
+                        const listItem = timeCode
+                            ? `<div class="schedule-item" onclick="copyText(this, '${timeCode} - ${title}')"><span class="time">${timeCode}</span><span class="title">${title}</span></div>`
+                            : `<div class="schedule-item" onclick="copyText(this, '${title}')"><span class="title">${title}</span></div>`;
+                        document.writeln(`<ul>${listItem}</ul>`);
+                    });
+                } else {
+                    document.writeln(`<h2 class="empty-day">${dayInfo}:</h2>`);
+                    document.writeln('<ul class="schedule-item empty-item"><li class="empty-text">Пусто</li></ul>');
                 }
-
-                if (clipboardText) {
-                    navigator.clipboard.writeText(clipboardText);
+                if (day !== days[days.length - 1]) {
+                    document.writeln('<br>');
                 }
-
-                title.classList.add('no-highlight');
-                setTimeout(function () {
-                    title.classList.remove('no-highlight');
-                }, 2000);
-            }
+            });
         </script>
     </div>
 </body>
