@@ -32,7 +32,7 @@
         h2 {
             font-size: 24px;
             margin-bottom: 5px;
-            margin-top: 10px;
+            margin-top: 25px;
             color: #dddddd;
         }
         ul {
@@ -93,6 +93,16 @@
         .title:hover {
             background-color: transparent;
         }
+        .time.highlighted {
+            -webkit-box-shadow:inset 0px 0px 0px 1.5px rgba(0, 0, 255, 0.3);
+            -moz-box-shadow:inset 0px 0px 0px 1.5px rgba(0, 0, 255, 0.3);
+            box-shadow:inset 0px 0px 0px 1.5px rgba(0, 0, 255, 0.3);
+        }
+        .schedule-item .title {
+            overflow: hidden;
+            max-height: 3em;
+            transition: max-height 0.5s ease-in-out;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 </head>
@@ -119,28 +129,32 @@
             function replaceTitleWithCopied(element) {
                 const titleElement = element.querySelector('.title');
                 const originalTitle = titleElement.textContent.trim();
-                const animationDuration = 500; // 0.5 seconds
-                titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out`;
+                const animationDuration = 500;
+                const originalHeight = titleElement.clientHeight + "px";
+                titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
                 titleElement.style.opacity = 0;
+                titleElement.style.maxHeight = "0";
 
                 setTimeout(() => {
                     titleElement.textContent = 'Скопировано';
                     titleElement.style.opacity = 1;
+                    titleElement.style.maxHeight = originalHeight;
 
                     setTimeout(() => {
-                        titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out`;
+                        titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
                         titleElement.style.opacity = 0;
+                        titleElement.style.maxHeight = "0";
 
                         setTimeout(() => {
                             titleElement.textContent = originalTitle;
-                            titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out`;
+                            titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
                             titleElement.style.opacity = 1;
+                            titleElement.style.maxHeight = originalHeight;
                         }, animationDuration);
                     }, 1000);
                 }, animationDuration);
             }
 
-            document.write('');
             const days = [
                 {day: 'Понедельник', schedule: [
                     { time: '17:15', title: 'Миги и Дали' },
@@ -154,11 +168,11 @@
                 ]},
                 {day: 'Среда', schedule: [
                     { time: '16:15', title: 'Прибрал к рукам девушку, потерявшую жениха, и теперь учу её всяким плохим вещам' },
-                    { time: '20:00', title: 'Восхождение в тени 2 [4K]' }
+                    { time: '22:00', title: 'Восхождение в тени 2 [4K]' }
                 ]},
                 {day: 'Четверг', schedule: [
-                    { time: '16:15', title: 'Невеста чародея 2. Часть 2' },
-                    { time: '18:15', title: 'Моя дочь, отправившаяся в столицу, захотев стать авантюристом, достигла S-ранга' },
+                    { time: '17:15', title: 'Моя дочь, отправившаяся в столицу, захотев стать авантюристом, достигла S-ранга' },
+                    { time: '18:15', title: 'Невеста чародея 2. Часть 2' },
                     { time: '19:42', title: 'Низкоквалифицированный ниндзя' },
                     { time: '19:50', title: 'Мой телохранитель' },
                     { time: '20:20', title: 'Магическая битва 2' },
@@ -191,8 +205,50 @@
                 ]},
                 { day: 'Без графика', schedule: [
                     { title: 'Мой счастливый брак (лето)' }
-                ]}
-            ];
+                ]}];
+            const userTimeZoneOffset = new Date().getTimezoneOffset();
+            const moscowTimeZoneOffset = -180; 
+            const differenceInMinutes = userTimeZoneOffset - moscowTimeZoneOffset;
+
+            days.forEach(day => {
+                day.schedule.forEach(info => {
+                    if (info.time) {
+                        const [hours, minutes] = info.time.split(':');
+                        let date = new Date();
+                        date.setHours(+hours);
+                        date.setMinutes(+minutes - differenceInMinutes);
+                        info.time = date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+                        
+                        if (differenceInMinutes > 0 && +hours * 60 + +minutes - differenceInMinutes < 0) {
+                            days[(days.indexOf(day) + 1) % 7].schedule.push(info);
+                            day.schedule = day.schedule.filter(item => item !== info);
+                        } else if (differenceInMinutes < 0 && +hours * 60 + +minutes - differenceInMinutes >= 1440) {
+                            days[(days.indexOf(day) - 1 + 7) % 7].schedule.push(info);
+                            day.schedule = day.schedule.filter(item => item !== info);
+                        }
+                    }
+                });
+            });
+
+            const timeZoneString = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
+            document.querySelector('h1').textContent = `График выхода серий (${timeZoneString})`;
+            const currentDay = new Date().getDay();
+            const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+            let isNextShowFound = false;
+
+            days.forEach((day, dayIndex) => {
+                if (isNextShowFound) return;
+                
+                if ((currentDay - 1 === dayIndex) || (currentDay === 0 && dayIndex === 6)) {
+                    for (let i = 0; i < day.schedule.length; i++) {
+                        if (day.schedule[i].time > currentTime) {
+                            day.schedule[i].highlighted = true;
+                            isNextShowFound = true;
+                            break;
+                        }
+                    }
+                }
+            });
 
             days.forEach(day => {
                 const dayInfo = day.day;
@@ -202,17 +258,15 @@
                     schedule.forEach(info => {
                         const timeCode = info.time;
                         const title = info.title;
+                        const highlightTimeClass = info.highlighted ? 'highlighted' : '';
                         const listItem = timeCode
-                            ? `<div class="schedule-item" onclick="copyText(this, '${timeCode} - ${title}')"><span class="time">${timeCode}</span><span class="title">${title}</span></div>`
+                            ? `<div class="schedule-item" onclick="copyText(this, '${timeCode} - ${title}')"><span class="time ${highlightTimeClass}">${timeCode}</span><span class="title">${title}</span></div>`
                             : `<div class="schedule-item" onclick="copyText(this, '${title}')"><span class="title">${title}</span></div>`;
                         document.writeln(`<ul>${listItem}</ul>`);
                     });
                 } else {
                     document.writeln(`<h2 class="empty-day">${dayInfo}:</h2>`);
                     document.writeln('<ul class="schedule-item empty-item"><li class="empty-text">Пусто</li></ul>');
-                }
-                if (day !== days[days.length - 1]) {
-                    document.writeln('<br>');
                 }
             });
         </script>
