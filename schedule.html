@@ -102,6 +102,17 @@
         .time.highlighted {
           animation: blinking 1.5s infinite;
         }
+        /* Стили для портретного режима (по умолчанию) */
+        .schedule-item .title {
+            max-height: 3em; /* Примерная высота для двух строк текста */
+            overflow: hidden;
+        }
+        /* Медиа-запрос для горизонтального режима */
+        @media screen and (orientation: landscape) {
+            .schedule-item .title {
+                max-height: 4em; /* Увеличить максимальную высоту для горизонтального режима */
+            }
+        }
     </style>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 </head>
