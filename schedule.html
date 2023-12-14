@@ -232,23 +232,22 @@
                     console.log('Animation in progress, copy blocked.');
                     return; // Выходим из функции, если идет анимация
                 }
-
+            
                 const clipboardText = textToCopy.trim();
                 if (!clipboardText) {
                     console.log('No text to copy.');
                     return;
                 }
-
-                const textArea = document.createElement("textarea");
-                textArea.value = clipboardText;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                console.log('Text copied to clipboard:', clipboardText);
-                
-                replaceTitleWithCopied(element);
+            
+                // Использование нового API для копирования текста
+                navigator.clipboard.writeText(clipboardText).then(function() {
+                    console.log('Text copied to clipboard:', clipboardText);
+                    replaceTitleWithCopied(element);
+                }).catch(function(error) {
+                    console.error('Error copying text: ', error);
+                });
             }
+
 
             function replaceTitleWithCopied(element) {
                 const titleElement = element.querySelector('.title');
