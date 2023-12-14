@@ -1,6 +1,7 @@
-<html>
+<!DOCTYPE html>
+<html lang="ru">
 <head>
-    <title>График выхода серий (МСК)</title>
+    <title>График выхода серий</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
@@ -14,9 +15,12 @@
             justify-content: center;
             align-items: center;
             cursor: default;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
         }
         div {
-            max-width: 100%;
             max-width: 620px;
         }
         h1 {
@@ -24,10 +28,6 @@
             font-size: 36px;
             margin-bottom: 20px;
             color: #ffffff;
-            user-select: all;
-            -moz-user-select: all;
-            -webkit-user-select: all;
-            -ms-user-select: all;
         }
         h2 {
             font-size: 24px;
@@ -36,7 +36,6 @@
             color: #dddddd;
         }
         ul {
-            list-style-type: none;
             padding-left: 0;
             margin-top: 0;
             margin-bottom: 7px;
@@ -53,7 +52,7 @@
             align-items: baseline;
             cursor: default;
             transition: background-color 0.3s ease-in-out;
-            margin-bottom: 2px;
+            margin-bottom: 5px;
             width: 100%;
             padding-left: 15px;
             box-sizing: border-box;
@@ -63,18 +62,6 @@
             margin-left: 5px;
             padding-right: 15px;
             transition: opacity 0.5s ease-in-out;
-        }
-        .time {
-            min-width: fit-content;
-            padding: 2px 6px;
-            border-radius: 6px;
-            user-select: none;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            background-color: rgba(170, 170, 170, 0.3);
-            color: #dddddd;
-            margin-right: 5px;
         }
         .empty-day {
             color: #ffffff;
@@ -93,68 +80,35 @@
         .title:hover {
             background-color: transparent;
         }
-        .time.highlighted {
-            -webkit-box-shadow:inset 0px 0px 0px 1.5px rgba(0, 0, 255, 0.3);
-            -moz-box-shadow:inset 0px 0px 0px 1.5px rgba(0, 0, 255, 0.3);
-            box-shadow:inset 0px 0px 0px 1.5px rgba(0, 0, 255, 0.3);
-        }
         .schedule-item .title {
             overflow: hidden;
             max-height: 3em;
             transition: max-height 0.5s ease-in-out;
+        }
+        .time {
+            position: relative;
+            display: inline-block;
+            margin-right: 5px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background-color: rgba(170, 170, 170, 0.3);
+            color: #dddddd;
+            border: 2px solid transparent;
+        }
+        @keyframes blinking {
+          0%, 100% { border-color: transparent; }
+          50% { border-color: white; }
+        }
+        .time.highlighted {
+          animation: blinking 1.5s infinite;
         }
     </style>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 </head>
 <body>
     <div>
-        <h1>График выхода серий (МСК)</h1>
+        <h1>График выхода серий (GMT+3)</h1>
         <script>
-            function copyText(element, textToCopy) {
-                const clipboardText = textToCopy.trim();
-                if (clipboardText) {
-                    const textArea = document.createElement("textarea");
-                    textArea.value = clipboardText;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    replaceTitleWithCopied(element);
-                    console.log('Text copied to clipboard:', clipboardText);
-                } else {
-                    console.log('No text to copy.');
-                }
-            }
-
-            function replaceTitleWithCopied(element) {
-                const titleElement = element.querySelector('.title');
-                const originalTitle = titleElement.textContent.trim();
-                const animationDuration = 500;
-                const originalHeight = titleElement.clientHeight + "px";
-                titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
-                titleElement.style.opacity = 0;
-                titleElement.style.maxHeight = "0";
-
-                setTimeout(() => {
-                    titleElement.textContent = 'Скопировано';
-                    titleElement.style.opacity = 1;
-                    titleElement.style.maxHeight = originalHeight;
-
-                    setTimeout(() => {
-                        titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
-                        titleElement.style.opacity = 0;
-                        titleElement.style.maxHeight = "0";
-
-                        setTimeout(() => {
-                            titleElement.textContent = originalTitle;
-                            titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
-                            titleElement.style.opacity = 1;
-                            titleElement.style.maxHeight = originalHeight;
-                        }, animationDuration);
-                    }, 1000);
-                }, animationDuration);
-            }
-
             const days = [
                 {day: 'Понедельник', schedule: [
                     { time: '17:15', title: 'Миги и Дали' },
@@ -175,8 +129,8 @@
                     { time: '18:15', title: 'Невеста чародея 2. Часть 2' },
                     { time: '19:42', title: 'Низкоквалифицированный ниндзя' },
                     { time: '19:50', title: 'Мой телохранитель' },
-                    { time: '20:20', title: 'Магическая битва 2' },
-                    { time: '21:15', title: 'Бродяга Кэнсин' }
+                    { time: '22:20', title: 'Магическая битва 2' },
+                    { time: '23:15', title: 'Бродяга Кэнсин' }
                 ]},
                 { day: 'Пятница', schedule: [
                     { time: '14:00', title: 'Восхождение героя щита 3' },
@@ -204,71 +158,142 @@
                     { time: '20:15', title: 'MF Призрак' }
                 ]},
                 { day: 'Без графика', schedule: [
-                    { title: 'Мой счастливый брак (лето)' }
+                    { title: 'Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето)' },
+                    { title: 'Test' },
                 ]}];
-            const userTimeZoneOffset = new Date().getTimezoneOffset();
-            const moscowTimeZoneOffset = -180; 
-            const differenceInMinutes = userTimeZoneOffset - moscowTimeZoneOffset;
 
-            days.forEach(day => {
-                day.schedule.forEach(info => {
-                    if (info.time) {
-                        const [hours, minutes] = info.time.split(':');
-                        let date = new Date();
-                        date.setHours(+hours);
-                        date.setMinutes(+minutes - differenceInMinutes);
-                        info.time = date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-                        
-                        if (differenceInMinutes > 0 && +hours * 60 + +minutes - differenceInMinutes < 0) {
-                            days[(days.indexOf(day) + 1) % 7].schedule.push(info);
-                            day.schedule = day.schedule.filter(item => item !== info);
-                        } else if (differenceInMinutes < 0 && +hours * 60 + +minutes - differenceInMinutes >= 1440) {
-                            days[(days.indexOf(day) - 1 + 7) % 7].schedule.push(info);
-                            day.schedule = day.schedule.filter(item => item !== info);
-                        }
-                    }
-                });
-            });
-
-            const timeZoneString = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
-            document.querySelector('h1').textContent = `График выхода серий (${timeZoneString})`;
+            // Получение текущего времени и дня
             const currentDay = new Date().getDay();
             const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-            let isNextShowFound = false;
 
-            days.forEach((day, dayIndex) => {
-                if (isNextShowFound) return;
+            // Обновление времени в расписании с учетом часового пояса
+            function adjustScheduleTime(days, diff) {
+              days.forEach(day => {
+                day.schedule.forEach(info => {
+                  if (!info.time) return;
+
+                  const [hours, minutes] = info.time.split(':').map(Number);
+                  let date = new Date();
+                  date.setHours(hours, minutes - diff);
+                  
+                  if (date.getDate() !== new Date().getDate()) {
+                    moveToShowToAnotherDay(day, date.getHours() < 0 ? -1 : 1);
+                  }
+                  
+                  info.time = date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+                });
+              });
+            }
+
+            function moveToShowToAnotherDay(day, offset) {
+              const dayIndex = (days.indexOf(day) + offset + 7) % 7;
+              days[dayIndex].schedule.push(...day.schedule);
+              day.schedule = [];
+            }
+
+            // Подсветка ближайшего будущего релиза
+            function highlightNextShow(days, currentDayIndex, currentTime) {
+              let foundNextShow = false;
+              days[currentDayIndex].schedule = days[currentDayIndex].schedule.map(show => {
+                if (foundNextShow) return show; // Если уже нашли следующий релиз, ничего не делаем
+                if (isTimeLater(show.time, currentTime)) { // Проверяем, если время шоу позже текущего времени
+                  show.highlighted = true; // Выделяем его
+                  foundNextShow = true; // Запоминаем, что нашли следующий релиз
+                }
+                return show;
+              });
+            }
+
+            function isTimeLater(time1, time2) {
+              const [hours1, minutes1] = time1.split(':').map(Number);
+              const [hours2, minutes2] = time2.split(':').map(Number);
+              return hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2);
+            }
+
+            // Отображение расписания
+            function renderDaySchedule() {
+              days.forEach(day => {
+                document.writeln(`<h2>${day.day}:</h2>`);
+                const listItems = day.schedule.map(createScheduleItem).join('');
+                document.writeln(`<ul>${listItems}</ul>`);
+              });
+            }
+
+            function createScheduleItem(info) {
+              const timeCode = info.time ? `<span class="time ${info.highlighted ? 'highlighted' : ''}">${info.time}</span>` : '';
+              const title = `<span class="title">${info.title}</span>`;
+              return `<div class="schedule-item" onclick="copyText(this, '${info.time} - ${info.title}')">${timeCode}${title}</div>`;
+            }
+
+            let isAnimationInProgress = false;
+
+            function copyText(element, textToCopy) {
+                if (isAnimationInProgress) {
+                    console.log('Animation in progress, copy blocked.');
+                    return; // Выходим из функции, если идет анимация
+                }
+
+                const clipboardText = textToCopy.trim();
+                if (!clipboardText) {
+                    console.log('No text to copy.');
+                    return;
+                }
+
+                const textArea = document.createElement("textarea");
+                textArea.value = clipboardText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                console.log('Text copied to clipboard:', clipboardText);
                 
-                if ((currentDay - 1 === dayIndex) || (currentDay === 0 && dayIndex === 6)) {
-                    for (let i = 0; i < day.schedule.length; i++) {
-                        if (day.schedule[i].time > currentTime) {
-                            day.schedule[i].highlighted = true;
-                            isNextShowFound = true;
-                            break;
-                        }
-                    }
-                }
-            });
+                replaceTitleWithCopied(element);
+            }
 
-            days.forEach(day => {
-                const dayInfo = day.day;
-                const schedule = day.schedule;
-                if (schedule.length > 0) {
-                    document.writeln(`<h2>${dayInfo}:</h2>`);
-                    schedule.forEach(info => {
-                        const timeCode = info.time;
-                        const title = info.title;
-                        const highlightTimeClass = info.highlighted ? 'highlighted' : '';
-                        const listItem = timeCode
-                            ? `<div class="schedule-item" onclick="copyText(this, '${timeCode} - ${title}')"><span class="time ${highlightTimeClass}">${timeCode}</span><span class="title">${title}</span></div>`
-                            : `<div class="schedule-item" onclick="copyText(this, '${title}')"><span class="title">${title}</span></div>`;
-                        document.writeln(`<ul>${listItem}</ul>`);
-                    });
-                } else {
-                    document.writeln(`<h2 class="empty-day">${dayInfo}:</h2>`);
-                    document.writeln('<ul class="schedule-item empty-item"><li class="empty-text">Пусто</li></ul>');
-                }
-            });
+            function replaceTitleWithCopied(element) {
+                const titleElement = element.querySelector('.title');
+                const originalTitle = titleElement.textContent.trim();
+                const hasTime = element.querySelector('.time') !== null;
+                const animationDuration = 500;
+
+                isAnimationInProgress = true; // Устанавливаем флаг, что анимация началась
+
+                titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
+                changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, hasTime);
+            }
+
+            function changeTitleText(titleElement, newText, duration, originalText, hasTime) {
+                titleElement.style.opacity = 0;
+                titleElement.style.maxHeight = hasTime ? "0" : "1.5em";
+
+                setTimeout(() => {
+                    titleElement.textContent = newText;
+                    titleElement.style.opacity = 1;
+                    titleElement.style.maxHeight = "3em";
+
+                    setTimeout(() => {
+                        titleElement.style.opacity = 0;
+                        titleElement.style.maxHeight = hasTime ? "0" : "1.5em";
+
+                        setTimeout(() => {
+                            titleElement.textContent = originalText;
+                            titleElement.style.opacity = 1;
+                            titleElement.style.maxHeight = "3em";
+
+                            isAnimationInProgress = false; // Снимаем флаг, анимация закончена
+                        }, duration);
+                    }, duration * 2);
+                }, duration);
+            }
+
+
+            const moscowTimeZoneOffset = -180; // Московское время GMT+3
+            const userTimeZoneOffset = new Date().getTimezoneOffset(); // Смещение часового пояса пользователя в минутах
+            const differenceInMinutes = moscowTimeZoneOffset - userTimeZoneOffset;
+            adjustScheduleTime(days, differenceInMinutes);
+            const currentDayIndex = (new Date().getDay() + 6) % 7; // JavaScript возвращает 0 для воскресенья, поэтому делаем корректировку на -1
+            highlightNextShow(days, currentDayIndex, currentTime);
+            renderDaySchedule(days);
         </script>
     </div>
 </body>
