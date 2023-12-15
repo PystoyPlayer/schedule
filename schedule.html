@@ -61,7 +61,9 @@
         .schedule-item .title {
             margin-left: 5px;
             padding-right: 15px;
-            transition: opacity 0.5s ease-in-out;
+            overflow: hidden;
+            min-height: 1.5em;
+            transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out;
         }
         .empty-day {
             color: #ffffff;
@@ -80,11 +82,6 @@
         .title:hover {
             background-color: transparent;
         }
-        .schedule-item .title {
-            overflow: hidden;
-            max-height: 3em;
-            transition: max-height 0.5s ease-in-out;
-        }
         .time {
             position: relative;
             display: inline-block;
@@ -101,17 +98,6 @@
         }
         .time.highlighted {
           animation: blinking 1.5s infinite;
-        }
-        /* Стили для портретного режима (по умолчанию) */
-        .schedule-item .title {
-            max-height: 3em; /* Примерная высота для двух строк текста */
-            overflow: hidden;
-        }
-        /* Медиа-запрос для горизонтального режима */
-        @media screen and (orientation: landscape) {
-            .schedule-item .title {
-                max-height: 4em; /* Увеличить максимальную высоту для горизонтального режима */
-            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
@@ -169,7 +155,7 @@
                     { time: '20:15', title: 'MF Призрак' }
                 ]},
                 { day: 'Без графика', schedule: [
-                    { title: 'Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето)' },
+                    { title: 'Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето) Nfnsnsfmg dfgmdfgmdgfmgdfjgkjdfkjgkdfkgk' },
                     { title: 'Test' },
                 ]}];
 
@@ -228,6 +214,7 @@
                 const listItems = day.schedule.map(createScheduleItem).join('');
                 document.writeln(`<ul>${listItems}</ul>`);
               });
+              setInitialMaxHeight();
             }
 
             function createScheduleItem(info) {
@@ -243,13 +230,13 @@
                     console.log('Animation in progress, copy blocked.');
                     return; // Выходим из функции, если идет анимация
                 }
-            
+
                 const clipboardText = textToCopy.trim();
                 if (!clipboardText) {
                     console.log('No text to copy.');
                     return;
                 }
-            
+
                 // Использование нового API для копирования текста
                 navigator.clipboard.writeText(clipboardText).then(function() {
                     console.log('Text copied to clipboard:', clipboardText);
@@ -259,36 +246,37 @@
                 });
             }
 
-
             function replaceTitleWithCopied(element) {
                 const titleElement = element.querySelector('.title');
                 const originalTitle = titleElement.textContent.trim();
-                const hasTime = element.querySelector('.time') !== null;
                 const animationDuration = 500;
+                const originalMaxHeight = titleElement.scrollHeight + "px"; // Получите текущую высоту содержимого
+
+                titleElement.style.maxHeight = originalMaxHeight; // Установите начальное значение max-height
 
                 isAnimationInProgress = true; // Устанавливаем флаг, что анимация началась
 
                 titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
-                changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, hasTime);
+                changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);
             }
 
-            function changeTitleText(titleElement, newText, duration, originalText, hasTime) {
+            function changeTitleText(titleElement, newText, duration, originalText, originalMaxHeight) {
                 titleElement.style.opacity = 0;
-                titleElement.style.maxHeight = hasTime ? "0" : "1.5em";
+                titleElement.style.maxHeight = "1em"; // Высота одной строки текста
 
                 setTimeout(() => {
                     titleElement.textContent = newText;
                     titleElement.style.opacity = 1;
-                    titleElement.style.maxHeight = "3em";
+                    titleElement.style.maxHeight = originalMaxHeight; // Возвращаем к исходной высоте
 
                     setTimeout(() => {
                         titleElement.style.opacity = 0;
-                        titleElement.style.maxHeight = hasTime ? "0" : "1.5em";
+                        titleElement.style.maxHeight = "1em"; // Снова сузим до одной строки
 
                         setTimeout(() => {
                             titleElement.textContent = originalText;
                             titleElement.style.opacity = 1;
-                            titleElement.style.maxHeight = "3em";
+                            titleElement.style.maxHeight = originalMaxHeight; // Восстановите исходное значение
 
                             isAnimationInProgress = false; // Снимаем флаг, анимация закончена
                         }, duration);
@@ -296,6 +284,12 @@
                 }, duration);
             }
 
+            function setInitialMaxHeight() {
+                const titles = document.querySelectorAll('.schedule-item .title');
+                titles.forEach(title => {
+                    title.style.maxHeight = title.scrollHeight + "px";
+                });
+            }
 
             const moscowTimeZoneOffset = -180; // Московское время GMT+3
             const userTimeZoneOffset = new Date().getTimezoneOffset(); // Смещение часового пояса пользователя в минутах
