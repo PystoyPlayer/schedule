@@ -25,7 +25,7 @@
         }
         h1 {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 5px;
             font-size: 36px;
             color: #ffffff;
         }
@@ -98,6 +98,9 @@
         }
         .time.highlighted {
           animation: blinking 1.5s infinite;
+        }
+        .highlighted-item {
+            background-color: rgba(255, 255, 255, 0.3);
         }
     </style>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
@@ -244,6 +247,7 @@
                 }).catch(function(error) {
                     console.error('Error copying text: ', error);
                 });
+                highlightItem(element);
             }
 
             function replaceTitleWithCopied(element) {
@@ -284,10 +288,25 @@
                 }, duration);
             }
 
+            function highlightItem(item) {
+                item.classList.add("highlighted-item");
+                setTimeout(() => {
+                    item.classList.remove("highlighted-item");
+                }, 3000); // подсветка исчезнет через 3 секунды
+            }
             function setInitialMaxHeight() {
                 const titles = document.querySelectorAll('.schedule-item .title');
                 titles.forEach(title => {
                     title.style.maxHeight = title.scrollHeight + "px";
+                });
+            }
+            
+            document.addEventListener('click', clearHighlights);
+            window.addEventListener('scroll', clearHighlights, true);
+
+            function clearHighlights() {
+                document.querySelectorAll('.highlighted-item').forEach(el => {
+                    el.classList.remove('highlighted-item');
                 });
             }
 
