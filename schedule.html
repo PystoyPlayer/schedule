@@ -42,6 +42,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            font-size: 16px;
         }
         li {
             margin-bottom: 5px;
@@ -300,15 +301,17 @@
                     title.style.maxHeight = title.scrollHeight + "px";
                 });
             }
-            
-            document.addEventListener('click', clearHighlights);
-            window.addEventListener('scroll', clearHighlights, true);
 
             function clearHighlights() {
                 document.querySelectorAll('.highlighted-item').forEach(el => {
                     el.classList.remove('highlighted-item');
                 });
             }
+
+            document.addEventListener('click', clearHighlights);
+            window.addEventListener('scroll', clearHighlights, true);
+            window.addEventListener('touchmove', clearHighlights, true); // Обработка прокрутки на мобильных устройствах
+
 
             const moscowTimeZoneOffset = -180; // Московское время GMT+3
             const userTimeZoneOffset = new Date().getTimezoneOffset(); // Смещение часового пояса пользователя в минутах
