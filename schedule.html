@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <title>График выхода серий</title>
+    <title>График</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta charset="utf-8">
+    <meta name="description" content="Расписание серий в Telegram канале @SubVost">
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
@@ -108,6 +110,7 @@
             background-color: rgba(255, 255, 255, 0.3);
         }
     </style>
+    <link rel="icon" type="image/x-icon" href="https://pystoyplayer.github.io/SubVost/icon.ico">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -315,7 +318,6 @@
             document.addEventListener('click', clearHighlights);
             window.addEventListener('scroll', clearHighlights, true);
             window.addEventListener('touchmove', clearHighlights, true); // Обработка прокрутки на мобильных устройствах
-
 
             const moscowTimeZoneOffset = -180; // Московское время GMT+3
             const userTimeZoneOffset = new Date().getTimezoneOffset(); // Смещение часового пояса пользователя в минутах
