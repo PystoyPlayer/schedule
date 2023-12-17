@@ -270,12 +270,9 @@
                 const titleElement = element.querySelector('.title');
                 const originalTitle = titleElement.textContent.trim();
                 const animationDuration = 500;
-                const originalMaxHeight = titleElement.scrollHeight + "px"; // Получите текущую высоту содержимого
-
-                titleElement.style.maxHeight = originalMaxHeight; // Установите начальное значение max-height
-
+                const originalMaxHeight = titleElement.scrollHeight + "px"; // Получаем текущую высоту содержимого
+                titleElement.style.maxHeight = originalMaxHeight;
                 isAnimationInProgress = true; // Устанавливаем флаг, что анимация началась
-
                 titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
                 changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);
             }
