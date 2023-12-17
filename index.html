@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <title>График</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -269,9 +269,12 @@
                 const titleElement = element.querySelector('.title');
                 const originalTitle = titleElement.textContent.trim();
                 const animationDuration = 500;
-                const originalMaxHeight = titleElement.scrollHeight + "px"; // Получаем текущую высоту содержимого
-                titleElement.style.maxHeight = originalMaxHeight;
+                const originalMaxHeight = titleElement.scrollHeight + "px"; // Получите текущую высоту содержимого
+
+                titleElement.style.maxHeight = originalMaxHeight; // Установите начальное значение max-height
+
                 isAnimationInProgress = true; // Устанавливаем флаг, что анимация началась
+
                 titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
                 changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);
             }
