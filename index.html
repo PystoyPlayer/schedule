@@ -323,14 +323,6 @@
                 });
                 setInitialMaxHeight();}
 
-            function scheduleItemClicked(element) {
-                if (highlightTimeout) {
-                    clearTimeout(highlightTimeout);
-                }
-                const textToCopy = `${element.time ? element.time + ' - ' : ''}${element.title}`;
-                copyText(textToCopy);
-                highlightTimeout = setTimeout(clearHighlights, 3000);}
-
             function resetHighlightTimeout() {
                 clearTimeout(highlightTimeout);
                 highlightTimeout = setTimeout(clearHighlights, 3000);}
