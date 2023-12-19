@@ -322,10 +322,8 @@
                 });
                 setInitialMaxHeight();}
 
-            document.addEventListener('touchend', function(event) {
-                clearHighlights();});
-
             function scheduleItemClicked(element) {
+                // Очищаем предыдущий таймаут, если он был установлен
                 if (highlightTimeout) {
                     clearTimeout(highlightTimeout);
                 }
@@ -333,14 +331,22 @@
                 const textToCopy = `${element.time ? element.time + ' - ' : ''}${element.title}`;
                 copyText(textToCopy);
 
+                // Устанавливаем новый таймаут для очистки подсветки
                 highlightTimeout = setTimeout(clearHighlights, 3000);}
 
             function clearHighlights() {
                 const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
-                highlightedItems.forEach(item => {
-                    item.classList.remove('highlighted');
-                });}
+                highlightedItems.forEach(item => item.classList.remove('highlighted'));}
 
+            document.getElementById('schedule-container').addEventListener('click', event => {
+                const scheduleItem = event.target.closest('.schedule-item');
+                if (scheduleItem) {
+                    scheduleItemClicked(scheduleItem);
+                }});
+            document.addEventListener(
+                'touchend', function(event) {
+                    clearHighlights();
+                });
             highlightNextShow(days);
             renderDaySchedule();
         </script>
