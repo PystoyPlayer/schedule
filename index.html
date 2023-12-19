@@ -50,7 +50,7 @@
         }
         h1 {
             text-align: center;
-            margin-top: 5px;
+            margin-top: 2.5px;
             font-size: 36px;
             color: #ffffff;
         }
@@ -184,6 +184,7 @@
                     { title: 'Test' },
                 ]}];
             let isAnimationInProgress = false;
+            let highlightTimeout;
 
             function createScheduleItem(info) {
                 const scheduleItem = document.createElement('div');
@@ -263,9 +264,9 @@
 
                             setTimeout(() => {
                                 isAnimationInProgress = false;
-                            }, duration / 2); // Уменьшил время ожидания для завершения анимации
+                            }, duration / 2);
                         }, duration);
-                    }, duration * 1.5); // Уменьшил задержку перед началом возврата текста
+                    }, duration * 1.5);
                 }, duration);}
 
             function setInitialMaxHeight() {
@@ -287,7 +288,7 @@
               for (let i = 0; i < days.length; i++) {
                 let dayIndex = (currentDayIndex + i) % days.length;
                 for (let show of days[dayIndex].schedule) {
-                  if (!show.time) continue; // Пропускаем элементы без времени
+                  if (!show.time) continue;
                   if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
                     show.highlighted = true;
                     foundNextShow = true;
@@ -320,6 +321,25 @@
                     document.getElementById('schedule-container').appendChild(dayElement);
                 });
                 setInitialMaxHeight();}
+
+            document.addEventListener('touchend', function(event) {
+                clearHighlights();});
+
+            function scheduleItemClicked(element) {
+                if (highlightTimeout) {
+                    clearTimeout(highlightTimeout);
+                }
+
+                const textToCopy = `${element.time ? element.time + ' - ' : ''}${element.title}`;
+                copyText(textToCopy);
+
+                highlightTimeout = setTimeout(clearHighlights, 3000);}
+
+            function clearHighlights() {
+                const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
+                highlightedItems.forEach(item => {
+                    item.classList.remove('highlighted');
+                });}
 
             highlightNextShow(days);
             renderDaySchedule();
