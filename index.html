@@ -44,9 +44,9 @@
             -moz-user-select: none;
             -webkit-user-select: none;
             -ms-user-select: none;
-        }
-        div {
             max-width: 620px;
+            margin-left: auto;
+            margin-right: auto;
         }
         h1 {
             text-align: center;
@@ -92,22 +92,12 @@
             transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out;
             line-height: 1.5em;
         }
-        .empty-day {
-            color: #ffffff;
-        }
-        .empty-item {
-            pointer-events: none;
-            opacity: 0.5;
-        }
-        .empty-item:hover {
-            background-color: transparent;
-        }
-        .schedule-item:not(.empty-item):hover {
-            background-color: rgba(170, 170, 170, 0.3);
-            cursor: pointer;
-        }
         .title:hover {
             background-color: transparent;
+        }
+        .schedule-item:hover {
+            background-color: rgba(170, 170, 170, 0.3);
+            cursor: pointer;
         }
         .time {
             position: relative;
@@ -119,32 +109,38 @@
             color: #dddddd;
             border: 1.5px solid transparent;
         }
-        @keyframes blinking {
-          0%, 100% { border-color: transparent; }
-          50% { border-color: white; }
+        .time:empty {
+            margin-top: 10px;
+            min-width: 5px;
+            height: 2px;
+            margin-bottom: auto;
+        }
+        @keyframes flashingBorder {
+            0%, 100% {box-shadow: none;}
+            45%, 55% {box-shadow: 0 0 5.5px white;}
+            45%, 55% {color: #ffffff;}
         }
         .time.highlighted {
-          animation: blinking 1.5s infinite;
+            animation: flashingBorder 2s infinite;
+            color: #dddddd;
         }
-        .highlighted-item {
-            background-color: rgba(255, 255, 255, 0.3);
+        .empty-day {
+            color: #666;
+            font-style: italic;
+            margin-left: 15px;
         }
     </style>
 </head>
 <body>
     <div>
         <h1>График выхода серий (GMT+3)</h1>
+        <div id="schedule-container"><!-- Здесь сгенерируется расписание --></div>
         <script>
             const days = [
-                {day: 'Понедельник', schedule: [
-                    { time: '17:15', title: 'Миги и Дали' },
-                    { time: '17:45', title: 'Рон Камонохаши: невменяемый детектив' },
-                    { time: '19:15', title: 'Стесняшка' },
-                    { time: '19:45', title: 'Я предпочитаю злодейку' },
-                    { time: '20:15', title: 'Обычный мужчина средних лет и его журнал активности в VRMMO [4K]' }
-                ]},
+                {day: 'Понедельник', schedule: [ ]},
                 { day: 'Вторник', schedule: [
-                    { time: '17:15', title: 'Всемогущая магия святой 2' }
+                    { time: '23:15', title: 'Бродяга Кэнсин' },
+                    { time: '23:59', title: 'Всемогущая магия святой 2' }
                 ]},
                 {day: 'Среда', schedule: [
                     { time: '16:15', title: 'Прибрал к рукам девушку, потерявшую жениха, и теперь учу её всяким плохим вещам' },
@@ -187,77 +183,39 @@
                     { title: 'Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето) Мой счастливый брак (лето) Nfnsnsfmg dfgmdfgmdgfmgdfjgkjdfkjgkdfkgk' },
                     { title: 'Test' },
                 ]}];
-
-            // Получение текущего времени и дня
-            const currentDay = new Date().getDay();
-            const currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-
-            // Обновление времени в расписании с учетом часового пояса
-            function adjustScheduleTime(days, diff) {
-              days.forEach(day => {
-                day.schedule.forEach(info => {
-                  if (!info.time) return;
-
-                  const [hours, minutes] = info.time.split(':').map(Number);
-                  let date = new Date();
-                  date.setHours(hours, minutes - diff);
-                  
-                  if (date.getDate() !== new Date().getDate()) {
-                    moveToShowToAnotherDay(day, date.getHours() < 0 ? -1 : 1);
-                  }
-                  
-                  info.time = date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-                });
-              });
-            }
-
-            function moveToShowToAnotherDay(day, offset) {
-              const dayIndex = (days.indexOf(day) + offset + 7) % 7;
-              days[dayIndex].schedule.push(...day.schedule);
-              day.schedule = [];
-            }
-
-            // Подсветка ближайшего будущего релиза
-            function highlightNextShow(days, currentDayIndex, currentTime) {
-              let foundNextShow = false;
-              days[currentDayIndex].schedule = days[currentDayIndex].schedule.map(show => {
-                if (foundNextShow) return show; // Если уже нашли следующий релиз, ничего не делаем
-                if (isTimeLater(show.time, currentTime)) { // Проверяем, если время шоу позже текущего времени
-                  show.highlighted = true; // Выделяем его
-                  foundNextShow = true; // Запоминаем, что нашли следующий релиз
-                }
-                return show;
-              });
-            }
-
-            function isTimeLater(time1, time2) {
-              const [hours1, minutes1] = time1.split(':').map(Number);
-              const [hours2, minutes2] = time2.split(':').map(Number);
-              return hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2);
-            }
-
-            // Отображение расписания
-            function renderDaySchedule() {
-              days.forEach(day => {
-                document.writeln(`<h2>${day.day}:</h2>`);
-                const listItems = day.schedule.map(createScheduleItem).join('');
-                document.writeln(`<ul>${listItems}</ul>`);
-              });
-              setInitialMaxHeight();
-            }
+            let isAnimationInProgress = false;
 
             function createScheduleItem(info) {
-              const timeCode = info.time ? `<span class="time ${info.highlighted ? 'highlighted' : ''}">${info.time}</span>` : '';
-              const title = `<span class="title">${info.title}</span>`;
-              return `<div class="schedule-item" onclick="copyText(this, '${info.time} - ${info.title}')">${timeCode}${title}</div>`;
-            }
+                const scheduleItem = document.createElement('div');
+                scheduleItem.className = 'schedule-item';
 
-            let isAnimationInProgress = false;
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'time';
+                if (info.time) {
+                    timeSpan.textContent = info.time;
+                    if (info.highlighted) {
+                        timeSpan.classList.add('highlighted');
+                    }
+                }
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'title';
+                titleSpan.textContent = info.title;
+
+                scheduleItem.appendChild(timeSpan);
+                scheduleItem.appendChild(titleSpan);
+
+                scheduleItem.addEventListener('click', () => {
+                    const textToCopy = `${info.time ? info.time + ' - ' : ''}${info.title}`;
+                    copyText(scheduleItem, textToCopy);
+                });
+
+                return scheduleItem;}
 
             function copyText(element, textToCopy) {
                 if (isAnimationInProgress) {
                     console.log('Animation in progress, copy blocked.');
-                    return; // Выходим из функции, если идет анимация
+                    return;
                 }
 
                 const clipboardText = textToCopy.trim();
@@ -266,84 +224,105 @@
                     return;
                 }
 
-                // Использование нового API для копирования текста
-                navigator.clipboard.writeText(clipboardText).then(function() {
+                navigator.clipboard.writeText(clipboardText).then(() => {
                     console.log('Text copied to clipboard:', clipboardText);
                     replaceTitleWithCopied(element);
-                }).catch(function(error) {
+                }).catch(error => {
                     console.error('Error copying text: ', error);
-                });
-                highlightItem(element);
-            }
+                });}
 
             function replaceTitleWithCopied(element) {
                 const titleElement = element.querySelector('.title');
                 const originalTitle = titleElement.textContent.trim();
-                const animationDuration = 500;
-                const originalMaxHeight = titleElement.scrollHeight + "px"; // Получите текущую высоту содержимого
+                const animationDuration = 400;
+                const originalMaxHeight = titleElement.scrollHeight + "px";
 
-                titleElement.style.maxHeight = originalMaxHeight; // Установите начальное значение max-height
-
-                isAnimationInProgress = true; // Устанавливаем флаг, что анимация началась
-
+                titleElement.style.maxHeight = originalMaxHeight;
                 titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
-                changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);
-            }
+
+                isAnimationInProgress = true;
+                changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);}
 
             function changeTitleText(titleElement, newText, duration, originalText, originalMaxHeight) {
                 titleElement.style.opacity = 0;
-                titleElement.style.maxHeight = "1em"; // Высота одной строки текста
+                titleElement.style.maxHeight = "1em";
 
                 setTimeout(() => {
                     titleElement.textContent = newText;
                     titleElement.style.opacity = 1;
-                    titleElement.style.maxHeight = originalMaxHeight; // Возвращаем к исходной высоте
+                    titleElement.style.maxHeight = originalMaxHeight;
 
                     setTimeout(() => {
                         titleElement.style.opacity = 0;
-                        titleElement.style.maxHeight = "1em"; // Снова сузим до одной строки
+                        titleElement.style.maxHeight = "1em";
 
                         setTimeout(() => {
                             titleElement.textContent = originalText;
                             titleElement.style.opacity = 1;
-                            titleElement.style.maxHeight = originalMaxHeight; // Восстановите исходное значение
+                            titleElement.style.maxHeight = originalMaxHeight;
 
-                            isAnimationInProgress = false; // Снимаем флаг, анимация закончена
+                            setTimeout(() => {
+                                isAnimationInProgress = false;
+                            }, duration / 2); // Уменьшил время ожидания для завершения анимации
                         }, duration);
-                    }, duration * 2);
-                }, duration);
-            }
+                    }, duration * 1.5); // Уменьшил задержку перед началом возврата текста
+                }, duration);}
 
-            function highlightItem(item) {
-                item.classList.add("highlighted-item");
-                setTimeout(() => {
-                    item.classList.remove("highlighted-item");
-                }, 3000); // подсветка исчезнет через 3 секунды
-            }
             function setInitialMaxHeight() {
                 const titles = document.querySelectorAll('.schedule-item .title');
                 titles.forEach(title => {
                     title.style.maxHeight = title.scrollHeight + "px";
+                });}
+
+            function isTimeLater(time1, time2) {
+              const [hours1, minutes1] = time1.split(':').map(Number);
+              const [hours2, minutes2] = time2.split(':').map(Number);
+              return hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2);}
+
+            function highlightNextShow(days) {
+              let currentDayIndex = (new Date().getDay() + 6) % 7;
+              let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+              let foundNextShow = false;
+              for (let i = 0; i < days.length; i++) {
+                let dayIndex = (currentDayIndex + i) % days.length;
+                for (let show of days[dayIndex].schedule) {
+                  if (!show.time) continue; // Пропускаем элементы без времени
+                  if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
+                    show.highlighted = true;
+                    foundNextShow = true;
+                    break;
+                  }
+                }
+                if (foundNextShow) break;
+              }}
+
+            function renderDaySchedule() {
+                document.getElementById('schedule-container').innerHTML = '';
+                days.forEach(day => {
+                    const dayElement = document.createElement('div');
+                    dayElement.innerHTML = `<h2>${day.day}:</h2>`;
+                    const list = document.createElement('ul');
+
+                    if (day.schedule.length > 0) {
+                        day.schedule.forEach(show => {
+                            const item = createScheduleItem(show);
+                            list.appendChild(item);
+                        });
+                    } else {
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.className = 'empty-day';
+                        emptyMessage.textContent = 'Пусто';
+                        list.appendChild(emptyMessage);
+                    }
+
+                    dayElement.appendChild(list);
+                    document.getElementById('schedule-container').appendChild(dayElement);
                 });
-            }
+                setInitialMaxHeight();}
 
-            function clearHighlights() {
-                document.querySelectorAll('.highlighted-item').forEach(el => {
-                    el.classList.remove('highlighted-item');
-                });
-            }
-
-            document.addEventListener('click', clearHighlights);
-            window.addEventListener('scroll', clearHighlights, true);
-            window.addEventListener('touchmove', clearHighlights, true); // Обработка прокрутки на мобильных устройствах
-
-            const moscowTimeZoneOffset = -180; // Московское время GMT+3
-            const userTimeZoneOffset = new Date().getTimezoneOffset(); // Смещение часового пояса пользователя в минутах
-            const differenceInMinutes = moscowTimeZoneOffset - userTimeZoneOffset;
-            adjustScheduleTime(days, differenceInMinutes);
-            const currentDayIndex = (new Date().getDay() + 6) % 7; // JavaScript возвращает 0 для воскресенья, поэтому делаем корректировку на -1
-            highlightNextShow(days, currentDayIndex, currentTime);
-            renderDaySchedule(days);
+            highlightNextShow(days);
+            renderDaySchedule();
         </script>
     </div>
 </body>
