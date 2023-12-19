@@ -324,8 +324,15 @@
                 setInitialMaxHeight();}
 
             function resetHighlightTimeout() {
-                clearTimeout(highlightTimeout);
+                if (highlightTimeout) {
+                    clearTimeout(highlightTimeout);
+                }
                 highlightTimeout = setTimeout(clearHighlights, 3000);}
+
+            function clearHighlights() {
+                const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
+                highlightedItems.forEach(item => item.classList.remove('highlighted'));
+                clearTimeout(highlightTimeout);}
 
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchend', resetHighlightTimeout);
