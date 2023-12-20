@@ -116,9 +116,15 @@
             margin-bottom: auto;
         }
         @keyframes flashingBorder {
-            0%, 100% {box-shadow: none;}
-            45%, 55% {box-shadow: 0 0 5.5px white;}
-            45%, 55% {color: #ffffff;}
+            0%, 100% {
+                box-shadow: none;
+                text-shadow: none;
+            }
+            45%, 55% {
+                box-shadow: 0 0 5.5px white;
+                text-shadow: 0 0 1px white;
+                color: #ffffff;
+            }
         }
         .time.highlighted {
             animation: flashingBorder 2s infinite;
@@ -335,7 +341,7 @@
                 clearTimeout(highlightTimeout);}
 
             document.addEventListener('click', resetHighlightTimeout);
-            document.addEventListener('touchend', resetHighlightTimeout);
+            document.addEventListener('touchstart', resetHighlightTimeout);
             highlightNextShow(days);
             renderDaySchedule();
         </script>
