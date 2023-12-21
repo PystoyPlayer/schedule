@@ -145,7 +145,7 @@
             const days = [
                 {day: 'Понедельник', schedule: [ ]},
                 { day: 'Вторник', schedule: [
-                    { time: '00:02', title: 'Бродяга Кэнсин' },
+                    { time: '00:01', title: 'Бродяга Кэнсин' },
                     { time: '23:59', title: 'Всемогущая магия святой 2' },
                 ]},
                 {day: 'Среда', schedule: [
@@ -340,50 +340,47 @@
                 highlightedItems.forEach(item => item.classList.remove('highlighted'));
                 clearTimeout(highlightTimeout);}
 
-            function convertMoscowTimeToLocal(moscowTime, moscowDate) {
-                // Проверка на валидность вводимого времени
-                if (!moscowTime || !moscowDate) {
-                    console.error('Invalid Moscow time or date provided:', moscowTime, moscowDate);
-                    return null;
-                }
-
-                // Создание объекта даты с учетом московского часового пояса
+            function convertMoscowTimeToLocal(moscowTime, moscowDate, dayOfWeek) {
                 const moscowDateTime = new Date(`${moscowDate}T${moscowTime}+03:00`);
-
-                // Проверка на валидность созданной даты
-                if (isNaN(moscowDateTime)) {
-                    console.error('Invalid Moscow date created:', moscowDateTime);
-                    return null;
+                const localDateTime = new Date(moscowDateTime.toLocaleString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
+                
+                // Корректировка дня недели, если необходимо
+                if (localDateTime.getDate() !== moscowDateTime.getDate()) {
+                    const dayIndex = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"].indexOf(dayOfWeek);
+                    const newDayIndex = (dayIndex + (localDateTime.getDate() > moscowDateTime.getDate() ? 1 : -1) + 7) % 7;
+                    dayOfWeek = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][newDayIndex];
                 }
 
-                // Конвертация времени из московского часового пояса в локальное
-                const localTime = new Date(moscowDateTime.getTime() + (moscowDateTime.getTimezoneOffset() * 60000));
-                return localTime;
-            }
+                return {
+                    time: localDateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                    dayOfWeek
+                };}
 
-            function updateScheduleWithLocalTime(schedule) {
-                return schedule.map(show => {
-                    if (!show.time) return show;
-                    const localTime = convertMoscowTimeToLocal(show.time, '2023-01-01');
-                    if (!localTime) return show;
+            function updateScheduleWithLocalTime(days) {
+                const moscowTimeZone = "Europe/Moscow";
+                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+                if (moscowTimeZone === userTimeZone) {
+                    return days; // Не требуется конвертация времени
+                }
+
+                return days.map(day => {
+                    if (day.day === 'Без графика') return day; // Игнорируем "Без графика"
+
                     return {
-                        ...show,
-                        time: localTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+                        ...day,
+                        schedule: day.schedule.map(show => {
+                            if (!show.time) return show;
+                            const convertedTime = convertMoscowTimeToLocal(show.time, '2023-01-01', day.day);
+                            return { ...show, time: convertedTime.time, day: convertedTime.dayOfWeek };
+                        })
                     };
-                });
-            }
-
-            // Обновление времени в расписании
-            days.forEach(day => {
-                day.schedule = updateScheduleWithLocalTime(day.schedule);
-            });
-
-            // Рендер расписания
+                });}
 
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
-            highlightNextShow(days);
-            renderDaySchedule();
+            highlightNextShow(updateScheduleWithLocalTime(days));
+            renderDaySchedule(updateScheduleWithLocalTime(days));
         </script>
     </div>
 </body>
