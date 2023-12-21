@@ -139,7 +139,7 @@
 </head>
 <body>
     <div>
-        <h1>График выхода серий (GMT-2)</h1>
+        <h1>График выхода серий (GMT+3)</h1>
         <div id="schedule-container"><!-- Здесь сгенерируется расписание --></div>
         <script>
             const days = [
@@ -315,7 +315,7 @@
                     if (day.schedule.length > 0) {
                         day.schedule.forEach(show => {
                             if (show.time) {
-                                const localTime = convertNewYorkTimeToLocal(show.time, '2023-01-01', userTimeZone);
+                                const localTime = convertMoscowTimeToLocal(show.time, '2023-01-01', userTimeZone);
                                 show.time = localTime.time;
                             }
                             const item = createScheduleItem(show);
@@ -348,19 +348,14 @@
                 return Intl.DateTimeFormat().resolvedOptions().timeZone;
             }
 
-            function convertNewYorkTimeToLocal(newYorkTime, newYorkDate, userTimeZone) {
-                // Создаем объект Date для Нью-Йорка
-                const newYorkDateTime = new Date(`${newYorkDate}T${newYorkTime}:00-05:00`); // -05:00 для Нью-Йорка (EST)
+            function convertMoscowTimeToLocal(MoscowTime, MoscowDate, userTimeZone) {
+                const MoscowDateTime = new Date(`${MoscowDate}T${MoscowTime}:00+03:00`); // +03:00 для Москвы
 
-                // Получаем смещение времени между Нью-Йорком и пользовательским часовым поясом
-                const offsetMinutes = newYorkDateTime.getTimezoneOffset();
-
-                // Вычисляем локальное время пользователя
-                const localDateTime = new Date(newYorkDateTime.getTime() + offsetMinutes * 60000);
-
+                const localDateTime = new Date(MoscowDateTime.toLocaleString('en-US', { timeZone: userTimeZone }));
+                
                 return {
                     time: localDateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: userTimeZone }),
-                    dayOfWeek: localDateTime.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: userTimeZone }), // День недели
+                    dayOfWeek: localDateTime.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: userTimeZone }),
                 };
             }
 
@@ -385,7 +380,7 @@
                             console.log("Элемент без времени:", show);
                             return show;
                         }
-                        const convertedTime = convertNewYorkTimeToLocal(show.time, '2023-01-01', userTimeZone);
+                        const convertedTime = convertMoscowTimeToLocal(show.time, '2023-01-01', userTimeZone);
                         console.log("Исходное время:", show.time, "Конвертированное время:", convertedTime.time);
                         return { ...show, time: convertedTime.time, day: convertedTime.dayOfWeek };
                     });
