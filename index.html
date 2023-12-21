@@ -139,7 +139,7 @@
 </head>
 <body>
     <div>
-        <h1>График выхода серий (GMT+3)</h1>
+        <h1>График выхода серий (GMT-2)</h1>
         <div id="schedule-container"><!-- Здесь сгенерируется расписание --></div>
         <script>
             const days = [
@@ -314,6 +314,10 @@
 
                     if (day.schedule.length > 0) {
                         day.schedule.forEach(show => {
+                            if (show.time) {
+                                const localTime = convertNewYorkTimeToLocal(show.time, '2023-01-01', userTimeZone);
+                                show.time = localTime.time;
+                            }
                             const item = createScheduleItem(show);
                             list.appendChild(item);
                         });
@@ -340,47 +344,68 @@
                 highlightedItems.forEach(item => item.classList.remove('highlighted'));
                 clearTimeout(highlightTimeout);}
 
-            function convertMoscowTimeToLocal(moscowTime, moscowDate, dayOfWeek) {
-                const moscowDateTime = new Date(`${moscowDate}T${moscowTime}+03:00`);
-                const localDateTime = new Date(moscowDateTime.toLocaleString("en-US", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }));
-                
-                // Корректировка дня недели, если необходимо
-                if (localDateTime.getDate() !== moscowDateTime.getDate()) {
-                    const dayIndex = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"].indexOf(dayOfWeek);
-                    const newDayIndex = (dayIndex + (localDateTime.getDate() > moscowDateTime.getDate() ? 1 : -1) + 7) % 7;
-                    dayOfWeek = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][newDayIndex];
-                }
+            function getUserTimeZone() {
+                return Intl.DateTimeFormat().resolvedOptions().timeZone;
+            }
+
+            function convertNewYorkTimeToLocal(newYorkTime, newYorkDate, userTimeZone) {
+                // Создаем объект Date для Нью-Йорка
+                const newYorkDateTime = new Date(`${newYorkDate}T${newYorkTime}:00-05:00`); // -05:00 для Нью-Йорка (EST)
+
+                // Получаем смещение времени между Нью-Йорком и пользовательским часовым поясом
+                const offsetMinutes = newYorkDateTime.getTimezoneOffset();
+
+                // Вычисляем локальное время пользователя
+                const localDateTime = new Date(newYorkDateTime.getTime() + offsetMinutes * 60000);
 
                 return {
-                    time: localDateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-                    dayOfWeek
-                };}
+                    time: localDateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: userTimeZone }),
+                    dayOfWeek: localDateTime.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: userTimeZone }), // День недели
+                };
+            }
 
             function updateScheduleWithLocalTime(days) {
-                const moscowTimeZone = "Europe/Moscow";
-                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const userTimeZone = getUserTimeZone();
 
-                if (moscowTimeZone === userTimeZone) {
-                    return days; // Не требуется конвертация времени
+                if (userTimeZone === 'America/New_York') {
+                    console.log("Часовые пояса совпадают, конвертация не требуется");
+                    highlightNextShow(days);
+                    renderDaySchedule(days);
+                    return days;
                 }
 
                 return days.map(day => {
-                    if (day.day === 'Без графика') return day; // Игнорируем "Без графика"
+                    if (day.day === 'Без графика') {
+                        console.log("Игнорируем 'Без графика'");
+                        return day; // Игнорируем "Без графика"
+                    }
 
-                    return {
-                        ...day,
-                        schedule: day.schedule.map(show => {
-                            if (!show.time) return show;
-                            const convertedTime = convertMoscowTimeToLocal(show.time, '2023-01-01', day.day);
-                            return { ...show, time: convertedTime.time, day: convertedTime.dayOfWeek };
-                        })
-                    };
-                });}
+                    const updatedSchedule = day.schedule.map(show => {
+                        if (!show.time) {
+                            console.log("Элемент без времени:", show);
+                            return show;
+                        }
+                        const convertedTime = convertNewYorkTimeToLocal(show.time, '2023-01-01', userTimeZone);
+                        console.log("Исходное время:", show.time, "Конвертированное время:", convertedTime.time);
+                        return { ...show, time: convertedTime.time, day: convertedTime.dayOfWeek };
+                    });
 
+                    return { ...day, schedule: updatedSchedule };
+                });
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const offsetMinutes = new Date().getTimezoneOffset();
+                const offsetHours = -offsetMinutes / 60;
+                const offsetString = `GMT${offsetHours >= 0 ? '+' : ''}${offsetHours}`;
+                const titleElement = document.querySelector('h1');
+                titleElement.textContent = `График выхода серий (${offsetString})`;
+            });
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
-            highlightNextShow(updateScheduleWithLocalTime(days));
-            renderDaySchedule(updateScheduleWithLocalTime(days));
+            const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            highlightNextShow(days);
+            renderDaySchedule(days, userTimeZone);
         </script>
     </div>
 </body>
