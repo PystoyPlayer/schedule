@@ -340,6 +340,27 @@
                 highlightedItems.forEach(item => item.classList.remove('highlighted'));
                 clearTimeout(highlightTimeout);}
 
+            function convertMoscowTimeToLocal(moscowTime, moscowDate) {
+                // Создаем дату в московском часовом поясе
+                const moscowDateTime = new Date(`${moscowDate}T${moscowTime}:00+03:00`);
+                // Конвертируем в локальное время пользователя
+                const localTime = new Date(moscowDateTime.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
+                return localTime;}
+
+            function updateScheduleWithLocalTime(schedule) {
+                return schedule.map(show => {
+                    if (!show.time) return show;
+                    // Используем фиксированную дату для преобразования времени
+                    const localTime = convertMoscowTimeToLocal(show.time, '2023-01-01');
+                    return {
+                        ...show,
+                        time: localTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                        day: localTime.toLocaleDateString('ru-RU', { weekday: 'long' })
+                    };
+                });}
+
+            days.forEach(day => {
+                day.schedule = updateScheduleWithLocalTime(day.schedule);});
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
             highlightNextShow(days);
