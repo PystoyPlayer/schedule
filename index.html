@@ -145,7 +145,7 @@
             const days = [
                 {day: 'Понедельник', schedule: [ ]},
                 { day: 'Вторник', schedule: [
-                    { time: '00:01', title: 'Бродяга Кэнсин' },
+                    { time: '00:02', title: 'Бродяга Кэнсин' },
                     { time: '23:59', title: 'Всемогущая магия святой 2' },
                 ]},
                 {day: 'Среда', schedule: [
@@ -341,26 +341,45 @@
                 clearTimeout(highlightTimeout);}
 
             function convertMoscowTimeToLocal(moscowTime, moscowDate) {
-                // Создаем дату в московском часовом поясе
-                const moscowDateTime = new Date(`${moscowDate}T${moscowTime}:00+03:00`);
-                // Конвертируем в локальное время пользователя
-                const localTime = new Date(moscowDateTime.toLocaleString('en-US', { timeZone: 'Europe/Moscow' }));
-                return localTime;}
+                // Проверка на валидность вводимого времени
+                if (!moscowTime || !moscowDate) {
+                    console.error('Invalid Moscow time or date provided:', moscowTime, moscowDate);
+                    return null;
+                }
+
+                // Создание объекта даты с учетом московского часового пояса
+                const moscowDateTime = new Date(`${moscowDate}T${moscowTime}+03:00`);
+
+                // Проверка на валидность созданной даты
+                if (isNaN(moscowDateTime)) {
+                    console.error('Invalid Moscow date created:', moscowDateTime);
+                    return null;
+                }
+
+                // Конвертация времени из московского часового пояса в локальное
+                const localTime = new Date(moscowDateTime.getTime() + (moscowDateTime.getTimezoneOffset() * 60000));
+                return localTime;
+            }
 
             function updateScheduleWithLocalTime(schedule) {
                 return schedule.map(show => {
                     if (!show.time) return show;
-                    // Используем фиксированную дату для преобразования времени
                     const localTime = convertMoscowTimeToLocal(show.time, '2023-01-01');
+                    if (!localTime) return show;
                     return {
                         ...show,
-                        time: localTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-                        day: localTime.toLocaleDateString('ru-RU', { weekday: 'long' })
+                        time: localTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
                     };
-                });}
+                });
+            }
 
+            // Обновление времени в расписании
             days.forEach(day => {
-                day.schedule = updateScheduleWithLocalTime(day.schedule);});
+                day.schedule = updateScheduleWithLocalTime(day.schedule);
+            });
+
+            // Рендер расписания
+
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
             highlightNextShow(days);
