@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <title>График</title>
-    <meta name="viewport" content="shrink-to-fit=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -28,12 +28,15 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="SubVost">
     <style>
-        body {
+        html {
             padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-            font-family: 'Open Sans', sans-serif;
-            line-height: 1.5;
+            /* background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); */
             background-color: #181818;
             background-size: cover;
+        }
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.5;
             color: #d1d1d1;
             margin: 0;
             padding: 20px;
@@ -48,7 +51,6 @@
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
-            /* background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); */
         }
         h1 {
             text-align: center;
