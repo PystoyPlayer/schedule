@@ -29,6 +29,7 @@
     <meta property="og:url" content="SubVost">
     <style>
         body {
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
             font-family: 'Open Sans', sans-serif;
             line-height: 1.5;
             background-color: #181818;
@@ -47,6 +48,7 @@
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
+            background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
         }
         h1 {
             text-align: center;
@@ -145,7 +147,7 @@
             const days = [
                 {day: 'Понедельник', schedule: [ ]},
                 { day: 'Вторник', schedule: [
-                    { time: '00:01', title: 'Бродяга Кэнсин' },
+                    { time: '23:15', title: 'Бродяга Кэнсин' },
                     { time: '23:59', title: 'Всемогущая магия святой 2' },
                 ]},
                 {day: 'Среда', schedule: [
@@ -314,10 +316,6 @@
 
                     if (day.schedule.length > 0) {
                         day.schedule.forEach(show => {
-                            if (show.time) {
-                                const localTime = convertMoscowTimeToLocal(show.time, '2023-01-01', userTimeZone);
-                                show.time = localTime.time;
-                            }
                             const item = createScheduleItem(show);
                             list.appendChild(item);
                         });
@@ -344,63 +342,10 @@
                 highlightedItems.forEach(item => item.classList.remove('highlighted'));
                 clearTimeout(highlightTimeout);}
 
-            function getUserTimeZone() {
-                return Intl.DateTimeFormat().resolvedOptions().timeZone;
-            }
-
-            function convertMoscowTimeToLocal(MoscowTime, MoscowDate, userTimeZone) {
-                const MoscowDateTime = new Date(`${MoscowDate}T${MoscowTime}:00+03:00`); // +03:00 для Москвы
-
-                const localDateTime = new Date(MoscowDateTime.toLocaleString('en-US', { timeZone: userTimeZone }));
-                
-                return {
-                    time: localDateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone: userTimeZone }),
-                    dayOfWeek: localDateTime.toLocaleDateString('ru-RU', { weekday: 'long', timeZone: userTimeZone }),
-                };
-            }
-
-            function updateScheduleWithLocalTime(days) {
-                const userTimeZone = getUserTimeZone();
-
-                if (userTimeZone === 'America/New_York') {
-                    console.log("Часовые пояса совпадают, конвертация не требуется");
-                    highlightNextShow(days);
-                    renderDaySchedule(days);
-                    return days;
-                }
-
-                return days.map(day => {
-                    if (day.day === 'Без графика') {
-                        console.log("Игнорируем 'Без графика'");
-                        return day; // Игнорируем "Без графика"
-                    }
-
-                    const updatedSchedule = day.schedule.map(show => {
-                        if (!show.time) {
-                            console.log("Элемент без времени:", show);
-                            return show;
-                        }
-                        const convertedTime = convertMoscowTimeToLocal(show.time, '2023-01-01', userTimeZone);
-                        console.log("Исходное время:", show.time, "Конвертированное время:", convertedTime.time);
-                        return { ...show, time: convertedTime.time, day: convertedTime.dayOfWeek };
-                    });
-
-                    return { ...day, schedule: updatedSchedule };
-                });
-            }
-            document.addEventListener('DOMContentLoaded', function() {
-                const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-                const offsetMinutes = new Date().getTimezoneOffset();
-                const offsetHours = -offsetMinutes / 60;
-                const offsetString = `GMT${offsetHours >= 0 ? '+' : ''}${offsetHours}`;
-                const titleElement = document.querySelector('h1');
-                titleElement.textContent = `График выхода серий (${offsetString})`;
-            });
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
-            const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             highlightNextShow(days);
-            renderDaySchedule(days, userTimeZone);
+            renderDaySchedule();
         </script>
     </div>
 </body>
