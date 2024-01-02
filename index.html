@@ -27,6 +27,7 @@
     <meta property="og:image" content="favicon/android-chrome-192x192.png">
     <meta property="og:type" content="website">
     <meta property="og:url" content="SubVost">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.25.0/luxon.min.js"></script>
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
@@ -136,13 +137,13 @@
 </head>
 <body>
     <div>
-        <h1>График выхода серий (GMT+3)</h1>
+        <h1 id="schedule-title">График выхода серий</h1>
         <div id="schedule-container"><!-- Здесь сгенерируется расписание --></div>
         <script>
             const days = [
                 {day: 'Понедельник', schedule: [ ]},
                 { day: 'Вторник', schedule: [
-                    { time: '23:15', title: 'Бродяга Кэнсин' },
+                    { time: '00:15', title: 'Бродяга Кэнсин' },
                     { time: '23:59', title: 'Всемогущая магия святой 2' },
                 ]},
                 {day: 'Среда', schedule: [
@@ -188,6 +189,47 @@
                 ]}];
             let isAnimationInProgress = false;
             let highlightTimeout;
+
+            function getLocalTimeZone() {
+                const offset = new Date().getTimezoneOffset();
+                const hours = Math.abs(Math.floor(offset / 60));
+                const sign = offset > 0 ? '-' : '+';
+                return `GMT${sign}${hours}`;}
+
+            function updateScheduleTitle() {
+                const timezone = getLocalTimeZone();
+                const title = `График выхода серий (${timezone})`;
+                document.getElementById('schedule-title').textContent = title;}
+
+            function convertNYTimeToLocal() {
+                const newYorkZone = 'Europe/Moscow';
+                const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+                let newDays = days.map(day => ({ day: day.day, schedule: [] }));
+
+                days.forEach((day, index) => {
+                    day.schedule.forEach(show => {
+                        if (show.time) {
+                            let dateTimeNY = luxon.DateTime.fromFormat(show.time, 'HH:mm', { zone: newYorkZone });
+                            let dateTimeLocal = dateTimeNY.setZone(localZone);
+                            let newDayIndex = (index + dateTimeLocal.weekday - dateTimeNY.weekday + 7) % 7;
+                            newDays[newDayIndex].schedule.push({ ...show, time: dateTimeLocal.toFormat('HH:mm') });
+                        } else {
+                            newDays[index].schedule.push({ ...show });
+                        }
+                    });
+                });
+
+                // Sort the schedules within each day
+                newDays.forEach(day => {
+                    day.schedule.sort((a, b) => {
+                        if (!a.time) return 1;
+                        if (!b.time) return -1;
+                        return a.time.localeCompare(b.time);
+                    });
+                });
+
+                return newDays;}
 
             function createScheduleItem(info) {
                 const scheduleItem = document.createElement('div');
@@ -302,9 +344,9 @@
                 if (foundNextShow) break;
               }}
 
-            function renderDaySchedule() {
+            function renderDaySchedule(convertedDays) {
                 document.getElementById('schedule-container').innerHTML = '';
-                days.forEach(day => {
+                convertedDays.forEach(day => {
                     const dayElement = document.createElement('div');
                     dayElement.innerHTML = `<h2>${day.day}:</h2>`;
                     const list = document.createElement('ul');
@@ -339,8 +381,10 @@
 
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
-            highlightNextShow(days);
-            renderDaySchedule();
+            const convertedDays = convertNYTimeToLocal();
+            updateScheduleTitle();
+            highlightNextShow(convertedDays);
+            renderDaySchedule(convertedDays);
         </script>
     </div>
 </body>
