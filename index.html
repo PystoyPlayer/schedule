@@ -128,6 +128,19 @@
         .time.highlighted {
             animation: flashingBorder 2s infinite;
         }
+        @keyframes flashingTitle {
+            0%, 100% {
+                color: inherit; /* Используйте начальный цвет */
+                text-shadow: none;
+            }
+            45%, 55% {
+                color: white; /* Цвет при "мигании" */
+                text-shadow: 0 0 1px white;
+            }
+        }
+        .title.highlighted {
+            animation: flashingTitle 2s infinite;
+        }
         .empty-day {
             color: #666;
             font-style: italic;
@@ -220,7 +233,6 @@
                     });
                 });
 
-                // Sort the schedules within each day
                 newDays.forEach(day => {
                     day.schedule.sort((a, b) => {
                         if (!a.time) return 1;
@@ -247,6 +259,9 @@
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'title';
                 titleSpan.textContent = info.title;
+                if (info.highlighted) {
+                    titleSpan.classList.add('highlighted');
+                }
 
                 scheduleItem.appendChild(timeSpan);
                 scheduleItem.appendChild(titleSpan);
