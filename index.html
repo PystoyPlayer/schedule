@@ -417,7 +417,22 @@
                 const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
                 highlightedItems.forEach(item => item.classList.remove('highlighted'));
                 clearTimeout(highlightTimeout);}
-
+            
+            function updateTimeAndSchedule() {
+                const convertedDays = convertNYTimeToLocal();
+                highlightNextShow(convertedDays);
+                renderDaySchedule(convertedDays);
+            }
+            
+            // Обновлять время и график каждую минуту (60 000 миллисекунд)
+            setInterval(updateTimeAndSchedule, 60000);
+            
+            // Запустить обновление сразу при загрузке страницы
+            document.addEventListener('DOMContentLoaded', () => {
+                updateScheduleTitle();
+                updateTimeAndSchedule();
+            });
+            
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
             const convertedDays = convertNYTimeToLocal();
