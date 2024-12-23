@@ -82,6 +82,8 @@
             padding-left: 15px;
             box-sizing: border-box;
             border-radius: 5px;
+            position: relative; /* Для псевдоэлемента */
+            overflow: hidden; /* Чтобы псевдоэлемент не выходил за пределы */
         }
         .schedule-item:hover {
             background-color: rgba(170, 170, 170, 0.3);
@@ -165,6 +167,23 @@
             color: #666;
             font-style: italic;
             margin-left: 15px;
+        }
+        /* Псевдоэлемент для временной декоративной обводки с внутренним размытием */
+        .schedule-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            box-shadow: 0 0 20px rgba(200, 200, 200, 0.9), inset 0 0 10px rgba(200, 200, 200, 0.5); /* Серо-белая размытая тень с внутренним размытием */
+            border-radius: 10px; /* Округлые углы */
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* Не мешает кликам */
+        }
+        .schedule-item.temporary-border::before {
+            opacity: 1;
         }
         /* Контейнер для кнопок */
         #button-container {
@@ -543,6 +562,14 @@
                     top: offsetPosition,
                     behavior: 'smooth'
                 });
+
+                // Добавляем временную декоративную обводку к текущему дню
+                targetElement.classList.add('temporary-border');
+
+                // Убираем класс 'temporary-border' через 2 секунды
+                setTimeout(() => {
+                    targetElement.classList.remove('temporary-border');
+                }, 2000);
             }
         }
 
@@ -550,8 +577,6 @@
             // Пока в разработке, можно добавить функциональность позже
             alert('Функциональность в разработке!');
         }
-
-        let isUpdating = false; // Флаг для предотвращения одновременных обновлений
 
         function updateTimeAndSchedule() {
             if (isUpdating) {
