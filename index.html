@@ -76,7 +76,7 @@
         .schedule-item {
             display: flex;
             align-items: baseline;
-            transition: background-color 0.3s ease-in-out;
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
             margin-bottom: 5px;
             width: 100%;
             padding-left: 15px;
@@ -164,13 +164,13 @@
         }
         /* Декоративная обводка для текущего дня */
         .current-day {
-            border: 2px solid #FFD700; /* Золотая обводка */
-            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7); /* Золотая тень */
+            transition: box-shadow 0.3s ease-in-out;
         }
         /* Декоративная обводка для ближайшей серии */
-        .next-show {
-            box-shadow: 0 0 10px 2px #32CD32; /* Зеленая тень */
-            border-radius: 5px;
+        .next-show-highlight {
+            box-shadow: 0 0 15px rgba(50, 205, 50, 0.7); /* Зеленая тень */
+            transition: box-shadow 0.3s ease-in-out;
         }
         .empty-day {
             color: #666;
@@ -442,11 +442,6 @@
         }
 
         function copyText(element, textToCopy) {
-            if (isAnimationInProgress) {
-                console.log('Animation in progress, copy blocked.');
-                return;
-            }
-
             const clipboardText = textToCopy.trim();
             if (!clipboardText) {
                 console.log('No text to copy.');
@@ -542,10 +537,10 @@
         }
 
         function clearHighlights() {
-            const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
+            const highlightedItems = document.querySelectorAll('.schedule-item.highlighted, .next-show-highlight');
             highlightedItems.forEach(item => {
-                item.classList.remove('highlighted');
-                console.log(`Removed 'highlighted' class from schedule-item.`);
+                item.classList.remove('highlighted', 'next-show-highlight');
+                console.log(`Removed 'highlighted' and 'next-show-highlight' classes from schedule-item.`);
             });
             clearTimeout(highlightTimeout);
         }
@@ -565,12 +560,12 @@
                     behavior: 'smooth'
                 });
 
-                // Дополнительно добавить декоративную обводку к ближайшей серии
+                // Добавляем декоративную обводку к ближайшей серии
                 const nextShow = targetElement.querySelector('.highlighted');
                 if (nextShow) {
-                    nextShow.classList.add('next-show');
+                    nextShow.classList.add('next-show-highlight');
                     setTimeout(() => {
-                        nextShow.classList.remove('next-show');
+                        nextShow.classList.remove('next-show-highlight');
                     }, 2000); // Убрать обводку через 2 секунды
                 }
             }
