@@ -82,7 +82,7 @@
             box-sizing: border-box;
             border-radius: 5px;
         }
-        .schedule-item .time {
+        .time {
             position: relative;
             display: inline-block;
             margin-right: 5px;
@@ -91,7 +91,7 @@
             background-color: rgba(170, 170, 170, 0.3);
             border: 1.5px solid transparent;
         }
-        .schedule-item .time:empty {
+        .time:empty {
             margin-top: 9.5px;
             min-width: 5px;
             height: 2px;
@@ -248,7 +248,7 @@
             }
 
             function convertNYTimeToLocal() {
-                // Замените 'Europe/Moscow' на нужный вам часовой пояс, если нужно
+                // Замените 'Europe/Moscow' на нужный вам часовой пояс, если необходимо
                 const newYorkZone = 'Europe/Moscow';
                 const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -269,7 +269,7 @@
 
                 newDays.forEach(day => {
                     day.schedule.sort((a, b) => {
-                        if (!a.time) return 1;
+                        if (!a.time) return 1; 
                         if (!b.time) return -1;
                         return a.time.localeCompare(b.time);
                     });
@@ -293,20 +293,25 @@
 
                 const titleSpan = document.createElement('span');
                 titleSpan.className = 'title';
-                titleSpan.textContent = info.title;
-                if (info.highlighted) {
-                    titleSpan.classList.add('highlighted');
-                }
+                titleSpan.textContent = info.title || '';
+
+                // Клик по времени -> копируем (с анимацией)
+                timeSpan.addEventListener('click', (event) => {
+                    event.stopPropagation(); 
+                    if (!info.time) return;
+                    copyText(scheduleItem, `${info.time} - ${info.title}`);
+                });
+
+                // Клик по названию -> переходим на Shikimori
+                titleSpan.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (!info.title) return;
+                    // открываем поиск на Shikimori в новой вкладке
+                    window.open("https://shikimori.me/search?hide_others=1&q=" + encodeURIComponent(info.title), "_blank");
+                });
 
                 scheduleItem.appendChild(timeSpan);
                 scheduleItem.appendChild(titleSpan);
-
-                scheduleItem.addEventListener('click', () => {
-                    const textToCopy = `${info.time ? info.time + ' - ' : ''}${info.title}`;
-                    copyText(scheduleItem, textToCopy);
-                    resetHighlightTimeout();
-                });
-
                 return scheduleItem;
             }
 
@@ -325,6 +330,7 @@
                 navigator.clipboard.writeText(clipboardText).then(() => {
                     console.log('Text copied to clipboard:', clipboardText);
                     replaceTitleWithCopied(element);
+                    resetHighlightTimeout();
                 }).catch(error => {
                     console.error('Error copying text: ', error);
                 });
@@ -383,6 +389,7 @@
             }
 
             function highlightNextShow(days) {
+                // смещение дней, чтобы Понедельник = 0, Вторник = 1, ... Воскресенье = 6
                 let currentDayIndex = (new Date().getDay() + 6) % 7;
                 let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
@@ -434,15 +441,13 @@
             }
 
             function clearHighlights() {
-                const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
+                const highlightedItems = document.querySelectorAll('.schedule-item .time.highlighted, .schedule-item .title.highlighted');
                 highlightedItems.forEach(item => item.classList.remove('highlighted'));
                 clearTimeout(highlightTimeout);
             }
 
-            // Функция для скролла к текущему дню
+            // Скролл к сегодняшнему дню
             function scrollToTodaySection() {
-                // JavaScript считает воскресенье днём 0,
-                // смещаем, чтобы Понедельник был 0, Вторник - 1 и т.д.
                 const dayIndex = (new Date().getDay() + 6) % 7;
                 const dayContainers = document.querySelectorAll('#schedule-container > div');
                 if (dayIndex < dayContainers.length) {
@@ -450,29 +455,25 @@
                 }
             }
 
-            // Обновлять время и график каждую минуту (60 000 мс)
+            // Каждую минуту обновляем
             function updateTimeAndSchedule() {
                 const convertedDays = convertNYTimeToLocal();
                 highlightNextShow(convertedDays);
                 renderDaySchedule(convertedDays);
             }
-
             setInterval(updateTimeAndSchedule, 60000);
 
-            // Запуск при загрузке
+            // Инициализация
             document.addEventListener('DOMContentLoaded', () => {
                 updateScheduleTitle();
                 updateTimeAndSchedule();
             });
-
-            // Сброс подсветки по клику/тачу
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
 
-            // Подключение кнопки "На сегодня"
             document.getElementById('scrollTodayButton').addEventListener('click', scrollToTodaySection);
 
-            // Первичная инициализация
+            // Первичная отрисовка
             const convertedDays = convertNYTimeToLocal();
             updateScheduleTitle();
             highlightNextShow(convertedDays);
