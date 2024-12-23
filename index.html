@@ -119,14 +119,16 @@
             text-decoration: none; /* Убирает подчёркивание */
             color: #dddddd; /* Цвет текста */
         }
-        /* Удаляем или изменяем фон при наведении на .title */
+        /* Удаляем изменение фона при наведении на .title */
         .title:hover {
-            /* background-color: rgba(255, 255, 255, 0.1); */ /* Убираем изменение фона */
-            /* Если всё же нужно немного подсветки, можно использовать более тонкий цвет */
             background-color: transparent;
         }
-        .title.highlighted {
+        /* Анимация мигания для выделенного элемента */
+        .schedule-item.highlighted .title {
             animation: flashingTitle 2s infinite;
+        }
+        .schedule-item.highlighted .time {
+            animation: flashingBorder 2s infinite;
         }
         @keyframes flashingTitle {
             0%, 100% {
@@ -142,18 +144,13 @@
             0%, 100% {
                 box-shadow: none;
                 text-shadow: none;
+                color: inherit;
             }
             45%, 55% {
                 box-shadow: 0 0 5.5px white;
                 text-shadow: 0 0 1px white;
                 color: #ffffff;
             }
-        }
-        .schedule-item.highlighted .time {
-            animation: flashingBorder 2s infinite;
-        }
-        .schedule-item.highlighted .title {
-            animation: flashingTitle 2s infinite;
         }
         .empty-day {
             color: #666;
@@ -232,9 +229,17 @@
             width: 20px; /* Подходит для кнопки */
             height: 20px;
             fill: currentColor;
-            /* Дополнительно можно добавить stroke для более жирного вида */
             stroke: currentColor;
-            stroke-width: 1;
+            stroke-width: 2; /* Увеличиваем толщину для жирности */
+        }
+        /* Анимация для состояния "Скопировано" */
+        .schedule-item.copied .title {
+            animation: flashingCopied 1s forwards;
+        }
+        @keyframes flashingCopied {
+            0% { color: #dddddd; }
+            50% { color: white; }
+            100% { color: #dddddd; }
         }
     </style>
 </head>
@@ -369,6 +374,9 @@
             timeSpan.className = 'time';
             if (info.time) {
                 timeSpan.textContent = info.time;
+                if (info.highlighted) {
+                    scheduleItem.classList.add('highlighted');
+                }
             }
 
             const titleSpan = document.createElement('span');
@@ -425,23 +433,17 @@
             const originalTime = timeElement.textContent.trim();
             const animationDuration = 400; // миллисекунд
 
-            // Сброс стилей
-            titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
-            timeElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
+            // Добавляем класс 'copied' для анимации
+            element.classList.add('copied');
 
-            isAnimationInProgress = true;
-
-            // Изменяем текст времени и названия
+            // Изменяем текст на "Скопировано"
             titleElement.textContent = 'Скопировано';
-            timeElement.textContent = originalTime;
-            element.classList.add('highlighted');
 
-            // Возвращаем оригинальные тексты после анимации
+            // Удаляем класс 'copied' после анимации
             setTimeout(() => {
                 titleElement.textContent = originalTitle;
-                element.classList.remove('highlighted');
-                isAnimationInProgress = false;
-            }, animationDuration * 2);
+                element.classList.remove('copied');
+            }, animationDuration);
         }
 
         function setInitialMaxHeight() {
@@ -468,7 +470,8 @@
                 for (let show of days[dayIndex].schedule) {
                     if (!show.time) continue;
                     if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
-                        days[dayIndex].schedule.find(s => s === show).highlighted = true;
+                        show.highlighted = true;
+                        console.log(`Highlighting: ${days[dayIndex].day} - ${show.time} - ${show.title}`);
                         foundNextShow = true;
                         break;
                     }
