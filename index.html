@@ -82,6 +82,7 @@
             padding-left: 15px;
             box-sizing: border-box;
             border-radius: 5px;
+            position: relative; /* Для декоративной обводки */
         }
         .schedule-item:hover {
             background-color: rgba(170, 170, 170, 0.3);
@@ -125,10 +126,10 @@
         }
         /* Анимация мигания для выделенного элемента */
         .schedule-item.highlighted .title {
-            animation: flashingTitle 1s infinite;
+            animation: flashingTitle 2s infinite; /* Увеличено до 2s */
         }
         .schedule-item.highlighted .time {
-            animation: flashingBorder 1s infinite;
+            animation: flashingBorder 2s infinite; /* Увеличено до 2s */
         }
         @keyframes flashingTitle {
             0%, 100% {
@@ -160,6 +161,16 @@
             0% { color: #dddddd; }
             50% { color: white; }
             100% { color: #dddddd; }
+        }
+        /* Декоративная обводка для текущего дня */
+        .current-day {
+            border: 2px solid #FFD700; /* Золотая обводка */
+            border-radius: 5px;
+        }
+        /* Декоративная обводка для ближайшей серии */
+        .next-show {
+            box-shadow: 0 0 10px 2px #32CD32; /* Зеленая тень */
+            border-radius: 5px;
         }
         .empty-day {
             color: #666;
@@ -319,7 +330,7 @@
             ]}
         ];
 
-        let isAnimationInProgress = false;
+        let isUpdating = false; // Флаг для предотвращения одновременных обновлений
         let highlightTimeout;
 
         function getLocalTimeZone() {
@@ -454,7 +465,7 @@
         function replaceTitleWithCopied(element) {
             const titleElement = element.querySelector('.title');
             const originalTitle = titleElement.textContent.trim();
-            const animationDuration = 400; // миллисекунд
+            const animationDuration = 1000; // миллисекунд (увеличено до 1s для плавности)
 
             // Добавляем класс 'copied' для анимации
             element.classList.add('copied');
@@ -508,6 +519,16 @@
                 container.appendChild(dayElement);
             });
             setInitialMaxHeight();
+            markCurrentDay(convertedDays); // Отметить текущий день
+        }
+
+        function markCurrentDay(convertedDays) {
+            const currentDayIndex = (new Date().getDay() + 6) % 7; // Понедельник=0, Вторник=1, ..., Воскресенье=6
+            const dayContainers = document.querySelectorAll('#schedule-container > div');
+            if (currentDayIndex < dayContainers.length) {
+                const currentDayElement = dayContainers[currentDayIndex];
+                currentDayElement.classList.add('current-day');
+            }
         }
 
         function resetHighlightTimeout() {
@@ -543,6 +564,15 @@
                     top: offsetPosition,
                     behavior: 'smooth'
                 });
+
+                // Дополнительно добавить декоративную обводку к ближайшей серии
+                const nextShow = targetElement.querySelector('.highlighted');
+                if (nextShow) {
+                    nextShow.classList.add('next-show');
+                    setTimeout(() => {
+                        nextShow.classList.remove('next-show');
+                    }, 2000); // Убрать обводку через 2 секунды
+                }
             }
         }
 
@@ -552,9 +582,15 @@
         }
 
         function updateTimeAndSchedule() {
+            if (isUpdating) {
+                console.log('Update already in progress, skipping this call.');
+                return;
+            }
+            isUpdating = true;
             const convertedDays = convertReferenceTimeToLocal();
             highlightNextShow(convertedDays);
             renderDaySchedule(convertedDays);
+            isUpdating = false;
         }
 
         // Обработчик скролла для показа/скрытия кнопок
@@ -583,12 +619,6 @@
 
         // Обновление каждые 60 секунд
         setInterval(updateTimeAndSchedule, 60000);
-
-        // Первичная отрисовка
-        const convertedDays = convertReferenceTimeToLocal();
-        updateScheduleTitle();
-        highlightNextShow(convertedDays);
-        renderDaySchedule(convertedDays);
     </script>
 </body>
 </html>
