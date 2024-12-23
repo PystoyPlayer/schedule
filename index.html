@@ -508,10 +508,24 @@
                     behavior: 'smooth'
                 });
 
+                // Проверяем, имеет ли элемент класс .current-day
+                const hasCurrentDay = targetElement.classList.contains('current-day');
+
+                if (hasCurrentDay) {
+                    // Удаляем класс .current-day, чтобы временная обводка не перекрывала её
+                    targetElement.classList.remove('current-day');
+                }
+
                 // Добавляем временную декоративную обводку к текущему дню
                 targetElement.classList.add('temporary-border');
+
                 setTimeout(() => {
+                    // Убираем временную обводку
                     targetElement.classList.remove('temporary-border');
+                    // Возвращаем класс .current-day, если он был
+                    if (hasCurrentDay) {
+                        targetElement.classList.add('current-day');
+                    }
                 }, 1000); // Убрать обводку через 1 секунду
             }
         }
