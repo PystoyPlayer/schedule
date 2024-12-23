@@ -75,7 +75,7 @@
         .schedule-item {
             display: flex;
             align-items: baseline;
-            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            transition: background-color 0.3s ease-in-out;
             margin-bottom: 5px;
             width: 100%;
             padding-left: 15px;
@@ -155,8 +155,13 @@
         /* Временная декоративная обводка */
         .temporary-border {
             box-shadow: 0 0 20px rgba(200, 200, 200, 0.9); /* Серо-белая размытая тень */
-            transition: box-shadow 0.5s ease-in-out;
-            border-radius: 10px; /* Округлые углы */
+            opacity: 0;
+            transform: scale(1.05);
+            transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        .temporary-border.show {
+            opacity: 1;
+            transform: scale(1);
         }
         .empty-day {
             color: #666;
@@ -457,16 +462,7 @@
                 container.appendChild(dayElement);
             });
             setInitialMaxHeight();
-            markCurrentDay(convertedDays); // Отметить текущий день
-        }
-
-        function markCurrentDay(convertedDays) {
-            const currentDayIndex = (new Date().getDay() + 6) % 7; // Понедельник=0, Вторник=1, ..., Воскресенье=6
-            const dayContainers = document.querySelectorAll('#schedule-container > div');
-            if (currentDayIndex < dayContainers.length) {
-                const currentDayElement = dayContainers[currentDayIndex];
-                currentDayElement.classList.add('current-day');
-            }
+            // Удалена функция markCurrentDay, так как класс .current-day убран
         }
 
         function resetHighlightTimeout() {
@@ -503,24 +499,10 @@
                     behavior: 'smooth'
                 });
 
-                // Проверяем, имеет ли элемент класс .current-day
-                const hasCurrentDay = targetElement.classList.contains('current-day');
-
-                if (hasCurrentDay) {
-                    // Удаляем класс .current-day, чтобы временная обводка не перекрывала её
-                    targetElement.classList.remove('current-day');
-                }
-
                 // Добавляем временную декоративную обводку к текущему дню
                 targetElement.classList.add('temporary-border');
-
                 setTimeout(() => {
-                    // Убираем временную обводку
                     targetElement.classList.remove('temporary-border');
-                    // Возвращаем класс .current-day, если он был
-                    if (hasCurrentDay) {
-                        targetElement.classList.add('current-day');
-                    }
                 }, 1000); // Убрать обводку через 1 секунду
             }
         }
