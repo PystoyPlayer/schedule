@@ -49,7 +49,6 @@
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
-            /* background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); */
         }
         h1 {
             text-align: center;
@@ -153,15 +152,6 @@
                 color: #ffffff;
             }
         }
-        /* Анимация для состояния "Скопировано" */
-        .schedule-item.copied .title {
-            animation: flashingCopied 1s forwards;
-        }
-        @keyframes flashingCopied {
-            0% { color: #dddddd; }
-            50% { color: white; }
-            100% { color: #dddddd; }
-        }
         /* Декоративная обводка для текущего дня */
         .current-day {
             box-shadow: 0 0 15px rgba(255, 215, 0, 0.7); /* Золотая тень */
@@ -169,8 +159,9 @@
         }
         /* Временная декоративная обводка */
         .temporary-border {
-            box-shadow: 0 0 20px rgba(255, 215, 0, 1); /* Интенсивная золотая тень */
+            box-shadow: 0 0 20px rgba(200, 200, 200, 0.9); /* Серо-белая размытая тень */
             transition: box-shadow 0.5s ease-in-out;
+            border-radius: 10px; /* Округлые углы */
         }
         .empty-day {
             color: #666;
@@ -419,13 +410,6 @@
             titleSpan.className = 'title';
             titleSpan.textContent = info.title || '';
 
-            // Клик по элементу -> копируем текст
-            scheduleItem.addEventListener('click', () => {
-                const textToCopy = `${info.time ? info.time + ' - ' : ''}${info.title}`;
-                copyText(scheduleItem, textToCopy);
-                resetHighlightTimeout();
-            });
-
             // Переход на Shikimori при клике на название
             titleSpan.addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -439,42 +423,6 @@
             scheduleItem.appendChild(timeSpan);
             scheduleItem.appendChild(titleSpan);
             return scheduleItem;
-        }
-
-        function copyText(element, textToCopy) {
-            const clipboardText = textToCopy.trim();
-            if (!clipboardText) {
-                console.log('No text to copy.');
-                return;
-            }
-
-            navigator.clipboard.writeText(clipboardText).then(() => {
-                console.log('Text copied to clipboard:', clipboardText);
-                replaceTitleWithCopied(element);
-                resetHighlightTimeout();
-            }).catch(error => {
-                console.error('Error copying text: ', error);
-            });
-        }
-
-        function replaceTitleWithCopied(element) {
-            const titleElement = element.querySelector('.title');
-            const originalTitle = titleElement.textContent.trim();
-            const animationDuration = 1000; // миллисекунд (увеличено до 1s для плавности)
-
-            // Добавляем класс 'copied' для анимации
-            element.classList.add('copied');
-            console.log(`Adding 'copied' class to schedule-item for show: ${originalTitle}`);
-
-            // Изменяем текст на "Скопировано"
-            titleElement.textContent = 'Скопировано';
-
-            // Удаляем класс 'copied' после анимации
-            setTimeout(() => {
-                titleElement.textContent = originalTitle;
-                element.classList.remove('copied');
-                console.log(`Removing 'copied' class from schedule-item for show: ${originalTitle}`);
-            }, animationDuration);
         }
 
         function setInitialMaxHeight() {
@@ -551,9 +499,9 @@
             if (dayIndex < dayContainers.length) {
                 const targetElement = dayContainers[dayIndex];
                 // Расчёт позиции с учётом фиксированного контейнера кнопок
-                const offset = 17; // Настроить под высоту фиксированных кнопок и желаемое смещение
+                const offset = 60; // Настроить под высоту фиксированных кнопок и желаемое смещение
                 const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = elementPosition - offset; // Смещение на 17 пикселей
+                const offsetPosition = elementPosition - offset; // Смещение на 60 пикселей
 
                 window.scrollTo({
                     top: offsetPosition,
