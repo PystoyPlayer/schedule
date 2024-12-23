@@ -147,25 +147,29 @@
         }
         /* Кнопка "На сегодня" */
         #scrollTodayButton {
-            display: block;
-            margin: 10px auto;
-            background-color: #3498db;
+            position: fixed;       /* фиксируем в правом верхнем углу */
+            top: 20px;
+            right: 20px;
+            background-color: #333;
             color: #fff;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 16px;
-            cursor: pointer;
+            border: 1px solid #666;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background-color 0.3s ease;
+            z-index: 9999;        /* чтобы кнопка была поверх остального */
         }
         #scrollTodayButton:hover {
-            background-color: #2980b9;
+            background-color: #444;
         }
     </style>
 </head>
 <body>
     <div>
         <h1 id="schedule-title">График выхода серий</h1>
-        <!-- Кнопка "На сегодня" -->
+
         <button id="scrollTodayButton">На сегодня</button>
 
         <div id="schedule-container"><!-- Здесь сгенерируется расписание --></div>
@@ -248,7 +252,7 @@
             }
 
             function convertNYTimeToLocal() {
-                // Замените 'Europe/Moscow' на нужный вам часовой пояс, если необходимо
+                // Замените 'Europe/Moscow' на нужный часовой пояс, если необходимо
                 const newYorkZone = 'Europe/Moscow';
                 const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -269,7 +273,7 @@
 
                 newDays.forEach(day => {
                     day.schedule.sort((a, b) => {
-                        if (!a.time) return 1; 
+                        if (!a.time) return 1;
                         if (!b.time) return -1;
                         return a.time.localeCompare(b.time);
                     });
@@ -302,12 +306,14 @@
                     copyText(scheduleItem, `${info.time} - ${info.title}`);
                 });
 
-                // Клик по названию -> переходим на Shikimori
+                // Клик по названию -> переходим на Shikimori (теперь https://shikimori.one/)
                 titleSpan.addEventListener('click', (event) => {
                     event.stopPropagation();
                     if (!info.title) return;
-                    // открываем поиск на Shikimori в новой вкладке
-                    window.open("https://shikimori.me/search?hide_others=1&q=" + encodeURIComponent(info.title), "_blank");
+                    window.open(
+                      "https://shikimori.one/animes?search=" + encodeURIComponent(info.title), 
+                      "_blank"
+                    );
                 });
 
                 scheduleItem.appendChild(timeSpan);
@@ -389,7 +395,6 @@
             }
 
             function highlightNextShow(days) {
-                // смещение дней, чтобы Понедельник = 0, Вторник = 1, ... Воскресенье = 6
                 let currentDayIndex = (new Date().getDay() + 6) % 7;
                 let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
 
@@ -446,7 +451,6 @@
                 clearTimeout(highlightTimeout);
             }
 
-            // Скролл к сегодняшнему дню
             function scrollToTodaySection() {
                 const dayIndex = (new Date().getDay() + 6) % 7;
                 const dayContainers = document.querySelectorAll('#schedule-container > div');
@@ -455,15 +459,16 @@
                 }
             }
 
-            // Каждую минуту обновляем
             function updateTimeAndSchedule() {
                 const convertedDays = convertNYTimeToLocal();
                 highlightNextShow(convertedDays);
                 renderDaySchedule(convertedDays);
             }
+            
+            // Обновляем каждую минуту
             setInterval(updateTimeAndSchedule, 60000);
-
-            // Инициализация
+            
+            // Запуск при загрузке
             document.addEventListener('DOMContentLoaded', () => {
                 updateScheduleTitle();
                 updateTimeAndSchedule();
@@ -471,6 +476,7 @@
             document.addEventListener('click', resetHighlightTimeout);
             document.addEventListener('touchstart', resetHighlightTimeout);
 
+            // Клик по кнопке "На сегодня"
             document.getElementById('scrollTodayButton').addEventListener('click', scrollToTodaySection);
 
             // Первичная отрисовка
