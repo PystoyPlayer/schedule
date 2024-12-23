@@ -167,10 +167,10 @@
             box-shadow: 0 0 15px rgba(255, 215, 0, 0.7); /* Золотая тень */
             transition: box-shadow 0.3s ease-in-out;
         }
-        /* Декоративная обводка для ближайшей серии */
-        .next-show-highlight {
-            box-shadow: 0 0 15px rgba(50, 205, 50, 0.7); /* Зеленая тень */
-            transition: box-shadow 0.3s ease-in-out;
+        /* Временная декоративная обводка */
+        .temporary-border {
+            box-shadow: 0 0 20px rgba(255, 215, 0, 1); /* Интенсивная золотая тень */
+            transition: box-shadow 0.5s ease-in-out;
         }
         .empty-day {
             color: #666;
@@ -537,10 +537,10 @@
         }
 
         function clearHighlights() {
-            const highlightedItems = document.querySelectorAll('.schedule-item.highlighted, .next-show-highlight');
+            const highlightedItems = document.querySelectorAll('.schedule-item.highlighted, .temporary-border');
             highlightedItems.forEach(item => {
-                item.classList.remove('highlighted', 'next-show-highlight');
-                console.log(`Removed 'highlighted' and 'next-show-highlight' classes from schedule-item.`);
+                item.classList.remove('highlighted', 'temporary-border');
+                console.log(`Removed 'highlighted' and 'temporary-border' classes from schedule-item.`);
             });
             clearTimeout(highlightTimeout);
         }
@@ -560,14 +560,11 @@
                     behavior: 'smooth'
                 });
 
-                // Добавляем декоративную обводку к ближайшей серии
-                const nextShow = targetElement.querySelector('.highlighted');
-                if (nextShow) {
-                    nextShow.classList.add('next-show-highlight');
-                    setTimeout(() => {
-                        nextShow.classList.remove('next-show-highlight');
-                    }, 2000); // Убрать обводку через 2 секунды
-                }
+                // Добавляем временную декоративную обводку к текущему дню
+                targetElement.classList.add('temporary-border');
+                setTimeout(() => {
+                    targetElement.classList.remove('temporary-border');
+                }, 1000); // Убрать обводку через 1 секунду
             }
         }
 
