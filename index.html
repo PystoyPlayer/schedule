@@ -125,18 +125,18 @@
         }
         /* Анимация мигания для выделенного элемента */
         .schedule-item.highlighted .title {
-            animation: flashingTitle 2s infinite;
+            animation: flashingTitle 1s infinite;
         }
         .schedule-item.highlighted .time {
-            animation: flashingBorder 2s infinite;
+            animation: flashingBorder 1s infinite;
         }
         @keyframes flashingTitle {
             0%, 100% {
-                color: inherit; /* Используйте начальный цвет */
+                color: inherit; /* Начальный цвет */
                 text-shadow: none;
             }
             45%, 55% {
-                color: white; /* Цвет при "мигании" */
+                color: white; /* Цвет при мигании */
                 text-shadow: 0 0 1px white;
             }
         }
@@ -151,6 +151,15 @@
                 text-shadow: 0 0 1px white;
                 color: #ffffff;
             }
+        }
+        /* Анимация для состояния "Скопировано" */
+        .schedule-item.copied .title {
+            animation: flashingCopied 1s forwards;
+        }
+        @keyframes flashingCopied {
+            0% { color: #dddddd; }
+            50% { color: white; }
+            100% { color: #dddddd; }
         }
         .empty-day {
             color: #666;
@@ -230,16 +239,7 @@
             height: 20px;
             fill: currentColor;
             stroke: currentColor;
-            stroke-width: 1; /* Увеличиваем толщину для жирности */
-        }
-        /* Анимация для состояния "Скопировано" */
-        .schedule-item.copied .title {
-            animation: flashingCopied 1s forwards;
-        }
-        @keyframes flashingCopied {
-            0% { color: #dddddd; }
-            50% { color: white; }
-            100% { color: #dddddd; }
+            stroke-width: 1; /* Изменено с 2 на 1 */
         }
     </style>
 </head>
@@ -366,6 +366,30 @@
             return newDays;
         }
 
+        function highlightNextShow(days) {
+            // Сначала сбросить все флаги highlighted
+            days.forEach(day => day.schedule.forEach(show => show.highlighted = false));
+
+            // Определение текущего дня и времени
+            let currentDayIndex = (new Date().getDay() + 6) % 7; // Понедельник=0, Вторник=1, ..., Воскресенье=6
+            let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+            let foundNextShow = false;
+            for (let i = 0; i < days.length; i++) {
+                let dayIndex = (currentDayIndex + i) % days.length;
+                for (let show of days[dayIndex].schedule) {
+                    if (!show.time) continue;
+                    if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
+                        show.highlighted = true;
+                        console.log(`Highlighting: ${days[dayIndex].day} - ${show.time} - ${show.title}`);
+                        foundNextShow = true;
+                        break;
+                    }
+                }
+                if (foundNextShow) break;
+            }
+        }
+
         function createScheduleItem(info) {
             const scheduleItem = document.createElement('div');
             scheduleItem.className = 'schedule-item';
@@ -376,6 +400,7 @@
                 timeSpan.textContent = info.time;
                 if (info.highlighted) {
                     scheduleItem.classList.add('highlighted');
+                    console.log(`Adding 'highlighted' class to schedule-item for show: ${info.title}`);
                 }
             }
 
@@ -428,13 +453,12 @@
 
         function replaceTitleWithCopied(element) {
             const titleElement = element.querySelector('.title');
-            const timeElement = element.querySelector('.time');
             const originalTitle = titleElement.textContent.trim();
-            const originalTime = timeElement.textContent.trim();
             const animationDuration = 400; // миллисекунд
 
             // Добавляем класс 'copied' для анимации
             element.classList.add('copied');
+            console.log(`Adding 'copied' class to schedule-item for show: ${originalTitle}`);
 
             // Изменяем текст на "Скопировано"
             titleElement.textContent = 'Скопировано';
@@ -443,6 +467,7 @@
             setTimeout(() => {
                 titleElement.textContent = originalTitle;
                 element.classList.remove('copied');
+                console.log(`Removing 'copied' class from schedule-item for show: ${originalTitle}`);
             }, animationDuration);
         }
 
@@ -457,27 +482,6 @@
             const [hours1, minutes1] = time1.split(':').map(Number);
             const [hours2, minutes2] = time2.split(':').map(Number);
             return hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2);
-        }
-
-        function highlightNextShow(days) {
-            // Сместим getDay(), чтобы Понедельник=0, Вторник=1, ...
-            let currentDayIndex = (new Date().getDay() + 6) % 7;
-            let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-
-            let foundNextShow = false;
-            for (let i = 0; i < days.length; i++) {
-                let dayIndex = (currentDayIndex + i) % days.length;
-                for (let show of days[dayIndex].schedule) {
-                    if (!show.time) continue;
-                    if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
-                        show.highlighted = true;
-                        console.log(`Highlighting: ${days[dayIndex].day} - ${show.time} - ${show.title}`);
-                        foundNextShow = true;
-                        break;
-                    }
-                }
-                if (foundNextShow) break;
-            }
         }
 
         function renderDaySchedule(convertedDays) {
@@ -510,12 +514,18 @@
             if (highlightTimeout) {
                 clearTimeout(highlightTimeout);
             }
-            highlightTimeout = setTimeout(clearHighlights, 3000);
+            highlightTimeout = setTimeout(() => {
+                clearHighlights();
+                updateTimeAndSchedule(); // Обновляем расписание после очистки
+            }, 3000);
         }
 
         function clearHighlights() {
             const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
-            highlightedItems.forEach(item => item.classList.remove('highlighted'));
+            highlightedItems.forEach(item => {
+                item.classList.remove('highlighted');
+                console.log(`Removed 'highlighted' class from schedule-item.`);
+            });
             clearTimeout(highlightTimeout);
         }
 
