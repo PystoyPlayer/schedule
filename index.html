@@ -11,16 +11,13 @@
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
-            line-height: 1.5;
             background-color: #181818;
-            background-size: cover;
             color: #dddddd;
             margin: 0;
             padding: 20px;
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
-            /* Flexbox removed to prevent interference with content */
         }
         h1 {
             text-align: center;
@@ -82,28 +79,27 @@
             font-size: 16px;
             margin-left: 5px;
             padding-right: 15px;
-            overflow: hidden;
-            min-height: 1.5em;
-            transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out;
             line-height: 1.5em;
             cursor: pointer;
-            color: #ffffff;
+            /* Убираем подчёркивание, если есть */
+            text-decoration: none;
+            color: #dddddd;
+            transition: color 0.3s ease;
         }
         .title:hover {
-            text-decoration: underline;
+            color: #ffffff;
         }
         .empty-day {
             color: #666;
             font-style: italic;
             margin-left: 15px;
         }
-
         /* Кнопка "На сегодня" */
         #scrollTodayButton {
             position: fixed;
             top: 20px;
             right: 20px;
-            background-color: #333;
+            background-color: rgba(51, 51, 51, 0.8);
             color: #fff;
             border: 1px solid #666;
             padding: 10px 16px;
@@ -111,27 +107,30 @@
             font-size: 14px;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: opacity 0.5s ease, visibility 0.5s ease, background-color 0.3s ease;
+            transition: opacity 0.5s ease, transform 0.5s ease;
             z-index: 9999;
+            cursor: pointer;
             opacity: 1;
-            visibility: visible;
-            pointer-events: auto;
+            transform: translateY(0);
         }
         #scrollTodayButton.hidden {
             opacity: 0;
-            visibility: hidden;
+            transform: translateY(-20px);
             pointer-events: none;
         }
         #scrollTodayButton:hover {
-            background-color: #444;
+            background-color: rgba(68, 68, 68, 0.8);
         }
-
-        /* Медиазапрос для мобильных устройств и планшетов */
-        @media (max-width: 768px) {
+        /* Медиа-запросы для планшетов и мобильных устройств */
+        @media (max-width: 1024px) {
             #scrollTodayButton {
                 top: auto;
                 bottom: 20px;
                 right: 20px;
+                transform: translateY(0);
+            }
+            #scrollTodayButton.hidden {
+                transform: translateY(20px);
             }
         }
     </style>
@@ -242,7 +241,7 @@
 
             newDays.forEach(day => {
                 day.schedule.sort((a, b) => {
-                    if (!a.time) return 1; 
+                    if (!a.time) return 1;
                     if (!b.time) return -1;
                     return a.time.localeCompare(b.time);
                 });
@@ -436,7 +435,7 @@
             renderDaySchedule(convertedDays);
         }
 
-        // Обработчик прокрутки для кнопки "На сегодня"
+        // Обработчик скролла для показа/скрытия кнопки
         window.addEventListener('scroll', () => {
             const button = document.getElementById('scrollTodayButton');
             if (window.pageYOffset > 15) {
@@ -446,21 +445,19 @@
             }
         });
 
-        // Обновлять каждую минуту
-        setInterval(updateTimeAndSchedule, 60000);
-
-        // Инициализация при загрузке страницы
+        // Инициализация
         document.addEventListener('DOMContentLoaded', () => {
             updateScheduleTitle();
             updateTimeAndSchedule();
         });
-
-        // Сброс подсветки по клику/тачу
         document.addEventListener('click', resetHighlightTimeout);
         document.addEventListener('touchstart', resetHighlightTimeout);
 
-        // Клик по кнопке "На сегодня"
+        // Клик по кнопке «На сегодня»
         document.getElementById('scrollTodayButton').addEventListener('click', scrollToTodaySection);
+
+        // Обновление каждые 60 секунд
+        setInterval(updateTimeAndSchedule, 60000);
 
         // Первичная отрисовка
         const convertedDays = convertNYTimeToLocal();
