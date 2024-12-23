@@ -79,7 +79,7 @@
             padding-left: 15px;
             box-sizing: border-box;
             border-radius: 5px;
-            position: relative; /* Для декоративной обводки */
+            position: relative; /* Для псевдоэлемента */
         }
 
         .schedule-item:hover {
@@ -161,18 +161,23 @@
             }
         }
 
-        /* Временная декоративная обводка с внутренним размытием */
-        .temporary-border {
+        /* Временная декоративная обводка с внутренним размытием через псевдоэлемент */
+        .temporary-border::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
             box-shadow: 0 0 20px rgba(200, 200, 200, 0.9), inset 0 0 10px rgba(200, 200, 200, 0.5);
-            opacity: 0;
-            transform: scale(1.05);
-            transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease;
             border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* Чтобы псевдоэлемент не мешал кликам */
         }
 
-        .temporary-border.show {
+        .temporary-border.show::before {
             opacity: 1;
-            transform: scale(1);
         }
 
         /* Пустой день */
@@ -589,7 +594,7 @@
                     targetElement.classList.remove('show');
                     setTimeout(() => {
                         targetElement.classList.remove('temporary-border');
-                    }, 500); // Совпадает с переходом opacity и transform
+                    }, 500); // Совпадает с переходом opacity
                 }, 1000);
             }
         }
