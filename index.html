@@ -112,6 +112,9 @@
                 text-shadow: 0 0 1px white;
             }
         }
+        /* Удаляем анимацию для time.highlighted, чтобы избежать конфликтов */
+        /* Если нужно, можно добавить аналогичную анимацию */
+        /*
         .time.highlighted {
             animation: flashingTime 2s infinite;
         }
@@ -125,6 +128,7 @@
                 box-shadow: 0 0 5px white;
             }
         }
+        */
         .empty-day {
             color: #666;
             font-style: italic;
@@ -199,8 +203,8 @@
         }
         /* Иконка шестерёнки внутри кнопки */
         #gearButton svg {
-            width: 20px; /* Изменено для лучшего отображения */
-            height: 20px; /* Изменено для лучшего отображения */
+            width: 20px; /* Подходит для кнопки */
+            height: 20px;
             fill: currentColor;
         }
     </style>
@@ -210,11 +214,10 @@
     
     <!-- Контейнер для кнопок -->
     <div id="button-container">
-        <button id="scrollTodayButton">На сегодня</button>
-        <button id="gearButton" title="В разработке">
+        <button id="scrollTodayButton" aria-label="Прокрутить к сегодняшнему дню">На сегодня</button>
+        <button id="gearButton" aria-label="Настройки (в разработке)" title="В разработке">
             <!-- Предоставленная иконка шестерёнки -->
-            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="50" height="50" viewBox="0 0 50 50"
-                style="fill:#FFFFFF;">
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="50" height="50" viewBox="0 0 50 50" style="fill:#FFFFFF;">
                 <path d="M47.16,21.221l-5.91-0.966c-0.346-1.186-0.819-2.326-1.411-3.405l3.45-4.917c0.279-0.397,0.231-0.938-0.112-1.282 
                 l-3.889-3.887c-0.347-0.346-0.893-0.391-1.291-0.104l-4.843,3.481c-1.089-0.602-2.239-1.08-3.432-1.427l-1.031-5.886 
                 C28.607,2.35,28.192,2,27.706,2h-5.5c-0.49,0-0.908,0.355-0.987,0.839l-0.956,5.854c-1.2,0.345-2.352,0.818-3.437,1.412 
@@ -311,7 +314,7 @@
 
         function convertNYTimeToLocal() {
             // Часовой пояс - можно менять при необходимости
-            const newYorkZone = 'Europe/Moscow';
+            const referenceZone = 'Europe/Moscow'; // Замените на нужный часовой пояс
             const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
             let newDays = days.map(day => ({ day: day.day, schedule: [] }));
@@ -319,9 +322,9 @@
             days.forEach((day, index) => {
                 day.schedule.forEach(show => {
                     if (show.time) {
-                        let dateTimeNY = luxon.DateTime.fromFormat(show.time, 'HH:mm', { zone: newYorkZone });
-                        let dateTimeLocal = dateTimeNY.setZone(localZone);
-                        let newDayIndex = (index + dateTimeLocal.weekday - dateTimeNY.weekday + 7) % 7;
+                        let dateTimeReference = luxon.DateTime.fromFormat(show.time, 'HH:mm', { zone: referenceZone });
+                        let dateTimeLocal = dateTimeReference.setZone(localZone);
+                        let newDayIndex = (index + dateTimeLocal.weekday - dateTimeReference.weekday + 7) % 7;
                         newDays[newDayIndex].schedule.push({ ...show, time: dateTimeLocal.toFormat('HH:mm') });
                     } else {
                         newDays[index].schedule.push({ ...show });
@@ -517,9 +520,9 @@
             if (dayIndex < dayContainers.length) {
                 const targetElement = dayContainers[dayIndex];
                 // Расчёт позиции с учётом фиксированного контейнера кнопок
-                const offset = window.innerWidth > 1024 ? 60 : 60; // Можно настроить под ваш дизайн
+                const offset = window.innerWidth > 1024 ? 50 : 50; // Уменьшаем с 60 до 50 пикселей
                 const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = elementPosition - offset;
+                const offsetPosition = elementPosition - offset - 5; // Дополнительное смещение на 5 пикселей
 
                 window.scrollTo({
                     top: offsetPosition,
