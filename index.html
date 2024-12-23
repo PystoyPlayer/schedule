@@ -152,12 +152,13 @@
                 color: #ffffff;
             }
         }
-        /* Временная декоративная обводка */
+        /* Временная декоративная обводка с внутренним размытием */
         .temporary-border {
-            box-shadow: 0 0 20px rgba(200, 200, 200, 0.9); /* Серо-белая размытая тень */
+            box-shadow: 0 0 20px rgba(200, 200, 200, 0.9), inset 0 0 10px rgba(200, 200, 200, 0.5); /* Серо-белая размытая тень с внутренним размытием */
             opacity: 0;
             transform: scale(1.05);
             transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.5s ease;
+            border-radius: 10px; /* Округлые углы */
         }
         .temporary-border.show {
             opacity: 1;
@@ -478,8 +479,8 @@
         function clearHighlights() {
             const highlightedItems = document.querySelectorAll('.schedule-item.highlighted, .temporary-border');
             highlightedItems.forEach(item => {
-                item.classList.remove('highlighted', 'temporary-border');
-                console.log(`Removed 'highlighted' and 'temporary-border' classes from schedule-item.`);
+                item.classList.remove('highlighted', 'temporary-border', 'show');
+                console.log(`Removed 'highlighted', 'temporary-border', and 'show' classes from schedule-item.`);
             });
             clearTimeout(highlightTimeout);
         }
@@ -501,8 +502,18 @@
 
                 // Добавляем временную декоративную обводку к текущему дню
                 targetElement.classList.add('temporary-border');
+                // Используем requestAnimationFrame для плавного добавления класса .show
+                requestAnimationFrame(() => {
+                    targetElement.classList.add('show');
+                });
+
                 setTimeout(() => {
-                    targetElement.classList.remove('temporary-border');
+                    // Убираем класс .show для начала плавного исчезновения
+                    targetElement.classList.remove('show');
+                    setTimeout(() => {
+                        // Убираем класс .temporary-border после завершения перехода
+                        targetElement.classList.remove('temporary-border');
+                    }, 500); // Совпадает с временем перехода opacity и transform
                 }, 1000); // Убрать обводку через 1 секунду
             }
         }
