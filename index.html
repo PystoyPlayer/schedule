@@ -11,13 +11,16 @@
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
+            line-height: 1.5;
             background-color: #181818;
+            background-size: cover;
             color: #dddddd;
             margin: 0;
             padding: 20px;
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
+            /* Flexbox removed to prevent interference with content */
         }
         h1 {
             text-align: center;
@@ -30,35 +33,17 @@
             margin-bottom: 5px;
             margin-top: 25px;
         }
-        /* Общие стили для кнопки */
-        #scrollTodayButton {
-            position: fixed;
-            top: 20px;           /* по умолчанию - вверху */
-            right: 20px;
-            background-color: #333;
-            color: #fff;
-            border: 1px solid #666;
-            padding: 10px 16px;
-            border-radius: 4px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: background-color 0.3s ease;
-            z-index: 9999;
-            display: block;      /* кнопка видна только при скролле = 0 */
+        ul {
+            padding-left: 0;
+            margin-top: 0;
+            margin-bottom: 7px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
         }
-        #scrollTodayButton:hover {
-            background-color: #444;
+        li {
+            margin-bottom: 5px;
         }
-        /* При маленькой ширине экрана - переносим кнопку вниз */
-        @media (max-width: 600px) {
-            #scrollTodayButton {
-                top: auto;
-                bottom: 20px;
-                right: 20px;
-            }
-        }
-
         .schedule-item {
             display: flex;
             align-items: baseline;
@@ -80,17 +65,74 @@
             padding: 0px 5px;
             border-radius: 6px;
             background-color: rgba(170, 170, 170, 0.3);
+            border: 1.5px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .time:hover {
+            background-color: rgba(170, 170, 170, 0.5);
+        }
+        .time:empty {
+            margin-top: 9.5px;
+            min-width: 5px;
+            height: 2px;
+            margin-bottom: auto;
         }
         .title {
             font-size: 16px;
             margin-left: 5px;
             padding-right: 15px;
+            overflow: hidden;
+            min-height: 1.5em;
+            transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out;
             line-height: 1.5em;
+            cursor: pointer;
+            color: #ffffff;
+        }
+        .title:hover {
+            text-decoration: underline;
         }
         .empty-day {
             color: #666;
             font-style: italic;
             margin-left: 15px;
+        }
+
+        /* Кнопка "На сегодня" */
+        #scrollTodayButton {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #666;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.5s ease, visibility 0.5s ease, background-color 0.3s ease;
+            z-index: 9999;
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+        }
+        #scrollTodayButton.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        #scrollTodayButton:hover {
+            background-color: #444;
+        }
+
+        /* Медиазапрос для мобильных устройств и планшетов */
+        @media (max-width: 768px) {
+            #scrollTodayButton {
+                top: auto;
+                bottom: 20px;
+                right: 20px;
+            }
         }
     </style>
 </head>
@@ -112,7 +154,7 @@
                 { time: '21:45', title: 'Мифический дух: Хроники 2' },
             ]},
             { day: 'Вторник', schedule: [
-                { time: '18:45', title: 'Я стал учителем в школе монстров! ' },
+                { time: '18:45', title: 'Я стал учителем в школе монстров!' },
                 { time: '19:15', title: 'Я стану злодейкой, которая войдёт в историю' },
                 { time: '19:45', title: 'Брачные узы с семьёй Амагами' },
                 { time: '23:15', title: 'Тасукэцу' },
@@ -200,7 +242,7 @@
 
             newDays.forEach(day => {
                 day.schedule.sort((a, b) => {
-                    if (!a.time) return 1;
+                    if (!a.time) return 1; 
                     if (!b.time) return -1;
                     return a.time.localeCompare(b.time);
                 });
@@ -342,7 +384,8 @@
         }
 
         function renderDaySchedule(convertedDays) {
-            document.getElementById('schedule-container').innerHTML = '';
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = '';
             convertedDays.forEach(day => {
                 const dayElement = document.createElement('div');
                 dayElement.innerHTML = `<h2>${day.day}:</h2>`;
@@ -361,7 +404,7 @@
                 }
 
                 dayElement.appendChild(list);
-                document.getElementById('schedule-container').appendChild(dayElement);
+                container.appendChild(dayElement);
             });
             setInitialMaxHeight();
         }
@@ -393,28 +436,30 @@
             renderDaySchedule(convertedDays);
         }
 
-        // По скроллу показываем/прячем кнопку
+        // Обработчик прокрутки для кнопки "На сегодня"
         window.addEventListener('scroll', () => {
             const button = document.getElementById('scrollTodayButton');
-            // Если пользователь уже проскроллил на 1px и более, прячем кнопку
-            if (window.pageYOffset > 10) {
-                button.style.display = 'none';
+            if (window.pageYOffset > 15) {
+                button.classList.add('hidden');
             } else {
-                button.style.display = 'block';
+                button.classList.remove('hidden');
             }
         });
 
         // Обновлять каждую минуту
         setInterval(updateTimeAndSchedule, 60000);
 
+        // Инициализация при загрузке страницы
         document.addEventListener('DOMContentLoaded', () => {
             updateScheduleTitle();
             updateTimeAndSchedule();
         });
+
+        // Сброс подсветки по клику/тачу
         document.addEventListener('click', resetHighlightTimeout);
         document.addEventListener('touchstart', resetHighlightTimeout);
 
-        // Клик по кнопке «На сегодня»
+        // Клик по кнопке "На сегодня"
         document.getElementById('scrollTodayButton').addEventListener('click', scrollToTodaySection);
 
         // Первичная отрисовка
