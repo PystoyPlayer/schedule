@@ -3,9 +3,30 @@
 <head>
     <title>График</title>
     <meta name="viewport" content="shrink-to-fit=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta charset="utf-8">
     <meta name="description" content="Расписание серий в Telegram канале @SubVost">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="favicon/favicon.ico">
+    <meta name="apple-mobile-web-app-title" content="График">
+    <meta name="application-name" content="График">
+    <meta name="msapplication-TileColor" content="#5bbad5">
+    <meta name="msapplication-TileImage" content="favicon/mstile-144x144.png">
+    <meta name="msapplication-config" content="favicon/browserconfig.xml">
+    <meta name="theme-color" content="#181818">
+    <meta property="og:title" content="График выхода серий">
+    <meta property="og:description" content="Расписание серий в Telegram канале @SubVost">
+    <meta property="og:image" content="favicon/android-chrome-192x192.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="SubVost">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.25.0/luxon.min.js"></script>
 
     <style>
@@ -28,6 +49,7 @@
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
+            /* background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); */
         }
         h1 {
             text-align: center;
@@ -63,6 +85,7 @@
         }
         .schedule-item:hover {
             background-color: rgba(170, 170, 170, 0.3);
+            cursor: pointer;
         }
         .schedule-item .time {
             position: relative;
@@ -104,31 +127,28 @@
         }
         @keyframes flashingTitle {
             0%, 100% {
-                color: inherit;
+                color: inherit; /* Используйте начальный цвет */
                 text-shadow: none;
             }
             45%, 55% {
-                color: white;
+                color: white; /* Цвет при "мигании" */
                 text-shadow: 0 0 1px white;
             }
         }
-        /* Удаляем анимацию для time.highlighted, чтобы избежать конфликтов */
-        /* Если нужно, можно добавить аналогичную анимацию */
-        /*
-        .time.highlighted {
-            animation: flashingTime 2s infinite;
-        }
-        @keyframes flashingTime {
+        @keyframes flashingBorder {
             0%, 100% {
-                background-color: rgba(170, 170, 170, 0.3);
                 box-shadow: none;
+                text-shadow: none;
             }
             45%, 55% {
-                background-color: rgba(255, 255, 255, 0.5);
-                box-shadow: 0 0 5px white;
+                box-shadow: 0 0 5.5px white;
+                text-shadow: 0 0 1px white;
+                color: #ffffff;
             }
         }
-        */
+        .time.highlighted {
+            animation: flashingBorder 2s infinite;
+        }
         .empty-day {
             color: #666;
             font-style: italic;
@@ -210,8 +230,6 @@
     </style>
 </head>
 <body>
-    <h1 id="schedule-title">График выхода серий</h1>
-    
     <!-- Контейнер для кнопок -->
     <div id="button-container">
         <button id="scrollTodayButton" aria-label="Прокрутить к сегодняшнему дню">На сегодня</button>
@@ -233,6 +251,7 @@
         </button>
     </div>
 
+    <h1 id="schedule-title">График выхода серий</h1>
     <div id="schedule-container"><!-- Здесь генерируется расписание --></div>
     
     <script>
@@ -269,7 +288,7 @@
                 { time: '22:15', title: 'Бродяга Кэнсин 2: Беспорядки в Киото' },
             ]},
             { day: 'Пятница', schedule: [
-                { time: '20:45', title: 'Мастера Меча Онлайн: Альтернативная «Призрачная буля» 2' },
+                { time: '20:45', title: 'Мастера Меча Онлайн: Альтернативная «Призрачная пуля» 2' },
                 { time: '22:45', title: 'История о девушке, которая не могла стать волшебницей' },
                 { time: '23:30', title: 'Драконий жемчуг Дайма' },
             ]},
@@ -312,8 +331,8 @@
             document.getElementById('schedule-title').textContent = title;
         }
 
-        function convertNYTimeToLocal() {
-            // Часовой пояс - можно менять при необходимости
+        function convertReferenceTimeToLocal() {
+            // Часовой пояс для расписания
             const referenceZone = 'Europe/Moscow'; // Замените на нужный часовой пояс
             const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -359,6 +378,9 @@
             const titleSpan = document.createElement('span');
             titleSpan.className = 'title';
             titleSpan.textContent = info.title || '';
+            if (info.highlighted) {
+                titleSpan.classList.add('highlighted');
+            }
 
             // Клик по времени -> копируем (с анимацией)
             timeSpan.addEventListener('click', (event) => {
@@ -405,41 +427,30 @@
 
         function replaceTitleWithCopied(element) {
             const titleElement = element.querySelector('.title');
+            const timeElement = element.querySelector('.time');
             const originalTitle = titleElement.textContent.trim();
-            const animationDuration = 400;
-            const originalMaxHeight = titleElement.scrollHeight + "px";
+            const originalTime = timeElement.textContent.trim();
+            const animationDuration = 400; // миллисекунд
 
-            titleElement.style.maxHeight = originalMaxHeight;
+            // Сброс стилей
             titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
+            timeElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
 
             isAnimationInProgress = true;
-            changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);
-        }
 
-        function changeTitleText(titleElement, newText, duration, originalText, originalMaxHeight) {
-            titleElement.style.opacity = 0;
-            titleElement.style.maxHeight = "1em";
+            // Изменяем текст времени и названия
+            titleElement.textContent = 'Скопировано';
+            timeElement.textContent = originalTime;
+            titleElement.classList.add('highlighted');
+            timeElement.classList.add('highlighted');
 
+            // Возвращаем оригинальные тексты после анимации
             setTimeout(() => {
-                titleElement.textContent = newText;
-                titleElement.style.opacity = 1;
-                titleElement.style.maxHeight = originalMaxHeight;
-
-                setTimeout(() => {
-                    titleElement.style.opacity = 0;
-                    titleElement.style.maxHeight = "1em";
-
-                    setTimeout(() => {
-                        titleElement.textContent = originalText;
-                        titleElement.style.opacity = 1;
-                        titleElement.style.maxHeight = originalMaxHeight;
-
-                        setTimeout(() => {
-                            isAnimationInProgress = false;
-                        }, duration / 2);
-                    }, duration);
-                }, duration * 1.5);
-            }, duration);
+                titleElement.textContent = originalTitle;
+                titleElement.classList.remove('highlighted');
+                timeElement.classList.remove('highlighted');
+                isAnimationInProgress = false;
+            }, animationDuration * 2);
         }
 
         function setInitialMaxHeight() {
@@ -520,9 +531,9 @@
             if (dayIndex < dayContainers.length) {
                 const targetElement = dayContainers[dayIndex];
                 // Расчёт позиции с учётом фиксированного контейнера кнопок
-                const offset = window.innerWidth > 1024 ? 50 : 50; // Уменьшаем с 60 до 50 пикселей
+                const offset = 50; // Настроить под высоту фиксированных кнопок и желаемое смещение
                 const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = elementPosition - offset - 5; // Дополнительное смещение на 5 пикселей
+                const offsetPosition = elementPosition - offset - 1; // Смещение на 1 пиксель
 
                 window.scrollTo({
                     top: offsetPosition,
@@ -537,7 +548,7 @@
         }
 
         function updateTimeAndSchedule() {
-            const convertedDays = convertNYTimeToLocal();
+            const convertedDays = convertReferenceTimeToLocal();
             highlightNextShow(convertedDays);
             renderDaySchedule(convertedDays);
         }
@@ -570,7 +581,7 @@
         setInterval(updateTimeAndSchedule, 60000);
 
         // Первичная отрисовка
-        const convertedDays = convertNYTimeToLocal();
+        const convertedDays = convertReferenceTimeToLocal();
         updateScheduleTitle();
         highlightNextShow(convertedDays);
         renderDaySchedule(convertedDays);
