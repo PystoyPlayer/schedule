@@ -112,6 +112,19 @@
                 text-shadow: 0 0 1px white;
             }
         }
+        .time.highlighted {
+            animation: flashingTime 2s infinite;
+        }
+        @keyframes flashingTime {
+            0%, 100% {
+                background-color: rgba(170, 170, 170, 0.3);
+                box-shadow: none;
+            }
+            45%, 55% {
+                background-color: rgba(255, 255, 255, 0.5);
+                box-shadow: 0 0 5px white;
+            }
+        }
         .empty-day {
             color: #666;
             font-style: italic;
@@ -200,7 +213,8 @@
         <button id="scrollTodayButton">На сегодня</button>
         <button id="gearButton" title="В разработке">
             <!-- Предоставленная иконка шестерёнки -->
-            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="50" height="50" viewBox="0 0 50 50" style="fill:#FFFFFF;">
+            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="50" height="50" viewBox="0 0 50 50"
+                style="fill:#FFFFFF;">
                 <path d="M47.16,21.221l-5.91-0.966c-0.346-1.186-0.819-2.326-1.411-3.405l3.45-4.917c0.279-0.397,0.231-0.938-0.112-1.282 
                 l-3.889-3.887c-0.347-0.346-0.893-0.391-1.291-0.104l-4.843,3.481c-1.089-0.602-2.239-1.08-3.432-1.427l-1.031-5.886 
                 C28.607,2.35,28.192,2,27.706,2h-5.5c-0.49,0-0.908,0.355-0.987,0.839l-0.956,5.854c-1.2,0.345-2.352,0.818-3.437,1.412 
@@ -501,7 +515,16 @@
             const dayIndex = (new Date().getDay() + 6) % 7;
             const dayContainers = document.querySelectorAll('#schedule-container > div');
             if (dayIndex < dayContainers.length) {
-                dayContainers[dayIndex].scrollIntoView({ behavior: 'smooth' });
+                const targetElement = dayContainers[dayIndex];
+                // Расчёт позиции с учётом фиксированного контейнера кнопок
+                const offset = window.innerWidth > 1024 ? 60 : 60; // Можно настроить под ваш дизайн
+                const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
+                const offsetPosition = elementPosition - offset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
             }
         }
 
