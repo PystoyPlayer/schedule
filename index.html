@@ -3,21 +3,52 @@
 <head>
     <title>График</title>
     <meta name="viewport" content="shrink-to-fit=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta charset="utf-8">
     <meta name="description" content="Расписание серий в Telegram канале @SubVost">
     <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="favicon/favicon.ico">
+    <meta name="apple-mobile-web-app-title" content="График">
+    <meta name="application-name" content="График">
+    <meta name="msapplication-TileColor" content="#5bbad5">
+    <meta name="msapplication-TileImage" content="favicon/mstile-144x144.png">
+    <meta name="msapplication-config" content="favicon/browserconfig.xml">
+    <meta name="theme-color" content="#181818">
+    <meta property="og:title" content="График выхода серий">
+    <meta property="og:description" content="Расписание серий в Telegram канале @SubVost">
+    <meta property="og:image" content="favicon/android-chrome-192x192.png">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="SubVost">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.25.0/luxon.min.js"></script>
-
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
+            line-height: 1.5;
             background-color: #181818;
+            background-size: cover;
             color: #dddddd;
             margin: 0;
             padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: default;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
+            /* background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); */
         }
         h1 {
             text-align: center;
@@ -44,6 +75,7 @@
         .schedule-item {
             display: flex;
             align-items: baseline;
+            cursor: default;
             transition: background-color 0.3s ease-in-out;
             margin-bottom: 5px;
             width: 100%;
@@ -51,11 +83,7 @@
             box-sizing: border-box;
             border-radius: 5px;
         }
-        .schedule-item:hover {
-            background-color: rgba(170, 170, 170, 0.3);
-            cursor: pointer;
-        }
-        .time {
+        .schedule-item .time {
             position: relative;
             display: inline-block;
             margin-right: 5px;
@@ -63,13 +91,13 @@
             border-radius: 6px;
             background-color: rgba(170, 170, 170, 0.3);
             border: 1.5px solid transparent;
-            cursor: pointer;
+            cursor: pointer; /* Добавлен курсор */
             transition: background-color 0.3s ease;
         }
-        .time:hover {
+        .schedule-item .time:hover {
             background-color: rgba(170, 170, 170, 0.5);
         }
-        .time:empty {
+        .schedule-item .time:empty {
             margin-top: 9.5px;
             min-width: 5px;
             height: 2px;
@@ -79,15 +107,48 @@
             font-size: 16px;
             margin-left: 5px;
             padding-right: 15px;
+            overflow: hidden;
+            min-height: 1.5em;
+            transition: opacity 0.5s ease-in-out, max-height 0.5s ease-in-out;
             line-height: 1.5em;
-            cursor: pointer;
-            /* Убираем подчёркивание, если есть */
-            text-decoration: none;
-            color: #dddddd;
-            transition: color 0.3s ease;
+            cursor: pointer; /* Добавлен курсор */
+            text-decoration: none; /* Убрано подчёркивание */
+            color: #dddddd; /* Установлен цвет текста */
+            transition: color 0.3s ease; /* Плавное изменение цвета */
         }
         .title:hover {
-            color: #ffffff;
+            color: #ffffff; /* Цвет при наведении */
+        }
+        .schedule-item:hover {
+            background-color: rgba(170, 170, 170, 0.3);
+            /* cursor: pointer; */ /* Убрано, так как курсор уже на отдельных элементах */
+        }
+        @keyframes flashingBorder {
+            0%, 100% {
+                box-shadow: none;
+                text-shadow: none;
+            }
+            45%, 55% {
+                box-shadow: 0 0 5.5px white;
+                text-shadow: 0 0 1px white;
+                color: #ffffff;
+            }
+        }
+        .time.highlighted {
+            animation: flashingBorder 2s infinite;
+        }
+        @keyframes flashingTitle {
+            0%, 100% {
+                color: inherit;
+                text-shadow: none;
+            }
+            45%, 55% {
+                color: white;
+                text-shadow: 0 0 1px white;
+            }
+        }
+        .title.highlighted {
+            animation: flashingTitle 2s infinite;
         }
         .empty-day {
             color: #666;
@@ -109,7 +170,7 @@
             letter-spacing: 1px;
             transition: opacity 0.5s ease, transform 0.5s ease;
             z-index: 9999;
-            cursor: pointer;
+            cursor: pointer; /* Добавлен курсор */
             opacity: 1;
             transform: translateY(0);
         }
@@ -135,335 +196,336 @@
         }
     </style>
 </head>
-
 <body>
-    <h1 id="schedule-title">График выхода серий</h1>
-    <button id="scrollTodayButton">На сегодня</button>
+    <div>
+        <h1 id="schedule-title">График выхода серий</h1>
+        <!-- Кнопка "На сегодня" -->
+        <button id="scrollTodayButton">На сегодня</button>
 
-    <div id="schedule-container"><!-- Здесь генерируется расписание --></div>
+        <div id="schedule-container"><!-- Здесь сгенерируется расписание --></div>
+        
+        <script>
+            const days = [
+                { day: 'Понедельник', schedule: [
+                    { time: '18:15', title: 'Нина в королевстве звёзд' },
+                    { time: '18:45', title: 'Рон Камонохаси: Невменяемый детектив 2' },
+                    { time: '19:00', title: 'Незнакомцы в другой жизни' },
+                    { time: '19:15', title: 'Арифурэта: Сильнейший ремесленник в мире 3' },
+                    { time: '21:15', title: 'Тетрадь дружбы Нацумэ 7' },
+                    { time: '21:45', title: 'Мифический дух: Хроники 2' },
+                ]},
+                { day: 'Вторник', schedule: [
+                    { time: '18:45', title: 'Я стал учителем в школе монстров!' },
+                    { time: '19:15', title: 'Я стану злодейкой, которая войдёт в историю' },
+                    { time: '19:45', title: 'Брачные узы с семьёй Амагами' },
+                    { time: '23:15', title: 'Тасукэцу' },
+                ]},
+                { day: 'Среда', schedule: [
+                    { time: '17:30', title: 'Плохая поездка' },
+                    { time: '17:45', title: 'На этот раз одержи победу над императором драконов, благородная девушка!' },
+                    { time: '18:45', title: 'Re:Zero. Жизнь с нуля в альтернативном мире 3 (перерыв до 5 февраля)' },
+                    { time: '19:45', title: 'Ëко из Сэнгоку' },
+                    { time: '21:15', title: 'Детская Делико' },
+                    { time: '21:45', title: 'Избрание божества 2' },
+                ]},
+                { day: 'Четверг', schedule: [
+                    { time: '17:15', title: 'Может, я встречу тебя в подземелье? 5' },
+                    { time: '17:45', title: 'Негативный позитивный рыбак' },
+                    { time: '19:45', title: 'Вы правда женитесь?' },
+                    { time: '20:45', title: 'Механические руки' },
+                    { time: '21:30', title: 'Прощай, жизнь дракона. Здравствуй, жизнь человека' },
+                    { time: '22:00', title: 'Игра на триллион' },
+                    { time: '22:15', title: 'Бродяга Кэнсин 2: Беспорядки в Киото' },
+                ]},
+                { day: 'Пятница', schedule: [
+                    { time: '20:45', title: 'Мастера Меча Онлайн: Альтернативная «Призрачная буля» 2' },
+                    { time: '22:45', title: 'История о девушке, которая не могла стать волшебницей' },
+                    { time: '23:30', title: 'Драконий жемчуг Дайма' },
+                ]},
+                { day: 'Суббота', schedule: [
+                    { time: '18:30', title: 'Король демонов, попытайтесь снова! R' },
+                    { time: '20:45', title: 'Повелитель демонов 2099' },
+                    { time: '21:15', title: 'Синий экзорцист: За снегом' },
+                    { time: '22:45', title: 'Целитель, которого исключили из группы, оказался сильнейшим!' },
+                    { time: '23:00', title: 'Ты — горничная' },
+                ]},
+                { day: 'Воскресенье', schedule: [
+                    { time: '13:45', title: 'Рубеж Шангри-Ла 2' },
+                    { time: '18:00', title: 'Если бы моя жена стала младшеклассницей' },
+                    { time: '18:15', title: 'Башня Бога: Битва при Мастерской' },
+                    { time: '19:30', title: 'Перерождение в аристократа со способностью анализа 2' },
+                    { time: '20:15', title: 'MF Призрак 2' },
+                ]},
+                { day: 'Без графика', schedule: [
+                    { title: 'Голубая шкатулка [4K] (~Пятница)' },
+                    { title: 'Дандадан (~Пятница)' },
+                    { title: 'Нападение одиночки на иной мир (~Суббота)' },
+                    { title: 'О движении Земли (~Воскресенье)' },
+                    { title: 'Долги...' },
+                ]}
+            ];
 
-    <script>
-        const days = [
-            { day: 'Понедельник', schedule: [
-                { time: '18:15', title: 'Нина в королевстве звёзд' },
-                { time: '18:45', title: 'Рон Камонохаси: Невменяемый детектив 2' },
-                { time: '19:00', title: 'Незнакомцы в другой жизни' },
-                { time: '19:15', title: 'Арифурэта: Сильнейший ремесленник в мире 3' },
-                { time: '21:15', title: 'Тетрадь дружбы Нацумэ 7' },
-                { time: '21:45', title: 'Мифический дух: Хроники 2' },
-            ]},
-            { day: 'Вторник', schedule: [
-                { time: '18:45', title: 'Я стал учителем в школе монстров!' },
-                { time: '19:15', title: 'Я стану злодейкой, которая войдёт в историю' },
-                { time: '19:45', title: 'Брачные узы с семьёй Амагами' },
-                { time: '23:15', title: 'Тасукэцу' },
-            ]},
-            { day: 'Среда', schedule: [
-                { time: '17:30', title: 'Плохая поездка' },
-                { time: '17:45', title: 'На этот раз одержи победу над императором драконов, благородная девушка!' },
-                { time: '18:45', title: 'Re:Zero. Жизнь с нуля в альтернативном мире 3 (перерыв до 5 февраля)' },
-                { time: '19:45', title: 'Ëко из Сэнгоку' },
-                { time: '21:15', title: 'Детская Делико' },
-                { time: '21:45', title: 'Избрание божества 2' },
-            ]},
-            { day: 'Четверг', schedule: [
-                { time: '17:15', title: 'Может, я встречу тебя в подземелье? 5' },
-                { time: '17:45', title: 'Негативный позитивный рыбак' },
-                { time: '19:45', title: 'Вы правда женитесь?' },
-                { time: '20:45', title: 'Механические руки' },
-                { time: '21:30', title: 'Прощай, жизнь дракона. Здравствуй, жизнь человека' },
-                { time: '22:00', title: 'Игра на триллион' },
-                { time: '22:15', title: 'Бродяга Кэнсин 2: Беспорядки в Киото' },
-            ]},
-            { day: 'Пятница', schedule: [
-                { time: '20:45', title: 'Мастера Меча Онлайн: Альтернативная «Призрачная буля» 2' },
-                { time: '22:45', title: 'История о девушке, которая не могла стать волшебницей' },
-                { time: '23:30', title: 'Драконий жемчуг Дайма' },
-            ]},
-            { day: 'Суббота', schedule: [
-                { time: '18:30', title: 'Король демонов, попытайтесь снова! R' },
-                { time: '20:45', title: 'Повелитель демонов 2099' },
-                { time: '21:15', title: 'Синий экзорцист: За снегом' },
-                { time: '22:45', title: 'Целитель, которого исключили из группы, оказался сильнейшим!' },
-                { time: '23:00', title: 'Ты — горничная' },
-            ]},
-            { day: 'Воскресенье', schedule: [
-                { time: '13:45', title: 'Рубеж Шангри-Ла 2' },
-                { time: '18:00', title: 'Если бы моя жена стала младшеклассницей' },
-                { time: '18:15', title: 'Башня Бога: Битва при Мастерской' },
-                { time: '19:30', title: 'Перерождение в аристократа со способностью анализа 2' },
-                { time: '20:15', title: 'MF Призрак 2' },
-            ]},
-            { day: 'Без графика', schedule: [
-                { title: 'Голубая шкатулка [4K] (~Пятница)' },
-                { title: 'Дандадан (~Пятница)' },
-                { title: 'Нападение одиночки на иной мир (~Суббота)' },
-                { title: 'О движении Земли (~Воскресенье)' },
-                { title: 'Долги...' },
-            ]}
-        ];
+            let isAnimationInProgress = false;
+            let highlightTimeout;
 
-        let isAnimationInProgress = false;
-        let highlightTimeout;
+            function getLocalTimeZone() {
+                const offset = new Date().getTimezoneOffset();
+                const hours = Math.abs(Math.floor(offset / 60));
+                const sign = offset > 0 ? '-' : '+';
+                return `GMT${sign}${hours}`;
+            }
 
-        function getLocalTimeZone() {
-            const offset = new Date().getTimezoneOffset();
-            const hours = Math.abs(Math.floor(offset / 60));
-            const sign = offset > 0 ? '-' : '+';
-            return `GMT${sign}${hours}`;
-        }
+            function updateScheduleTitle() {
+                const timezone = getLocalTimeZone();
+                const title = `График выхода серий (${timezone})`;
+                document.getElementById('schedule-title').textContent = title;
+            }
 
-        function updateScheduleTitle() {
-            const timezone = getLocalTimeZone();
-            const title = `График выхода серий (${timezone})`;
-            document.getElementById('schedule-title').textContent = title;
-        }
+            function convertNYTimeToLocal() {
+                // Часовой пояс - можно менять при необходимости
+                const newYorkZone = 'Europe/Moscow';
+                const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-        function convertNYTimeToLocal() {
-            // Часовой пояс - можно менять при необходимости
-            const newYorkZone = 'Europe/Moscow';
-            const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                let newDays = days.map(day => ({ day: day.day, schedule: [] }));
 
-            let newDays = days.map(day => ({ day: day.day, schedule: [] }));
+                days.forEach((day, index) => {
+                    day.schedule.forEach(show => {
+                        if (show.time) {
+                            let dateTimeNY = luxon.DateTime.fromFormat(show.time, 'HH:mm', { zone: newYorkZone });
+                            let dateTimeLocal = dateTimeNY.setZone(localZone);
+                            let newDayIndex = (index + dateTimeLocal.weekday - dateTimeNY.weekday + 7) % 7;
+                            newDays[newDayIndex].schedule.push({ ...show, time: dateTimeLocal.toFormat('HH:mm') });
+                        } else {
+                            newDays[index].schedule.push({ ...show });
+                        }
+                    });
+                });
 
-            days.forEach((day, index) => {
-                day.schedule.forEach(show => {
-                    if (show.time) {
-                        let dateTimeNY = luxon.DateTime.fromFormat(show.time, 'HH:mm', { zone: newYorkZone });
-                        let dateTimeLocal = dateTimeNY.setZone(localZone);
-                        let newDayIndex = (index + dateTimeLocal.weekday - dateTimeNY.weekday + 7) % 7;
-                        newDays[newDayIndex].schedule.push({ ...show, time: dateTimeLocal.toFormat('HH:mm') });
-                    } else {
-                        newDays[index].schedule.push({ ...show });
+                newDays.forEach(day => {
+                    day.schedule.sort((a, b) => {
+                        if (!a.time) return 1;
+                        if (!b.time) return -1;
+                        return a.time.localeCompare(b.time);
+                    });
+                });
+
+                return newDays;
+            }
+
+            function createScheduleItem(info) {
+                const scheduleItem = document.createElement('div');
+                scheduleItem.className = 'schedule-item';
+
+                const timeSpan = document.createElement('span');
+                timeSpan.className = 'time';
+                if (info.time) {
+                    timeSpan.textContent = info.time;
+                    if (info.highlighted) {
+                        timeSpan.classList.add('highlighted');
                     }
-                });
-            });
-
-            newDays.forEach(day => {
-                day.schedule.sort((a, b) => {
-                    if (!a.time) return 1;
-                    if (!b.time) return -1;
-                    return a.time.localeCompare(b.time);
-                });
-            });
-
-            return newDays;
-        }
-
-        function createScheduleItem(info) {
-            const scheduleItem = document.createElement('div');
-            scheduleItem.className = 'schedule-item';
-
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'time';
-            if (info.time) {
-                timeSpan.textContent = info.time;
-                if (info.highlighted) {
-                    timeSpan.classList.add('highlighted');
                 }
+
+                const titleSpan = document.createElement('span');
+                titleSpan.className = 'title';
+                titleSpan.textContent = info.title || '';
+
+                // Клик по времени -> копируем (с анимацией)
+                timeSpan.addEventListener('click', (event) => {
+                    event.stopPropagation(); 
+                    if (!info.time) return;
+                    copyText(scheduleItem, `${info.time} - ${info.title}`);
+                });
+
+                // Клик по названию -> переходим на Shikimori
+                titleSpan.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    if (!info.title) return;
+                    window.open(
+                      "https://shikimori.one/animes?search=" + encodeURIComponent(info.title), 
+                      "_blank"
+                    );
+                });
+
+                scheduleItem.appendChild(timeSpan);
+                scheduleItem.appendChild(titleSpan);
+                return scheduleItem;
             }
 
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'title';
-            titleSpan.textContent = info.title || '';
+            function copyText(element, textToCopy) {
+                if (isAnimationInProgress) {
+                    console.log('Animation in progress, copy blocked.');
+                    return;
+                }
 
-            // Клик по времени -> копируем (с анимацией)
-            timeSpan.addEventListener('click', (event) => {
-                event.stopPropagation(); 
-                if (!info.time) return;
-                copyText(scheduleItem, `${info.time} - ${info.title}`);
-            });
+                const clipboardText = textToCopy.trim();
+                if (!clipboardText) {
+                    console.log('No text to copy.');
+                    return;
+                }
 
-            // Клик по названию -> переходим на Shikimori
-            titleSpan.addEventListener('click', (event) => {
-                event.stopPropagation();
-                if (!info.title) return;
-                window.open(
-                  "https://shikimori.one/animes?search=" + encodeURIComponent(info.title), 
-                  "_blank"
-                );
-            });
-
-            scheduleItem.appendChild(timeSpan);
-            scheduleItem.appendChild(titleSpan);
-            return scheduleItem;
-        }
-
-        function copyText(element, textToCopy) {
-            if (isAnimationInProgress) {
-                console.log('Animation in progress, copy blocked.');
-                return;
+                navigator.clipboard.writeText(clipboardText).then(() => {
+                    console.log('Text copied to clipboard:', clipboardText);
+                    replaceTitleWithCopied(element);
+                    resetHighlightTimeout();
+                }).catch(error => {
+                    console.error('Error copying text: ', error);
+                });
             }
 
-            const clipboardText = textToCopy.trim();
-            if (!clipboardText) {
-                console.log('No text to copy.');
-                return;
-            }
+            function replaceTitleWithCopied(element) {
+                const titleElement = element.querySelector('.title');
+                const originalTitle = titleElement.textContent.trim();
+                const animationDuration = 400;
+                const originalMaxHeight = titleElement.scrollHeight + "px";
 
-            navigator.clipboard.writeText(clipboardText).then(() => {
-                console.log('Text copied to clipboard:', clipboardText);
-                replaceTitleWithCopied(element);
-                resetHighlightTimeout();
-            }).catch(error => {
-                console.error('Error copying text: ', error);
-            });
-        }
-
-        function replaceTitleWithCopied(element) {
-            const titleElement = element.querySelector('.title');
-            const originalTitle = titleElement.textContent.trim();
-            const animationDuration = 400;
-            const originalMaxHeight = titleElement.scrollHeight + "px";
-
-            titleElement.style.maxHeight = originalMaxHeight;
-            titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
-
-            isAnimationInProgress = true;
-            changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);
-        }
-
-        function changeTitleText(titleElement, newText, duration, originalText, originalMaxHeight) {
-            titleElement.style.opacity = 0;
-            titleElement.style.maxHeight = "1em";
-
-            setTimeout(() => {
-                titleElement.textContent = newText;
-                titleElement.style.opacity = 1;
                 titleElement.style.maxHeight = originalMaxHeight;
+                titleElement.style.transition = `opacity ${animationDuration / 1000}s ease-in-out, max-height ${animationDuration / 1000}s ease-in-out`;
+
+                isAnimationInProgress = true;
+                changeTitleText(titleElement, 'Скопировано', animationDuration, originalTitle, originalMaxHeight);
+            }
+
+            function changeTitleText(titleElement, newText, duration, originalText, originalMaxHeight) {
+                titleElement.style.opacity = 0;
+                titleElement.style.maxHeight = "1em";
 
                 setTimeout(() => {
-                    titleElement.style.opacity = 0;
-                    titleElement.style.maxHeight = "1em";
+                    titleElement.textContent = newText;
+                    titleElement.style.opacity = 1;
+                    titleElement.style.maxHeight = originalMaxHeight;
 
                     setTimeout(() => {
-                        titleElement.textContent = originalText;
-                        titleElement.style.opacity = 1;
-                        titleElement.style.maxHeight = originalMaxHeight;
+                        titleElement.style.opacity = 0;
+                        titleElement.style.maxHeight = "1em";
 
                         setTimeout(() => {
-                            isAnimationInProgress = false;
-                        }, duration / 2);
-                    }, duration);
-                }, duration * 1.5);
-            }, duration);
-        }
+                            titleElement.textContent = originalText;
+                            titleElement.style.opacity = 1;
+                            titleElement.style.maxHeight = originalMaxHeight;
 
-        function setInitialMaxHeight() {
-            const titles = document.querySelectorAll('.schedule-item .title');
-            titles.forEach(title => {
-                title.style.maxHeight = title.scrollHeight + "px";
-            });
-        }
-
-        function isTimeLater(time1, time2) {
-            const [hours1, minutes1] = time1.split(':').map(Number);
-            const [hours2, minutes2] = time2.split(':').map(Number);
-            return hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2);
-        }
-
-        function highlightNextShow(days) {
-            // Сместим getDay(), чтобы Понедельник=0, Вторник=1, ...
-            let currentDayIndex = (new Date().getDay() + 6) % 7;
-            let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-
-            let foundNextShow = false;
-            for (let i = 0; i < days.length; i++) {
-                let dayIndex = (currentDayIndex + i) % days.length;
-                for (let show of days[dayIndex].schedule) {
-                    if (!show.time) continue;
-                    if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
-                        show.highlighted = true;
-                        foundNextShow = true;
-                        break;
-                    }
-                }
-                if (foundNextShow) break;
+                            setTimeout(() => {
+                                isAnimationInProgress = false;
+                            }, duration / 2);
+                        }, duration);
+                    }, duration * 1.5);
+                }, duration);
             }
-        }
 
-        function renderDaySchedule(convertedDays) {
-            const container = document.getElementById('schedule-container');
-            container.innerHTML = '';
-            convertedDays.forEach(day => {
-                const dayElement = document.createElement('div');
-                dayElement.innerHTML = `<h2>${day.day}:</h2>`;
-                const list = document.createElement('ul');
+            function setInitialMaxHeight() {
+                const titles = document.querySelectorAll('.schedule-item .title');
+                titles.forEach(title => {
+                    title.style.maxHeight = title.scrollHeight + "px";
+                });
+            }
 
-                if (day.schedule.length > 0) {
-                    day.schedule.forEach(show => {
-                        const item = createScheduleItem(show);
-                        list.appendChild(item);
-                    });
-                } else {
-                    const emptyMessage = document.createElement('div');
-                    emptyMessage.className = 'empty-day';
-                    emptyMessage.textContent = 'Пусто';
-                    list.appendChild(emptyMessage);
+            function isTimeLater(time1, time2) {
+                const [hours1, minutes1] = time1.split(':').map(Number);
+                const [hours2, minutes2] = time2.split(':').map(Number);
+                return hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2);
+            }
+
+            function highlightNextShow(days) {
+                // Сместим getDay(), чтобы Понедельник=0, Вторник=1, ...
+                let currentDayIndex = (new Date().getDay() + 6) % 7;
+                let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+
+                let foundNextShow = false;
+                for (let i = 0; i < days.length; i++) {
+                    let dayIndex = (currentDayIndex + i) % days.length;
+                    for (let show of days[dayIndex].schedule) {
+                        if (!show.time) continue;
+                        if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
+                            show.highlighted = true;
+                            foundNextShow = true;
+                            break;
+                        }
+                    }
+                    if (foundNextShow) break;
                 }
+            }
 
-                dayElement.appendChild(list);
-                container.appendChild(dayElement);
-            });
-            setInitialMaxHeight();
-        }
+            function renderDaySchedule(convertedDays) {
+                document.getElementById('schedule-container').innerHTML = '';
+                convertedDays.forEach(day => {
+                    const dayElement = document.createElement('div');
+                    dayElement.innerHTML = `<h2>${day.day}:</h2>`;
+                    const list = document.createElement('ul');
 
-        function resetHighlightTimeout() {
-            if (highlightTimeout) {
+                    if (day.schedule.length > 0) {
+                        day.schedule.forEach(show => {
+                            const item = createScheduleItem(show);
+                            list.appendChild(item);
+                        });
+                    } else {
+                        const emptyMessage = document.createElement('div');
+                        emptyMessage.className = 'empty-day';
+                        emptyMessage.textContent = 'Пусто';
+                        list.appendChild(emptyMessage);
+                    }
+
+                    dayElement.appendChild(list);
+                    document.getElementById('schedule-container').appendChild(dayElement);
+                });
+                setInitialMaxHeight();
+            }
+
+            function resetHighlightTimeout() {
+                if (highlightTimeout) {
+                    clearTimeout(highlightTimeout);
+                }
+                highlightTimeout = setTimeout(clearHighlights, 3000);
+            }
+
+            function clearHighlights() {
+                const highlightedItems = document.querySelectorAll('.schedule-item .time.highlighted, .schedule-item .title.highlighted');
+                highlightedItems.forEach(item => item.classList.remove('highlighted'));
                 clearTimeout(highlightTimeout);
             }
-            highlightTimeout = setTimeout(clearHighlights, 3000);
-        }
 
-        function clearHighlights() {
-            const highlightedItems = document.querySelectorAll('.schedule-item .time.highlighted, .schedule-item .title.highlighted');
-            highlightedItems.forEach(item => item.classList.remove('highlighted'));
-            clearTimeout(highlightTimeout);
-        }
-
-        function scrollToTodaySection() {
-            const dayIndex = (new Date().getDay() + 6) % 7;
-            const dayContainers = document.querySelectorAll('#schedule-container > div');
-            if (dayIndex < dayContainers.length) {
-                dayContainers[dayIndex].scrollIntoView({ behavior: 'smooth' });
+            function scrollToTodaySection() {
+                const dayIndex = (new Date().getDay() + 6) % 7;
+                const dayContainers = document.querySelectorAll('#schedule-container > div');
+                if (dayIndex < dayContainers.length) {
+                    dayContainers[dayIndex].scrollIntoView({ behavior: 'smooth' });
+                }
             }
-        }
 
-        function updateTimeAndSchedule() {
+            function updateTimeAndSchedule() {
+                const convertedDays = convertNYTimeToLocal();
+                highlightNextShow(convertedDays);
+                renderDaySchedule(convertedDays);
+            }
+
+            // Обработчик скролла для показа/скрытия кнопки
+            window.addEventListener('scroll', () => {
+                const button = document.getElementById('scrollTodayButton');
+                if (window.pageYOffset > 15) { /* Изменено с 0 на 15 */
+                    button.classList.add('hidden');
+                } else {
+                    button.classList.remove('hidden');
+                }
+            });
+
+            // Инициализация
+            document.addEventListener('DOMContentLoaded', () => {
+                updateScheduleTitle();
+                updateTimeAndSchedule();
+            });
+            document.addEventListener('click', resetHighlightTimeout);
+            document.addEventListener('touchstart', resetHighlightTimeout);
+
+            // Клик по кнопке «На сегодня»
+            document.getElementById('scrollTodayButton').addEventListener('click', scrollToTodaySection);
+
+            // Обновление каждые 60 секунд
+            setInterval(updateTimeAndSchedule, 60000);
+
+            // Первичная отрисовка
             const convertedDays = convertNYTimeToLocal();
+            updateScheduleTitle();
             highlightNextShow(convertedDays);
             renderDaySchedule(convertedDays);
-        }
-
-        // Обработчик скролла для показа/скрытия кнопки
-        window.addEventListener('scroll', () => {
-            const button = document.getElementById('scrollTodayButton');
-            if (window.pageYOffset > 15) {
-                button.classList.add('hidden');
-            } else {
-                button.classList.remove('hidden');
-            }
-        });
-
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', () => {
-            updateScheduleTitle();
-            updateTimeAndSchedule();
-        });
-        document.addEventListener('click', resetHighlightTimeout);
-        document.addEventListener('touchstart', resetHighlightTimeout);
-
-        // Клик по кнопке «На сегодня»
-        document.getElementById('scrollTodayButton').addEventListener('click', scrollToTodaySection);
-
-        // Обновление каждые 60 секунд
-        setInterval(updateTimeAndSchedule, 60000);
-
-        // Первичная отрисовка
-        const convertedDays = convertNYTimeToLocal();
-        updateScheduleTitle();
-        highlightNextShow(convertedDays);
-        renderDaySchedule(convertedDays);
-    </script>
+        </script>
+    </div>
 </body>
 </html>
