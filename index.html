@@ -531,7 +531,7 @@
             if (dayIndex < dayContainers.length) {
                 const targetElement = dayContainers[dayIndex];
                 // Расчёт позиции с учётом фиксированного контейнера кнопок
-                const offset = 60; // Настроить под высоту фиксированных кнопок и желаемое смещение
+                const offset = 25; // Настроить под высоту фиксированных кнопок и желаемое смещение
                 const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
                 const offsetPosition = elementPosition - offset;
 
