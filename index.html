@@ -79,7 +79,7 @@
             width: 100%;
             padding-left: 15px;
             box-sizing: border-box;
-            border-radius: 10px; /* Более плавные закругления */
+            border-radius: 8px;
             /* Удалены position: relative и overflow: hidden */
         }
         .schedule-item:hover {
@@ -93,11 +93,14 @@
             border-radius: 6px;
             background-color: rgba(170, 170, 170, 0.3);
             border: 1.5px solid transparent;
-            cursor: pointer; /* Указывает, что элемент кликабельный */
+            cursor: pointer;
             transition: background-color 0.3s ease;
         }
         .schedule-item .time:hover {
             background-color: rgba(170, 170, 170, 0.5);
+        }
+        .schedule-container {
+            margin-top: -10px;
         }
         .schedule-item .time:empty {
             margin-top: 9.5px;
