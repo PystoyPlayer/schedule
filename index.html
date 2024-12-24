@@ -49,7 +49,6 @@
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
-            /* background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); */
         }
         h1 {
             text-align: center;
@@ -76,12 +75,12 @@
         .schedule-item {
             display: flex;
             align-items: baseline;
-            transition: background-color 0.3s ease-in-out, box-shadow 0.5s ease-in-out;
+            transition: background-color 0.3s ease-in-out;
             margin-bottom: 5px;
             width: 100%;
             padding-left: 15px;
             box-sizing: border-box;
-            border-radius: 10px; /* Увеличено до 10px для более плавных закруглений */
+            border-radius: 10px; /* Более плавные закругления */
             /* Удалены position: relative и overflow: hidden */
         }
         .schedule-item:hover {
@@ -89,7 +88,6 @@
             cursor: pointer;
         }
         .schedule-item .time {
-            position: relative;
             display: inline-block;
             margin-right: 5px;
             padding: 0px 5px;
@@ -242,11 +240,23 @@
             stroke: currentColor;
             stroke-width: 1; /* Изменено с 2 на 1 */
         }
-        /* Класс для временной обводки */
-        .temporary-border {
-            box-shadow: 0 0 20px rgba(200, 200, 200, 0.6), inset 0 0 10px rgba(200, 200, 200, 0.3);
-            border-radius: 10px; /* Совпадает с основным border-radius */
-            transition: box-shadow 0.5s ease-in-out;
+        /* Класс для анимации обводки */
+        .animate-border {
+            animation: temporary-border 1s ease-in-out forwards;
+        }
+        @keyframes temporary-border {
+            0% {
+                box-shadow: none;
+            }
+            20% {
+                box-shadow: 0 0 20px rgba(200, 200, 200, 0.6), inset 0 0 10px rgba(200, 200, 200, 0.3);
+            }
+            80% {
+                box-shadow: 0 0 20px rgba(200, 200, 200, 0.6), inset 0 0 10px rgba(200, 200, 200, 0.3);
+            }
+            100% {
+                box-shadow: none;
+            }
         }
     </style>
 </head>
@@ -546,13 +556,13 @@
                     behavior: 'smooth'
                 });
 
-                // Добавляем временную декоративную обводку к текущему дню
-                targetElement.classList.add('temporary-border');
+                // Запуск анимации обводки
+                targetElement.classList.add('animate-border');
 
-                // Убираем класс 'temporary-border' через 1 секунду для сокращения длительности
+                // Удаляем класс 'animate-border' после завершения анимации (1 секунда)
                 setTimeout(() => {
-                    targetElement.classList.remove('temporary-border');
-                }, 1000); // Убираем обводку через 1 секунду
+                    targetElement.classList.remove('animate-border');
+                }, 1000); // Соответствует длительности анимации
             }
         }
 
