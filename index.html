@@ -49,7 +49,6 @@
             max-width: 620px;
             margin-left: auto;
             margin-right: auto;
-            /* background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%); */
         }
         h1 {
             text-align: center;
@@ -76,14 +75,13 @@
         .schedule-item {
             display: flex;
             align-items: baseline;
-            transition: background-color 0.3s ease-in-out;
+            transition: background-color 0.3s ease-in-out, box-shadow 0.5s ease-in-out;
             margin-bottom: 5px;
             width: 100%;
             padding-left: 15px;
             box-sizing: border-box;
-            border-radius: 5px;
-            position: relative; /* Для псевдоэлемента */
-            overflow: hidden; /* Чтобы псевдоэлемент не выходил за пределы */
+            border-radius: 10px; /* Увеличено до 10px для более плавных закруглений */
+            /* Удалены position: relative и overflow: hidden */
         }
         .schedule-item:hover {
             background-color: rgba(170, 170, 170, 0.3);
@@ -168,23 +166,6 @@
             font-style: italic;
             margin-left: 15px;
         }
-        /* Псевдоэлемент для временной декоративной обводки с внутренним размытием */
-        .schedule-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            box-shadow: 0 0 20px rgba(200, 200, 200, 0.9), inset 0 0 10px rgba(200, 200, 200, 0.5); /* Серо-белая размытая тень с внутренним размытием */
-            border-radius: 10px; /* Округлые углы */
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            pointer-events: none; /* Не мешает кликам */
-        }
-        .schedule-item.temporary-border::before {
-            opacity: 1;
-        }
         /* Контейнер для кнопок */
         #button-container {
             position: fixed;
@@ -259,6 +240,12 @@
             fill: currentColor;
             stroke: currentColor;
             stroke-width: 1; /* Изменено с 2 на 1 */
+        }
+        /* Класс для временной обводки */
+        .temporary-border {
+            box-shadow: 0 0 20px rgba(200, 200, 200, 0.6), inset 0 0 10px rgba(200, 200, 200, 0.3);
+            border-radius: 10px; /* Совпадает с основным border-radius */
+            transition: box-shadow 0.5s ease-in-out;
         }
     </style>
 </head>
@@ -450,11 +437,6 @@
         }
 
         function copyText(element, textToCopy) {
-            if (isAnimationInProgress) {
-                console.log('Animation in progress, copy blocked.');
-                return;
-            }
-
             const clipboardText = textToCopy.trim();
             if (!clipboardText) {
                 console.log('No text to copy.');
