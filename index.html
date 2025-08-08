@@ -12,133 +12,82 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.25.0/luxon.min.js"></script>
-
   <style>
     :root{
-      /* Базовые размеры (перекрываются режимами) */
+      /* базовые размеры (перекрываются режимами) */
       --fs-h1: 36px; --fs-h2: 24px; --fs-title:16px; --fs-time:16px; --fs-meta:13px; --fs-badge:12px;
 
-      /* Таймлайн */
+      /* таймлайн */
       --gutter:20px; --rail-w:4px;
       --rail-c1:rgba(255,255,255,.16); --rail-c2:rgba(255,255,255,.28);
 
-      /* Маркер текущего времени (tag + точка) */
+      /* маркер на таймлайне */
       --tag-h:26px; --tag-pad-x:8px; --tag-nudge:0px;
       --tag-bg:rgba(255,255,255,.10); --tag-br:rgba(255,255,255,.22); --tag-text:#ececec;
       --tag-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 10px rgba(255,255,255,.12);
 
-      /* Таймкоды — единый стиль (чуть темнее) */
+      /* таймкоды */
       --time-w-static: 90px;
       --time-bg: rgba(255,255,255,.12);
       --time-bg-hover: rgba(255,255,255,.18);
       --time-border: rgba(255,255,255,.10);
       --time-color: #e2e2e2;
 
-      /* Placeholder для «Без графика» */
+      /* плейсхолдеры «Без графика» */
       --ph-bg: rgba(255,255,255,.09);
       --ph-border: rgba(255,255,255,.10);
       --ph-color:#bdbdbd;
 
-      /* Ховеры строк */
       --row-hover: rgba(170,170,170,.10);
     }
 
-    /* ==== РЕЖИМЫ ОТОБРАЖЕНИЯ ==== */
+    /* ===== ВИДЫ ===== */
     body.view-classic{ }
-    body.view-wide{
-      max-width:1100px !important;
-      --fs-h1: 42px; --fs-h2:26px; --fs-title:18px; --fs-time:18px; --fs-badge:12px;
-      --gutter:28px; --rail-w:5px;
-      --time-bg: rgba(255,255,255,.14);
-      --time-bg-hover: rgba(255,255,255,.22);
-      --time-border: rgba(255,255,255,.14);
-      --row-hover: rgba(170,170,170,.12);
-      --tag-h:28px; --tag-pad-x:10px;
+
+    body.view-compact{
+      max-width:560px !important;
+      --fs-h1: 34px; --fs-h2:22px; --fs-title:15px; --fs-time:15px; --fs-badge:12px; --fs-meta:12px;
+      --gutter:18px; --rail-w:3px;
+      --time-bg: rgba(255,255,255,.11);
+      --time-bg-hover: rgba(255,255,255,.17);
+      --time-border: rgba(255,255,255,.10);
+      --row-hover: rgba(170,170,170,.08);
     }
+    body.view-compact .schedule-item{ margin-bottom:4px; }
+    body.view-compact h2{ margin:20px 0 4px; }
+
     body.view-minimal{
-      /* типографика и плотность */
-      --fs-h1: 34px; --fs-h2: 20px; --fs-title:16px; --fs-time:16px; --fs-badge:12px;
-      /* таймлайн */
+      --fs-h1: 34px; --fs-h2:20px; --fs-title:16px; --fs-time:16px; --fs-badge:12px;
       --gutter:18px; --rail-w:2px;
       --rail-c1: rgba(255,255,255,.10);
       --rail-c2: rgba(255,255,255,.16);
-      /* таймкоды — без фона, тонкий контур */
       --time-bg: transparent;
       --time-bg-hover: rgba(255,255,255,.06);
       --time-border: rgba(255,255,255,.16);
       --time-color:#dcdcdc;
-      /* ховер строки — почти незаметный */
       --row-hover: rgba(255,255,255,.035);
-      /* метка времени не используется */
       --tag-bg: transparent; --tag-br: transparent; --tag-shadow:none;
     }
-
-    body.view-minimal #schedule-wrap{ padding-left: calc(var(--gutter) + 8px) }
-    body.view-minimal h2{ margin:18px 0 4px; font-weight:600; opacity:.92; letter-spacing:.1px }
-
-    /* строки компактнее */
-    body.view-minimal .schedule-item{
-      margin-bottom:4px; padding-left:12px; border-radius:6px;
-    }
-
-    /* таймкод — «призрак»: только контур, без заливки */
-    body.view-minimal .time{
-      background: var(--time-bg);
-      border: 1px solid var(--time-border);
-      color: var(--time-color);
-      border-radius:6px;
-      padding:0 6px;
-      box-shadow:none;
-    }
-    body.view-minimal .schedule-item:hover .time{
-      background: var(--time-bg-hover);
-      border-color: rgba(255,255,255,.22);
-    }
-
-    /* placeholder в «Без графика» — пунктирный контур, тусклее */
-    body.view-minimal .time.is-placeholder{
-      border-style: dashed;
-      color:#a9a9a9;
-      border-color: rgba(255,255,255,.12);
-    }
-
-    /* заголовок элемента — чуть светлее */
-    body.view-minimal .title{ color:#e3e3e3 }
-
-    /* ховер строки — еле заметный, без сдвигов */
-    body.view-minimal .schedule-item:hover{
-      background: var(--row-hover);
-    }
-
-    /* Рельса таймлайна — тонкая, мягкий градиент, с мягким краевым маском */
-    body.view-minimal #time-rail .rail-line{
-      left: calc(var(--gutter)/2 - var(--rail-w)/2);
-      width: var(--rail-w);
-      background: linear-gradient(180deg, var(--rail-c1), var(--rail-c2));
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16px, #000 calc(100% - 16px), transparent 100%);
-              mask-image: linear-gradient(to bottom, transparent 0%, #000 16px, #000 calc(100% - 16px), transparent 100%);
-      box-shadow: none;
-    }
-
-    /* Маркер: только маленькая точка с мягким пульсом, без кольца/бейджа/коннектора */
-    body.view-minimal #time-rail .now-tag .badge,
-    body.view-minimal #time-rail .now-tag .ring,
-    body.view-minimal #time-rail .now-tag .connector{ display:none !important; }
-
+    /* Минимализм: только точка, без подписи/кольца/коннектора */
     @keyframes miniPulse{
       0%,100%{ box-shadow:0 0 0 2px rgba(255,255,255,.18), 0 0 8px rgba(255,255,255,.10) }
       50%    { box-shadow:0 0 0 3px rgba(255,255,255,.26), 0 0 14px rgba(255,255,255,.18) }
     }
+    body.view-minimal #time-rail .now-tag .badge,
+    body.view-minimal #time-rail .now-tag .ring,
+    body.view-minimal #time-rail .now-tag .connector{ display:none !important; }
     body.view-minimal #time-rail .now-tag .dot{
       width:8px; height:8px; left:calc(var(--rail-w)/2 - 4px); top:-4px;
-      background:#fff; border-radius:50%;
-      animation: miniPulse 2.8s ease-in-out infinite;
+      background:#fff; border-radius:50%; animation: miniPulse 2.8s ease-in-out infinite;
     }
-
-    /* «Без графика»: ещё тише */
-    body.view-minimal .time.is-placeholder{ color:#b8b8b8 }
-    body.view-minimal .empty-day{ color:#777 }
-
+    body.view-minimal #schedule-wrap{ padding-left: calc(var(--gutter) + 8px) }
+    body.view-minimal .schedule-item{ margin-bottom:4px; padding-left:12px; border-radius:6px; }
+    body.view-minimal .time{
+      background: var(--time-bg); border:1px solid var(--time-border);
+      color: var(--time-color); border-radius:6px; padding:0 6px; box-shadow:none;
+    }
+    body.view-minimal .time.is-placeholder{ border-style:dashed; color:#a9a9a9; border-color:rgba(255,255,255,.12) }
+    body.view-minimal h2{ margin:18px 0 4px; font-weight:600; opacity:.92; letter-spacing:.1px }
 
     *{ box-sizing:border-box }
     html,body{ height:100% }
@@ -159,17 +108,14 @@
     h2{ font-size:var(--fs-h2); margin:25px 0 5px; position:relative; z-index:1; transition: font-size .28s ease }
     ul{ padding-left:0; margin:0 0 7px; display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1 }
 
-    /* Строка списка — кликабельна целиком */
     .schedule-item{
       display:flex; align-items:flex-start;
       margin-bottom:5px; width:100%; padding-left:15px; border-radius:8px;
       transition: background-color .18s ease, padding .18s ease;
       cursor:pointer;
     }
-    body.view-minimal .schedule-item{ margin-bottom:4px; border-radius:7px }
     .schedule-item:hover{ background:var(--row-hover) }
 
-    /* Таймкод — фикс ширина + анимация при смене формата/режима */
     .time{
       display:flex; align-items:center; justify-content:center;
       margin-right:5px; padding:0 6px;
@@ -195,7 +141,7 @@
 
     .empty-day{ color:#666; font-style:italic; margin-left:15px }
 
-    /* Кнопки */
+    /* кнопки */
     #button-container{ position:fixed; top:20px; right:20px; display:flex; gap:10px; z-index:50 }
     @media (max-width:1024px){ #button-container{ top:auto; bottom:20px } }
     .btn{
@@ -211,10 +157,9 @@
     .icon-gear{ width:20px; height:20px; display:block }
     .icon-gear path, .icon-gear circle{ fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
 
-    /* Контент + левый таймлайн */
+    /* контент + левый таймлайн */
     #schedule-wrap{ position:relative; width:100%; padding-left:calc(var(--gutter) + 12px); transition: padding-left .28s ease }
 
-    /* Рельса времени */
     #time-rail{ position:absolute; left:8px; top:0; width:var(--gutter); height:0; pointer-events:none; z-index:0 }
     #time-rail .rail-line{
       position:absolute; top:0; bottom:0; left:calc(var(--gutter)/2 - var(--rail-w)/2);
@@ -226,22 +171,20 @@
       transition: height .24s ease, width .28s ease, left .28s ease;
     }
 
-    /* Маркер: точка + коннектор + бейдж слева */
+    /* маркер */
     #time-rail .now-tag{
       position:absolute; top:0; left:calc(50% - var(--rail-w)/2);
       width:0; height:0; opacity:0; transition:none;
     }
     .now-tag .dot{
       position:absolute; left:calc(var(--rail-w)/2 - 5px); top:-5px;
-      width:10px; height:10px; border-radius:50%;
-      background:#f8f8f8;
+      width:10px; height:10px; border-radius:50%; background:#f8f8f8;
       box-shadow:0 0 0 2px rgba(255,255,255,.28), 0 0 12px rgba(255,255,255,.18);
       transition: left .28s ease;
     }
     .now-tag .ring{
       position:absolute; left:calc(var(--rail-w)/2 - 9px); top:-9px;
-      width:18px; height:18px; border-radius:50%;
-      border:1px solid rgba(255,255,255,.20);
+      width:18px; height:18px; border-radius:50%; border:1px solid rgba(255,255,255,.20);
       transition: left .28s ease;
     }
     .now-tag .connector{
@@ -269,7 +212,7 @@
       #time-rail .now-tag .badge{ max-width:140px }
     }
 
-    /* Модалка настроек */
+    /* настройки (модалка) */
     .modal-backdrop{
       position:fixed; inset:0; background:rgba(0,0,0,.45);
       display:none; align-items:center; justify-content:center; z-index:100;
@@ -302,7 +245,14 @@
       cursor:pointer; transition: background-color .18s ease, border-color .18s ease;
     }
 
-    /* Сегментный тумблер 24ч/12ч */
+    /* мобильные правки для ровного выравнивания */
+    @media (max-width:520px){
+      .row{ align-items:stretch }
+      .row label{ min-width:unset; flex: 1 1 100%; margin-bottom:6px }
+      .row .control{ width:100% }
+    }
+
+    /* сегментный тумблер 24/12 */
     .seg-toggle{
       position:relative; display:grid; grid-template-columns:1fr 1fr;
       background:#2a2a2a; border:1px solid #3a3a3a; border-radius:10px; padding:4px; gap:4px;
@@ -323,14 +273,13 @@
     .segbtn:hover{ color:#fff; transform:translateY(-1px) }
     .segbtn.active{ color:#fff }
 
-    /* Коллапсер для пользовательского UTC */
     .tz-collapsible{ overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
       transition: max-height .28s cubic-bezier(.2,.6,.2,1), opacity .28s ease, transform .28s ease; }
     .tz-collapsible.open{ max-height:84px; opacity:1; transform:none; }
 
     .note{ font-size:12px; color:#9a9a9a }
 
-    /* Пробник ширины таймкода */
+    /* измеритель ширины таймкода */
     .time-measure{
       position:absolute; visibility:hidden; left:-9999px; top:-9999px;
       display:inline-block;
@@ -342,7 +291,6 @@
   </style>
 </head>
 <body class="view-classic">
-  <!-- Кнопки -->
   <div id="button-container">
     <button id="scrollTodayButton" class="btn" aria-label="Прокрутить к сегодняшнему дню">На сегодня</button>
     <button id="gearButton" class="btn" aria-label="Настройки" title="Настройки">
@@ -356,7 +304,6 @@
   <h1 id="schedule-title">График выхода серий</h1>
   <div id="meta-tz"></div>
 
-  <!-- Контент + левый таймлайн -->
   <div id="schedule-wrap">
     <div id="time-rail" aria-hidden="true">
       <div class="rail-line"></div>
@@ -403,7 +350,7 @@
         <label for="viewMode">Вид:</label>
         <select id="viewMode" class="control select">
           <option value="classic">Классический</option>
-          <option value="wide">Широкий (TV)</option>
+          <option value="compact">Компактный</option>
           <option value="minimal">Минимализм</option>
         </select>
       </div>
@@ -500,11 +447,14 @@
       ];
 
       /* ===== STATE / SETTINGS ===== */
+      const computeDefaultView = () =>
+        (window.matchMedia && window.matchMedia('(max-width: 560px)').matches) ? 'compact' : 'classic';
+
       const settings = {
         tzMode: localStorage.getItem('tzMode') || 'system',
         tzOffsetMin: parseInt(localStorage.getItem('tzOffsetMin') || '180', 10),
         clock12: localStorage.getItem('clock12') === 'true',
-        viewMode: localStorage.getItem('viewMode') || 'classic'
+        viewMode: localStorage.getItem('viewMode') || computeDefaultView()
       };
 
       function zoneId(){
@@ -537,10 +487,10 @@
         const z = zoneId();
         const off = DateTime.local().setZone(z).offset;
         const label = (settings.tzMode === 'system') ? `${z} (${offsetLabel(off)})` : `${offsetLabel(settings.tzOffsetMin)}`;
-        $('#meta-tz').textContent = `Время сейчас: ${label}. База расписания: Europe/Moscow.`;
+        document.getElementById('meta-tz').textContent = `Время сейчас: ${label}. База расписания: Europe/Moscow.`;
       }
 
-      /* Конвертация */
+      /* конвертация */
       function convertReferenceTimeToLocal(){
         const referenceZone='Europe/Moscow';
         const localZone = zoneId();
@@ -614,7 +564,7 @@
       }
 
       function render(converted){
-        const c = $('#schedule-container');
+        const c = document.getElementById('schedule-container');
         c.innerHTML = '';
 
         for(let di=0; di<7; di++){
@@ -639,7 +589,7 @@
           c.appendChild(block);
         }
 
-        // Без графика: день из скобок -> в таймкод (сокр. Пн–Вс)
+        // Без графика
         const block = document.createElement('div');
         block.className = 'day-block';
         const h2 = document.createElement('h2');
@@ -654,12 +604,12 @@
         c.appendChild(block);
       }
 
-      /* Таймлайн метрики */
+      /* таймлайн метрики */
       const metrics = { railTop:0, railH:0, todayTopRel:0, todayH:0 };
 
       function layoutRail(){
-        const wrap = $('#schedule-wrap');
-        const rail = $('#time-rail');
+        const wrap = document.getElementById('schedule-wrap');
+        const rail = document.getElementById('time-rail');
         const blocks = [...document.querySelectorAll('#schedule-container > .day-block')].filter(b => b.dataset.di !== undefined);
         if(blocks.length < 7) return;
 
@@ -695,7 +645,6 @@
         tag.style.top = `${top}px`;
       }
 
-      /* подпись в теге — обновление раз в минуту и при формат/зоне */
       let lastMinute = -1;
       function updateNowLabel(force=false){
         const now = DateTime.local().setZone(zoneId());
@@ -705,7 +654,6 @@
         }
       }
 
-      /* не давать бейджу уезжать за левый край (в минимализме просто не виден) */
       function clampTagIntoView(){
         const badge = document.querySelector('#time-rail .now-tag .badge');
         if(!badge) return;
@@ -718,7 +666,6 @@
         }
       }
 
-      /* плавное непрерывное движение маркера */
       function animate(){
         const now = DateTime.local().setZone(zoneId());
         const totalMin = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
@@ -729,7 +676,7 @@
         requestAnimationFrame(animate);
       }
 
-      /* === ширина таймкода — без накопления, может и уменьшаться === */
+      /* ширина таймкода — без накопления */
       function recalcTimeWidth(){
         const sample = settings.clock12 ? '12:00\u202FPM' : '00:00';
         const probe = document.createElement('span');
@@ -742,10 +689,9 @@
         probe.remove();
       }
 
-      /* мягкая смена формата — без пересоздания DOM */
       function smoothFormatSwitch(){
         document.body.classList.add('format-anim');
-        recalcTimeWidth(); // запустить анимацию ширины
+        recalcTimeWidth();
         const converted = convertReferenceTimeToLocal();
         for(let di=0; di<7; di++){
           const block = document.querySelector(`.day-block[data-di="${di}"]`);
@@ -758,19 +704,18 @@
             node.textContent = show.time || NO_TIME;
           });
         }
-        updateNowLabel(true); // обновить метку таймлайна
+        updateNowLabel(true);
         setTimeout(()=> document.body.classList.remove('format-anim'), 320);
         requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); });
       }
 
-      /* ===== Настройки / UI ===== */
-      const settingsModal = $('#settings');
-      const tzModeSel = $('#tzMode');
-      const tzFixedWrap = $('#tzFixedWrap');
-      const tzOffsetText = $('#tzOffsetText');
-      const seg = $('#clockSeg');
+      const settingsModal = document.getElementById('settings');
+      const tzModeSel = document.getElementById('tzMode');
+      const tzFixedWrap = document.getElementById('tzFixedWrap');
+      const tzOffsetText = document.getElementById('tzOffsetText');
+      const seg = document.getElementById('clockSeg');
       const segBtns = seg.querySelectorAll('.segbtn');
-      const viewSel = $('#viewMode');
+      const viewSel = document.getElementById('viewMode');
 
       const setSegActive = (mode)=>{
         segBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
@@ -791,17 +736,17 @@
         if(total > 14*60 || total < -12*60) return null;
         return total;
       }
-      function formatOffset(mins){
+      const formatOffset = mins => {
         const sign = mins>=0 ? '+' : '-';
         const abs = Math.abs(mins);
         const hh = String(Math.floor(abs/60)).padStart(2,'0');
         const mm = String(abs%60).padStart(2,'0');
         return `${sign}${hh}:${mm}`;
-      }
+      };
 
       function applyViewMode(){
         document.body.classList.toggle('view-classic', settings.viewMode==='classic');
-        document.body.classList.toggle('view-wide', settings.viewMode==='wide');
+        document.body.classList.toggle('view-compact', settings.viewMode==='compact');
         document.body.classList.toggle('view-minimal', settings.viewMode==='minimal');
         recalcTimeWidth();
         layoutRail();
@@ -876,11 +821,10 @@
         setTimeout(persistAndRerender, 60);
       });
 
-      $('#gearButton').addEventListener('click', openSettings);
-      $('#closeSettings').addEventListener('click', closeSettings);
-      $('#settings').addEventListener('click', (e)=>{ if(e.target === $('#settings')) closeSettings(); });
+      document.getElementById('gearButton').addEventListener('click', openSettings);
+      document.getElementById('closeSettings').addEventListener('click', closeSettings);
+      document.getElementById('settings').addEventListener('click', (e)=>{ if(e.target === document.getElementById('settings')) closeSettings(); });
 
-      /* Кнопка «На сегодня» */
       function scrollToToday(){
         const now = DateTime.local().setZone(zoneId());
         const di = (now.weekday + 6) % 7;
@@ -890,38 +834,48 @@
           window.scrollTo({ top:y, behavior:'smooth' });
         }
       }
-      $('#scrollTodayButton').addEventListener('click', scrollToToday);
+      document.getElementById('scrollTodayButton').addEventListener('click', scrollToToday);
 
-      /* Прятать кнопки при скролле */
       window.addEventListener('scroll', ()=>{
         const hidden = window.pageYOffset > 40;
-        $('#scrollTodayButton').classList.toggle('hidden', hidden);
-        $('#gearButton').classList.toggle('hidden', hidden);
+        document.getElementById('scrollTodayButton').classList.toggle('hidden', hidden);
+        document.getElementById('gearButton').classList.toggle('hidden', hidden);
       }, { passive:true });
 
-      /* ResizeObserver: пересчёт таймлайна при любых изменениях высоты */
       let ro;
       if('ResizeObserver' in window){
         ro = new ResizeObserver(()=> requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); }));
       }
-
-      window.addEventListener('resize', ()=>{ layoutRail(); recalcTimeWidth(); clampTagIntoView(); }, { passive:true });
+      window.addEventListener('resize', ()=>{
+        // если пользователь ещё не выбирал вид — пересчитать дефолт для телефонов при повороте
+        if(!localStorage.getItem('viewMode')){
+          const auto = computeDefaultView();
+          if(auto !== settings.viewMode){
+            settings.viewMode = auto;
+            applyViewMode();
+            localStorage.setItem('viewMode', auto);
+          }
+        }
+        layoutRail(); recalcTimeWidth(); clampTagIntoView();
+      }, { passive:true });
 
       /* INIT */
       document.addEventListener('DOMContentLoaded', ()=>{
-        applyViewMode();      // применить сохранённый вид до рендеров
+        // применить дефолтный/сохранённый вид до рендеров
+        applyViewMode();
+
         recalcTimeWidth();
         updateMeta();
         render(convertReferenceTimeToLocal());
         layoutRail();
 
-        if(ro){ ro.observe($('#schedule-container')); }
+        if(ro){ ro.observe(document.getElementById('schedule-container')); }
 
         if(document.fonts && document.fonts.ready){
           document.fonts.ready.then(()=>{ recalcTimeWidth(); layoutRail(); clampTagIntoView(); });
         }
 
-        // первичное позиционирование без «езда»
+        // первичная позиция маркера
         const now = DateTime.local().setZone(zoneId());
         const minutes = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
         const ratio = Math.max(0, Math.min(1, minutes/1440));
@@ -931,7 +885,7 @@
         clampTagIntoView();
         requestAnimationFrame(()=> document.querySelector('#time-rail .now-tag').classList.add('ready'));
 
-        // плавное непрерывное движение
+        // анимация маркера
         requestAnimationFrame(animate);
 
         // минутная ресинхронизация
