@@ -1,564 +1,948 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <title>График</title>
-    <meta name="viewport" content="shrink-to-fit=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta charset="utf-8">
-    <meta name="description" content="Расписание серий в Telegram канале @SubVost">
-    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="favicon/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-    <link rel="manifest" href="favicon/site.webmanifest">
-    <link rel="mask-icon" href="favicon/safari-pinned-tab.svg" color="#5bbad5">
-    <link rel="shortcut icon" href="favicon/favicon.ico">
-    <meta name="apple-mobile-web-app-title" content="График">
-    <meta name="application-name" content="График">
-    <meta name="msapplication-TileColor" content="#5bbad5">
-    <meta name="msapplication-TileImage" content="favicon/mstile-144x144.png">
-    <meta name="msapplication-config" content="favicon/browserconfig.xml">
-    <meta name="theme-color" content="#181818">
-    <meta property="og:title" content="График выхода серий">
-    <meta property="og:description" content="Расписание серий в Telegram канале @SubVost">
-    <meta property="og:image" content="favicon/android-chrome-192x192.png">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="SubVost">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.25.0/luxon.min.js"></script>
-    <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-            line-height: 1.5;
-            background-color: #181818;
-            background-size: cover;
-            color: #dddddd;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            cursor: default;
-            user-select: none;
-            -moz-user-select: none;
-            -webkit-user-select: none;
-            -ms-user-select: none;
-            max-width: 620px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        h1 {
-            text-align: center;
-            margin-top: 0.1em;
-            font-size: 36px;
-            color: #ffffff;
-        }
-        h2 {
-            font-size: 24px;
-            margin-bottom: 5px;
-            margin-top: 25px;
-        }
-        ul {
-            padding-left: 0;
-            margin-top: 0;
-            margin-bottom: 7px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        li {
-            margin-bottom: 5px;
-        }
-        .schedule-item {
-            display: flex;
-            align-items: baseline;
-            transition: background-color 0.3s ease-in-out;
-            margin-bottom: 5px;
-            width: 100%;
-            padding-left: 15px;
-            box-sizing: border-box;
-            border-radius: 8px;
-            /* Удалены position: relative и overflow: hidden */
-        }
-        .schedule-item:hover {
-            background-color: rgba(170, 170, 170, 0.3);
-            cursor: pointer;
-        }
-        .schedule-item .time {
-            display: inline-block;
-            margin-right: 5px;
-            padding: 0px 5px;
-            border-radius: 6px;
-            background-color: rgba(170, 170, 170, 0.3);
-            border: 1.5px solid transparent;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .schedule-item .time:hover {
-            background-color: rgba(170, 170, 170, 0.5);
-        }
-        #schedule-container {
-            margin-top: -10px;
-        }
-        .schedule-item .time:empty {
-            margin-top: 9.5px;
-            min-width: 5px;
-            height: 2px;
-            margin-bottom: auto;
-        }
-        .title {
-            font-size: 16px;
-            margin-left: 5px;
-            padding-right: 15px;
-            line-height: 1.5em;
-            color: #dddddd;
-            overflow: visible;
-            max-height: none;
-            transition: none; 
-        }
-        .title:hover {
-            background-color: transparent;
-        }
-        /* Анимация мигания для выделенного элемента */
-        .schedule-item.highlighted .title {
-            animation: flashingTitle 2s infinite;
-        }
-        .schedule-item.highlighted .time {
-            animation: flashingBorder 2s infinite;
-        }
-        @keyframes flashingTitle {
-            0%, 100% {
-                color: inherit;
-                text-shadow: none;
-            }
-            45%, 55% {
-                color: white;
-                text-shadow: 0 0 1px white;
-            }
-        }
-        @keyframes flashingBorder {
-            0%, 100% {
-                box-shadow: none;
-                text-shadow: none;
-                color: inherit;
-            }
-            45%, 55% {
-                box-shadow: 0 0 5.5px white;
-                text-shadow: 0 0 1px white;
-                color: #ffffff;
-            }
-        }
-        .empty-day {
-            color: #666;
-            font-style: italic;
-            margin-left: 15px;
-        }
-        /* Контейнер для кнопок */
-        #button-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-            z-index: 9999;
-        }
-        @media (max-width: 1024px) {
-            #button-container {
-                top: auto;
-                bottom: 20px;
-            }
-        }
-        /* Кнопка "На сегодня" */
-        #scrollTodayButton {
-            background-color: rgba(51, 51, 51, 0.8);
-            color: #fff;
-            border: 1px solid #666;
-            padding: 10px 16px;
-            border-radius: 4px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: opacity 0.5s ease, transform 0.5s ease, background-color 0.3s ease;
-            cursor: pointer;
-            opacity: 1;
-            transform: translateY(0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #scrollTodayButton.hidden {
-            opacity: 0;
-            transform: translateY(-20px);
-            pointer-events: none;
-        }
-        #scrollTodayButton:hover {
-            background-color: rgba(68, 68, 68, 0.8);
-        }
-        /* Кнопка шестерёнки */
-        #gearButton {
-            background-color: rgba(51, 51, 51, 0.8);
-            color: #fff;
-            border: 1px solid #666;
-            padding: 10px 10px;
-            border-radius: 4px;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: opacity 0.5s ease, transform 0.5s ease, background-color 0.3s ease;
-            cursor: pointer; /* Указывает, что элемент кликабельный */
-            opacity: 1;
-            transform: translateY(0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        #gearButton.hidden {
-            opacity: 0;
-            transform: translateY(-20px);
-            pointer-events: none;
-        }
-        #gearButton:hover {
-            background-color: rgba(68, 68, 68, 0.8);
-        }
-        #gearButton svg {
-            width: 20px;
-            height: 20px;
-            fill: currentColor;
-            stroke: currentColor;
-            stroke-width: 1;
-        }
-        /* Класс для анимации обводки */
-        .animate-border {
-            animation: temporary-border 1s ease-in-out forwards;
-        }
-        @keyframes temporary-border {
-            0% {
-                box-shadow: none;
-            }
-            20% {
-                box-shadow: 0 0 20px rgba(200, 200, 200, 0.6), inset 0 0 10px rgba(200, 200, 200, 0.3);
-            }
-            80% {
-                box-shadow: 0 0 20px rgba(200, 200, 200, 0.6), inset 0 0 10px rgba(200, 200, 200, 0.3);
-            }
-            100% {
-                box-shadow: none;
-            }
-        }
-    </style>
+  <title>График</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="shrink-to-fit=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <meta name="description" content="Расписание серий в Telegram канале @SubVost">
+  <meta name="theme-color" content="#181818">
+  <meta property="og:title" content="График выхода серий">
+  <meta property="og:description" content="Расписание серий в Telegram канале @SubVost">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.25.0/luxon.min.js"></script>
+
+  <style>
+    :root{
+      /* Базовые размеры (перекрываются режимами) */
+      --fs-h1: 36px; --fs-h2: 24px; --fs-title:16px; --fs-time:16px; --fs-meta:13px; --fs-badge:12px;
+
+      /* Таймлайн */
+      --gutter:20px; --rail-w:4px;
+      --rail-c1:rgba(255,255,255,.16); --rail-c2:rgba(255,255,255,.28);
+
+      /* Маркер текущего времени (tag + точка) */
+      --tag-h:26px; --tag-pad-x:8px; --tag-nudge:0px;
+      --tag-bg:rgba(255,255,255,.10); --tag-br:rgba(255,255,255,.22); --tag-text:#ececec;
+      --tag-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 10px rgba(255,255,255,.12);
+
+      /* Таймкоды — единый стиль (чуть темнее) */
+      --time-w-static: 90px;
+      --time-bg: rgba(255,255,255,.12);
+      --time-bg-hover: rgba(255,255,255,.18);
+      --time-border: rgba(255,255,255,.10);
+      --time-color: #e2e2e2;
+
+      /* Placeholder для «Без графика» */
+      --ph-bg: rgba(255,255,255,.09);
+      --ph-border: rgba(255,255,255,.10);
+      --ph-color:#bdbdbd;
+
+      /* Ховеры строк */
+      --row-hover: rgba(170,170,170,.10);
+    }
+
+    /* ==== РЕЖИМЫ ОТОБРАЖЕНИЯ ==== */
+    body.view-classic{ }
+    body.view-wide{
+      max-width:1100px !important;
+      --fs-h1: 42px; --fs-h2:26px; --fs-title:18px; --fs-time:18px; --fs-badge:12px;
+      --gutter:28px; --rail-w:5px;
+      --time-bg: rgba(255,255,255,.14);
+      --time-bg-hover: rgba(255,255,255,.22);
+      --time-border: rgba(255,255,255,.14);
+      --row-hover: rgba(170,170,170,.12);
+      --tag-h:28px; --tag-pad-x:10px;
+    }
+    body.view-minimal{
+      /* типографика и плотность */
+      --fs-h1: 34px; --fs-h2: 20px; --fs-title:16px; --fs-time:16px; --fs-badge:12px;
+      /* таймлайн */
+      --gutter:18px; --rail-w:2px;
+      --rail-c1: rgba(255,255,255,.10);
+      --rail-c2: rgba(255,255,255,.16);
+      /* таймкоды — без фона, тонкий контур */
+      --time-bg: transparent;
+      --time-bg-hover: rgba(255,255,255,.06);
+      --time-border: rgba(255,255,255,.16);
+      --time-color:#dcdcdc;
+      /* ховер строки — почти незаметный */
+      --row-hover: rgba(255,255,255,.035);
+      /* метка времени не используется */
+      --tag-bg: transparent; --tag-br: transparent; --tag-shadow:none;
+    }
+
+    body.view-minimal #schedule-wrap{ padding-left: calc(var(--gutter) + 8px) }
+    body.view-minimal h2{ margin:18px 0 4px; font-weight:600; opacity:.92; letter-spacing:.1px }
+
+    /* строки компактнее */
+    body.view-minimal .schedule-item{
+      margin-bottom:4px; padding-left:12px; border-radius:6px;
+    }
+
+    /* таймкод — «призрак»: только контур, без заливки */
+    body.view-minimal .time{
+      background: var(--time-bg);
+      border: 1px solid var(--time-border);
+      color: var(--time-color);
+      border-radius:6px;
+      padding:0 6px;
+      box-shadow:none;
+    }
+    body.view-minimal .schedule-item:hover .time{
+      background: var(--time-bg-hover);
+      border-color: rgba(255,255,255,.22);
+    }
+
+    /* placeholder в «Без графика» — пунктирный контур, тусклее */
+    body.view-minimal .time.is-placeholder{
+      border-style: dashed;
+      color:#a9a9a9;
+      border-color: rgba(255,255,255,.12);
+    }
+
+    /* заголовок элемента — чуть светлее */
+    body.view-minimal .title{ color:#e3e3e3 }
+
+    /* ховер строки — еле заметный, без сдвигов */
+    body.view-minimal .schedule-item:hover{
+      background: var(--row-hover);
+    }
+
+    /* Рельса таймлайна — тонкая, мягкий градиент, с мягким краевым маском */
+    body.view-minimal #time-rail .rail-line{
+      left: calc(var(--gutter)/2 - var(--rail-w)/2);
+      width: var(--rail-w);
+      background: linear-gradient(180deg, var(--rail-c1), var(--rail-c2));
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16px, #000 calc(100% - 16px), transparent 100%);
+              mask-image: linear-gradient(to bottom, transparent 0%, #000 16px, #000 calc(100% - 16px), transparent 100%);
+      box-shadow: none;
+    }
+
+    /* Маркер: только маленькая точка с мягким пульсом, без кольца/бейджа/коннектора */
+    body.view-minimal #time-rail .now-tag .badge,
+    body.view-minimal #time-rail .now-tag .ring,
+    body.view-minimal #time-rail .now-tag .connector{ display:none !important; }
+
+    @keyframes miniPulse{
+      0%,100%{ box-shadow:0 0 0 2px rgba(255,255,255,.18), 0 0 8px rgba(255,255,255,.10) }
+      50%    { box-shadow:0 0 0 3px rgba(255,255,255,.26), 0 0 14px rgba(255,255,255,.18) }
+    }
+    body.view-minimal #time-rail .now-tag .dot{
+      width:8px; height:8px; left:calc(var(--rail-w)/2 - 4px); top:-4px;
+      background:#fff; border-radius:50%;
+      animation: miniPulse 2.8s ease-in-out infinite;
+    }
+
+    /* «Без графика»: ещё тише */
+    body.view-minimal .time.is-placeholder{ color:#b8b8b8 }
+    body.view-minimal .empty-day{ color:#777 }
+
+
+    *{ box-sizing:border-box }
+    html,body{ height:100% }
+    body{
+      font-family:'Open Sans',sans-serif;
+      line-height:1.5;
+      background:#181818; color:#dddddd;
+      margin:0; padding:20px;
+      display:flex; flex-direction:column; align-items:center;
+      max-width:620px; margin-left:auto; margin-right:auto;
+      user-select:none; cursor:default;
+      transition: max-width .28s cubic-bezier(.2,.6,.2,1);
+    }
+
+    h1{ text-align:center; margin-top:.1em; font-size:var(--fs-h1); color:#fff; transition: font-size .28s ease }
+    #meta-tz{ margin:-14px 0 12px; font-size:var(--fs-meta); color:#9a9a9a; text-align:center; transition: font-size .28s ease }
+
+    h2{ font-size:var(--fs-h2); margin:25px 0 5px; position:relative; z-index:1; transition: font-size .28s ease }
+    ul{ padding-left:0; margin:0 0 7px; display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1 }
+
+    /* Строка списка — кликабельна целиком */
+    .schedule-item{
+      display:flex; align-items:flex-start;
+      margin-bottom:5px; width:100%; padding-left:15px; border-radius:8px;
+      transition: background-color .18s ease, padding .18s ease;
+      cursor:pointer;
+    }
+    body.view-minimal .schedule-item{ margin-bottom:4px; border-radius:7px }
+    .schedule-item:hover{ background:var(--row-hover) }
+
+    /* Таймкод — фикс ширина + анимация при смене формата/режима */
+    .time{
+      display:flex; align-items:center; justify-content:center;
+      margin-right:5px; padding:0 6px;
+      width:var(--time-w-static); min-width:var(--time-w-static); max-width:var(--time-w-static);
+      flex:0 0 var(--time-w-static);
+      text-align:center; white-space:nowrap;
+      border-radius:7px; color:var(--time-color);
+      background:var(--time-bg); border:1px solid var(--time-border);
+      font-size:var(--fs-time);
+      font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
+      transition: background .18s ease, color .18s ease, border-color .18s ease, width .28s cubic-bezier(.2,.6,.2,1), opacity .2s ease, font-size .28s ease;
+    }
+    .schedule-item:hover .time{ background:var(--time-bg-hover) }
+    .time:empty{ visibility:hidden }
+    .time.is-placeholder{ background:var(--ph-bg); border-color:var(--ph-border); color:var(--ph-color) }
+    .format-anim .time{ opacity:.35 }
+
+    .title{
+      flex:1 1 auto;
+      font-size:var(--fs-title); margin-left:5px; padding-right:15px; color:#ddd;
+      text-decoration:none; cursor:inherit; transition: font-size .28s ease;
+    }
+
+    .empty-day{ color:#666; font-style:italic; margin-left:15px }
+
+    /* Кнопки */
+    #button-container{ position:fixed; top:20px; right:20px; display:flex; gap:10px; z-index:50 }
+    @media (max-width:1024px){ #button-container{ top:auto; bottom:20px } }
+    .btn{
+      background:rgba(51,51,51,.85); color:#fff; border:1px solid #666; border-radius:10px;
+      display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+      padding:10px 14px; font-size:14px; letter-spacing:.2px;
+      transition: background-color .18s ease, transform .06s ease, opacity .3s ease, border-color .18s ease;
+    }
+    .btn:hover{ background:rgba(68,68,68,.9); transform:translateY(-1px); border-color:#777 }
+    .btn.hidden{ opacity:0; pointer-events:none }
+    #scrollTodayButton{ text-transform:uppercase; letter-spacing:.6px }
+    #gearButton{ width:40px; height:40px; padding:0; border-radius:10px }
+    .icon-gear{ width:20px; height:20px; display:block }
+    .icon-gear path, .icon-gear circle{ fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
+
+    /* Контент + левый таймлайн */
+    #schedule-wrap{ position:relative; width:100%; padding-left:calc(var(--gutter) + 12px); transition: padding-left .28s ease }
+
+    /* Рельса времени */
+    #time-rail{ position:absolute; left:8px; top:0; width:var(--gutter); height:0; pointer-events:none; z-index:0 }
+    #time-rail .rail-line{
+      position:absolute; top:0; bottom:0; left:calc(var(--gutter)/2 - var(--rail-w)/2);
+      width:var(--rail-w); border-radius:3px;
+      background:linear-gradient(180deg, var(--rail-c1), var(--rail-c2));
+      -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
+              mask-image:linear-gradient(to bottom, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
+      box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);
+      transition: height .24s ease, width .28s ease, left .28s ease;
+    }
+
+    /* Маркер: точка + коннектор + бейдж слева */
+    #time-rail .now-tag{
+      position:absolute; top:0; left:calc(50% - var(--rail-w)/2);
+      width:0; height:0; opacity:0; transition:none;
+    }
+    .now-tag .dot{
+      position:absolute; left:calc(var(--rail-w)/2 - 5px); top:-5px;
+      width:10px; height:10px; border-radius:50%;
+      background:#f8f8f8;
+      box-shadow:0 0 0 2px rgba(255,255,255,.28), 0 0 12px rgba(255,255,255,.18);
+      transition: left .28s ease;
+    }
+    .now-tag .ring{
+      position:absolute; left:calc(var(--rail-w)/2 - 9px); top:-9px;
+      width:18px; height:18px; border-radius:50%;
+      border:1px solid rgba(255,255,255,.20);
+      transition: left .28s ease;
+    }
+    .now-tag .connector{
+      position:absolute; top:0; left:-6px; width:6px; height:1px;
+      background:linear-gradient(to left, rgba(255,255,255,.24), rgba(255,255,255,0));
+    }
+    .now-tag .badge{
+      position:absolute; left:calc(-8px - var(--tag-nudge)); top:calc(-1 * (var(--tag-h)/2) + .5px);
+      transform:translateX(-100%);
+      display:flex; align-items:center; justify-content:center;
+      min-width:54px; max-width:160px; height:var(--tag-h);
+      padding:0 var(--tag-pad-x); white-space:nowrap;
+      font-size:var(--fs-badge); color:var(--tag-text);
+      background:var(--tag-bg); border:1px solid var(--tag-br); border-radius:8px;
+      box-shadow:var(--tag-shadow);
+      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+      transition: width .18s ease, left .18s ease, opacity .18s ease, height .28s ease, font-size .28s ease, padding .28s ease;
+    }
+    #time-rail .now-tag.ready{ opacity:1; transition: top .12s linear, opacity .18s ease; }
+
+    @media (max-width:420px){
+      :root{ --gutter:18px }
+      #schedule-wrap{ padding-left:calc(var(--gutter) + 10px) }
+      #time-rail{ left:6px }
+      #time-rail .now-tag .badge{ max-width:140px }
+    }
+
+    /* Модалка настроек */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(0,0,0,.45);
+      display:none; align-items:center; justify-content:center; z-index:100;
+      opacity:0; transition: opacity .2s ease;
+    }
+    .modal-backdrop.show{ display:flex; }
+    .modal-backdrop.show.visible{ opacity:1; }
+    .modal{
+      background:#1e1e1e; color:#e6e6e6; border:1px solid #333; border-radius:14px; padding:16px;
+      width:min(560px, 92vw); box-shadow:0 12px 40px rgba(0,0,0,.55);
+      transform: translateY(8px); opacity:.98; transition: transform .24s cubic-bezier(.2,.6,.2,1), opacity .24s ease;
+    }
+    .modal-backdrop.visible .modal{ transform:none; opacity:1; }
+    .modal h3{ margin:0 0 12px; font-size:18px; font-weight:600 }
+    .row{ display:flex; align-items:center; gap:12px; margin:12px 0; flex-wrap:wrap }
+    .row label{ min-width:128px; font-size:14px; color:#bbb }
+
+    .control{
+      background:#2a2a2a; color:#fff; border:1px solid #3a3a3a; border-radius:10px;
+      padding:10px 12px; font-size:14px; line-height:1; outline:none;
+      transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+    .control:focus{ border-color:#666; box-shadow:0 0 0 2px rgba(255,255,255,.06) }
+
+    .select{
+      appearance:none; -webkit-appearance:none; -moz-appearance:none;
+      padding-right:34px; position:relative;
+      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="%23cfcfcf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5l4 4 4-4"/></svg>');
+      background-repeat:no-repeat; background-position:right 10px center; background-size:14px;
+      cursor:pointer; transition: background-color .18s ease, border-color .18s ease;
+    }
+
+    /* Сегментный тумблер 24ч/12ч */
+    .seg-toggle{
+      position:relative; display:grid; grid-template-columns:1fr 1fr;
+      background:#2a2a2a; border:1px solid #3a3a3a; border-radius:10px; padding:4px; gap:4px;
+      --seg-x:0%;
+      transition: border-color .18s ease, background-color .18s ease;
+    }
+    .seg-toggle.mode12{ --seg-x:100%; }
+    .seg-indicator{
+      position:absolute; top:4px; left:4px; width:calc(50% - 4px); height:calc(100% - 8px);
+      background:#3a3a3a; border-radius:8px; transition: transform .28s cubic-bezier(.2,.6,.2,1);
+      transform: translateX(var(--seg-x));
+      box-shadow:0 1px 0 rgba(255,255,255,.06), inset 0 0 0 .5px rgba(0,0,0,.25);
+    }
+    .segbtn{
+      position:relative; z-index:1; background:transparent; border:0; border-radius:8px; color:#cfcfcf;
+      padding:8px 10px; font-size:14px; cursor:pointer; transition: color .18s ease, transform .06s ease;
+    }
+    .segbtn:hover{ color:#fff; transform:translateY(-1px) }
+    .segbtn.active{ color:#fff }
+
+    /* Коллапсер для пользовательского UTC */
+    .tz-collapsible{ overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
+      transition: max-height .28s cubic-bezier(.2,.6,.2,1), opacity .28s ease, transform .28s ease; }
+    .tz-collapsible.open{ max-height:84px; opacity:1; transform:none; }
+
+    .note{ font-size:12px; color:#9a9a9a }
+
+    /* Пробник ширины таймкода */
+    .time-measure{
+      position:absolute; visibility:hidden; left:-9999px; top:-9999px;
+      display:inline-block;
+      padding:0 6px; border:1px solid transparent; border-radius:7px;
+      white-space:nowrap; font-family:'Open Sans',sans-serif; font-size:var(--fs-time);
+      font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
+      min-width:0; max-width:none; flex:0 0 auto;
+    }
+  </style>
 </head>
-<body>
-    <!-- Контейнер для кнопок -->
-    <div id="button-container">
-        <button id="scrollTodayButton" aria-label="Прокрутить к сегодняшнему дню">На сегодня</button>
-        <button id="gearButton" aria-label="Настройки (в разработке)" title="В разработке">
-            <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="50" height="50" viewBox="0 0 50 50" style="fill:#FFFFFF;">
-                <path d="M 22.205078 2 A 1.0001 1.0001 0 0 0 21.21875 2.8378906 L 20.246094 8.7929688 C 19.076509 9.1331971 17.961243 9.5922728 16.910156 10.164062 L 11.996094 6.6542969 A 1.0001 1.0001 0 0 0 10.708984 6.7597656 L 6.8183594 10.646484 A 1.0001 1.0001 0 0 0 6.7070312 11.927734 L 10.164062 16.873047 C 9.583454 17.930271 9.1142098 19.051824 8.765625 20.232422 L 2.8359375 21.21875 A 1.0001 1.0001 0 0 0 2.0019531 22.205078 L 2.0019531 27.705078 A 1.0001 1.0001 0 0 0 2.8261719 28.691406 L 8.7597656 29.742188 C 9.1064607 30.920739 9.5727226 32.043065 10.154297 33.101562 L 6.6542969 37.998047 A 1.0001 1.0001 0 0 0 6.7597656 39.285156 L 10.648438 43.175781 A 1.0001 1.0001 0 0 0 11.927734 43.289062 L 16.882812 39.820312 C 17.936999 40.39548 19.054994 40.857928 20.228516 41.201172 L 21.21875 47.164062 A 1.0001 1.0001 0 0 0 22.205078 48 L 27.705078 48 A 1.0001 1.0001 0 0 0 28.691406 47.173828 L 29.751953 41.1875 C 30.920633 40.838997 32.033372 40.369697 33.082031 39.791016 L 38.070312 43.291016 A 1.0001 1.0001 0 0 0 39.351562 43.179688 L 43.240234 39.287109 A 1.0001 1.0001 0 0 0 43.34375 37.996094 L 39.787109 33.058594 C 40.355783 32.014958 40.813915 30.908875 41.154297 29.748047 L 47.171875 28.693359 A 1.0001 1.0001 0 0 0 47.998047 27.707031 L 47.998047 22.207031 A 1.0001 1.0001 0 0 0 47.160156 21.220703 L 41.152344 20.238281 C 40.80968 19.078827 40.350281 17.974723 39.78125 16.931641 L 43.289062 11.933594 A 1.0001 1.0001 0 0 0 43.177734 10.652344 L 39.287109 6.7636719 A 1.0001 1.0001 0 0 0 37.996094 6.6601562 L 33.072266 10.201172 C 32.023186 9.6248101 30.909713 9.1579916 29.738281 8.8125 L 28.691406 2.828125 A 1.0001 1.0001 0 0 0 27.705078 2 L 22.205078 2 z M 23.056641 4 L 26.865234 4 L 27.861328 9.6855469 A 1.0001 1.0001 0 0 0 28.603516 10.484375 C 30.066026 10.848832 31.439607 11.426549 32.693359 12.185547 A 1.0001 1.0001 0 0 0 33.794922 12.142578 L 38.474609 8.7792969 L 41.167969 11.472656 L 37.835938 16.220703 A 1.0001 1.0001 0 0 0 37.796875 17.310547 C 38.548366 18.561471 39.118333 19.926379 39.482422 21.380859 A 1.0001 1.0001 0 0 0 40.291016 22.125 L 45.998047 23.058594 L 45.998047 26.867188 L 40.279297 27.871094 A 1.0001 1.0001 0 0 0 39.482422 28.617188 C 39.122545 30.069817 38.552234 31.434687 37.800781 32.685547 A 1.0001 1.0001 0 0 0 37.845703 33.785156 L 41.224609 38.474609 L 38.53125 41.169922 L 33.791016 37.84375 A 1.0001 1.0001 0 0 0 32.697266 37.808594 C 31.44975 38.567585 30.074755 39.148028 28.617188 39.517578 A 1.0001 1.0001 0 0 0 27.876953 40.3125 L 26.867188 46 L 23.052734 46 L 22.111328 40.337891 A 1.0001 1.0001 0 0 0 21.365234 39.53125 C 19.90185 39.170557 18.522094 38.59371 17.259766 37.835938 A 1.0001 1.0001 0 0 0 16.171875 37.875 L 11.46875 41.169922 L 8.7734375 38.470703 L 12.097656 33.824219 A 1.0001 1.0001 0 0 0 12.138672 32.724609 C 11.372652 31.458855 10.793319 30.079213 10.427734 28.609375 A 1.0001 1.0001 0 0 0 9.6328125 27.867188 L 4.0019531 26.867188 L 4.0019531 23.052734 L 9.6289062 22.117188 A 1.0001 1.0001 0 0 0 10.435547 21.373047 C 10.804273 19.898143 11.383325 18.518729 12.146484 17.255859 A 1.0001 1.0001 0 0 0 12.111328 16.164062 L 8.8261719 11.46875 L 11.523438 8.7734375 L 16.185547 12.105469 A 1.0001 1.0001 0 0 0 17.28125 12.148438 C 18.536908 11.394293 19.919867 10.822081 21.384766 10.462891 A 1.0001 1.0001 0 0 0 22.132812 9.6523438 L 23.056641 4 z M 25 17 C 20.593567 17 17 20.593567 17 25 C 17 29.406433 20.593567 33 25 33 C 29.406433 33 33 29.406433 33 25 C 33 20.593567 29.406433 17 25 17 z M 25 19 C 28.325553 19 31 21.674447 31 25 C 31 28.325553 28.325553 31 25 31 C 21.674447 31 19 28.325553 19 25 C 19 21.674447 21.674447 19 25 19 z"></path>
-            </svg>
-        </button>
+<body class="view-classic">
+  <!-- Кнопки -->
+  <div id="button-container">
+    <button id="scrollTodayButton" class="btn" aria-label="Прокрутить к сегодняшнему дню">На сегодня</button>
+    <button id="gearButton" class="btn" aria-label="Настройки" title="Настройки">
+      <svg class="icon-gear" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 3.9l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+      </svg>
+    </button>
+  </div>
+
+  <h1 id="schedule-title">График выхода серий</h1>
+  <div id="meta-tz"></div>
+
+  <!-- Контент + левый таймлайн -->
+  <div id="schedule-wrap">
+    <div id="time-rail" aria-hidden="true">
+      <div class="rail-line"></div>
+      <div class="now-tag">
+        <span class="ring"></span>
+        <span class="dot"></span>
+        <span class="connector"></span>
+        <span class="badge">00:00</span>
+      </div>
     </div>
+    <div id="schedule-container"></div>
+  </div>
 
-    <h1 id="schedule-title">График выхода серий</h1>
-    <div id="schedule-container"><!-- Здесь генерируется расписание --></div>
-    
-    <script>
-        const days = [
-            { day: 'Понедельник', schedule: [
-                { time: '15:00', title: 'Ван-Пис' },
-                { time: '16:15', title: 'Увидимся завтра в ресторанном дворике' },
-                { time: '18:15', title: 'Карманы лета' },
-                { time: '19:45', title: 'Необъятный океан 2' },
-            ]},
-            { day: 'Вторник', schedule: [
-                { time: '16:45', title: 'Девушка на час 4' },
-                { time: '17:45', title: 'Сведённые кукушкой 2' },
-                { time: '18:15', title: 'С нынешними детективами ничего не поделаешь' },
-                { time: '18:30', title: 'Космическое шоу ужасов Некрономико' },
-                { time: '21:45', title: 'Тёрки!' },
-            ]},
-            { day: 'Среда', schedule: [
-                { time: '15:15', title: 'Клеватесс: Король демонических зверей, младенец и герой-нежить' },
-                { time: '15:45', title: 'Герой щита 4' },
-                { time: '17:45', title: 'Я переродился торговым автоматом и скитаюсь по лабиринту 2' },
-                { time: '20:15', title: 'Три сестры Микадоно оказались неожиданно простыми' },
-                { time: '20:40', title: 'Цикл оммёдзи: Перерождение' },
-                { time: '21:15', title: 'Стать сильнее! Новая сага' },
-            ]},
-            { day: 'Четверг', schedule: [
-                { time: '17:15', title: 'Доктор Стоун: Научное будущее. Часть 2' },
-                { time: '17:45', title: 'Добро пожаловать в дешёвый ресторан изгнанника!' },
-                { time: '19:15', title: 'Дандадан 2' },
-                { time: '20:45', title: 'Строящийся город Камицубаки' },
-                { time: '22:15', title: 'Маг воды' },
-            ]},
-            { day: 'Пятница', schedule: [
-                { time: '18:15', title: 'Аркнайтс: Восстание из пепла' },
-                { time: '18:30', title: 'Первородный грех Такопи' },
-                { time: '18:45', title: 'Тёмный демон' },
-                { time: '19:45', title: 'Молчаливая ведьма: Тайна молчаливой колдуньи' },
-                { time: '20:45', title: 'За небрежной молодой девушкой ухаживает бывший жених её сестры' },
-            ]},
-            { day: 'Суббота', schedule: [
-                { time: '11:00', title: 'Повелитель тайн: Клоун' },
-                { time: '16:30', title: 'Энн Ширли' },
-                { time: '17:45', title: 'Кайдзю номер восемь 2' },
-                { time: '18:15', title: 'Герой, упавший в обморок, и принцессы-убийцы' },
-                { time: '18:45', title: 'Белого мага, изгнанного из команды героя, подобрал авантюрист ранга S: Этот белый маг слишком нестандартный' },
-                { time: '19:15', title: 'Этот глупый свин не понимает мечту Санта-Клауса' },
-                { time: '19:45', title: 'Эта фарфоровая кукла влюбилась 2' },
-                { time: '21:15', title: 'Дождь и ты' },
-            ]},
-            { day: 'Воскресенье', schedule: [
-                { time: '04:00', title: 'Быть героем Икс' },
-                { time: '11:45', title: 'Ведьмнадзор' },
-                { time: '12:15', title: 'Туалетный мальчик Ханако 2. Часть 2' },
-                { time: '16:45', title: 'Драгоценности Рури' },
-                { time: '17:00', title: 'Апокалипсис Миногры: Покорение другого мира начинается с разрушенной цивилизации' },
-                { time: '17:30', title: 'Ночь живых кошаков' },
-                { time: '18:00', title: 'Межкультурный обмен с девушкой у игровых автоматов' },
-                { time: '19:45', title: 'Отель для нелюдей' },
-            ]},
-            { day: 'Без графика', schedule: [
-                { title: 'Город (понедельник)' },
-                { title: 'Хроники людей и демонов (вторник)' },
-                { title: 'У меня нет любовницы! А может и есть?! (вторник)' },
-                { title: 'Дни Сакамото. Часть 2 (понедельник)' },
-                { title: 'Песнь ночных сов 2 (пятница)' },
-                { title: 'Благоухающий цветок расцветает с достоинством (суббота)' },
-                { title: 'Букет для гадкой девочки (суббота)' },
-                { title: 'Девять: Корона правителя (воскресенье)' },
-                { title: 'Плохая девочка (воскресенье)' },
-                { title: 'Лето, когда погас свет (воскресенье)' },
-                { title: 'Пуля/Пуля' },
-                { title: 'Нукитаси' },
-                { title: 'Сверхкуб' },
-                { title: 'Адский учитель Нубэ (2025)' },
-                { title: 'Мобильный воин Гандам: GQuuuuuuX' },
-                { title: 'Рок — женская скромность' },
-                { title: 'Старик из деревни становится Святым мечом' },
-                { title: 'Боевой отряд «Полный провал» 2' },
-                { title: 'Долги...' },
-            ]}
-        ];
+  <!-- Настройки -->
+  <div id="settings" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+    <div class="modal">
+      <h3 id="settings-title">Настройки</h3>
 
-        let isUpdating = false; // Флаг для предотвращения одновременных обновлений
-        let highlightTimeout;
+      <div class="row">
+        <label for="tzMode">Часовой пояс:</label>
+        <select id="tzMode" class="control select">
+          <option value="system">Авто (системный)</option>
+          <option value="fixed">Пользовательский UTC±</option>
+        </select>
+      </div>
 
-        function getLocalTimeZone() {
-            const offset = new Date().getTimezoneOffset();
-            const hours = Math.abs(Math.floor(offset / 60));
-            const sign = offset > 0 ? '-' : '+';
-            return `GMT${sign}${hours}`;
+      <div id="tzFixedWrap" class="tz-collapsible">
+        <div class="row" style="margin-top:0">
+          <input id="tzOffsetText" class="control" inputmode="text" autocomplete="off" spellcheck="false" placeholder="+03:00" aria-label="Смещение, формат ±HH:MM" style="width:120px; text-align:center; font-variant-numeric:tabular-nums; letter-spacing:.04em">
+          <span class="note">формат: ±HH:MM (шаг 15 мин)</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <label>Формат времени:</label>
+        <div id="clockSeg" class="seg-toggle" role="group" aria-label="Формат времени">
+          <div class="seg-indicator" aria-hidden="true"></div>
+          <button type="button" class="segbtn" data-mode="24">24ч</button>
+          <button type="button" class="segbtn" data-mode="12">12ч AM/PM</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="viewMode">Вид:</label>
+        <select id="viewMode" class="control select">
+          <option value="classic">Классический</option>
+          <option value="wide">Широкий (TV)</option>
+          <option value="minimal">Минимализм</option>
+        </select>
+      </div>
+
+      <div class="row" style="justify-content:flex-end">
+        <button id="closeSettings" class="btn">Закрыть</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      if(!window.luxon){ console.error('Luxon не загрузился'); return; }
+      const { DateTime } = luxon;
+      const $ = (sel, root=document) => root.querySelector(sel);
+
+      /* ===== DATA ===== */
+      const days = [
+        { day: 'Понедельник', schedule: [
+          { time: '15:00', title: 'Ван-Пис' },
+          { time: '16:15', title: 'Увидимся завтра в ресторанном дворике' },
+          { time: '18:15', title: 'Карманы лета' },
+          { time: '19:45', title: 'Необъятный океан 2' },
+        ]},
+        { day: 'Вторник', schedule: [
+          { time: '16:45', title: 'Девушка на час 4' },
+          { time: '17:45', title: 'Сведённые кукушкой 2' },
+          { time: '18:15', title: 'С нынешними детективами ничего не поделаешь' },
+          { time: '18:30', title: 'Космическое шоу ужасов Некрономико' },
+          { time: '21:45', title: 'Тёрки!' },
+        ]},
+        { day: 'Среда', schedule: [
+          { time: '15:15', title: 'Клеватесс: Король демонических зверей, младенец и герой-нежить' },
+          { time: '15:45', title: 'Герой щита 4' },
+          { time: '17:45', title: 'Я переродился торговым автоматом и скитаюсь по лабиринту 2' },
+          { time: '20:15', title: 'Три сестры Микадоно оказались неожиданно простыми' },
+          { time: '20:40', title: 'Цикл оммёдзи: Перерождение' },
+          { time: '21:15', title: 'Стать сильнее! Новая сага' },
+        ]},
+        { day: 'Четверг', schedule: [
+          { time: '17:15', title: 'Доктор Стоун: Научное будущее. Часть 2' },
+          { time: '17:45', title: 'Добро пожаловать в дешёвый ресторан изгнанника!' },
+          { time: '19:15', title: 'Дандадан 2' },
+          { time: '20:45', title: 'Строящийся город Камицубаки' },
+          { time: '22:15', title: 'Маг воды' },
+        ]},
+        { day: 'Пятница', schedule: [
+          { time: '18:15', title: 'Аркнайтс: Восстание из пепла' },
+          { time: '18:45', title: 'Тёмный демон' },
+          { time: '19:45', title: 'Молчаливая ведьма: Тайна молчаливой колдуньи' },
+          { time: '20:45', title: 'За небрежной молодой девушкой ухаживает бывший жених её сестры' },
+        ]},
+        { day: 'Суббота', schedule: [
+          { time: '11:00', title: 'Повелитель тайн: Клоун' },
+          { time: '16:30', title: 'Энн Ширли' },
+          { time: '17:45', title: 'Кайдзю номер восемь 2' },
+          { time: '18:15', title: 'Герой, упавший в обморок, и принцессы-убийцы' },
+          { time: '18:45', title: 'Белого мага, изгнанного из команды героя, подобрал авантюрист ранга S: Этот белый маг слишком нестандартный' },
+          { time: '19:15', title: 'Этот глупый свин не понимает мечту Санта-Клауса' },
+          { time: '19:45', title: 'Эта фарфоровая кукла влюбилась 2' },
+          { time: '21:15', title: 'Дождь и ты' },
+        ]},
+        { day: 'Воскресенье', schedule: [
+          { time: '04:00', title: 'Быть героем Икс' },
+          { time: '11:45', title: 'Ведьмнадзор' },
+          { time: '12:15', title: 'Туалетный мальчик Ханако 2. Часть 2' },
+          { time: '16:45', title: 'Драгоценности Рури' },
+          { time: '17:00', title: 'Апокалипсис Миногры: Покорение другого мира начинается с разрушенной цивилизации' },
+          { time: '17:30', title: 'Ночь живых кошаков' },
+          { time: '18:00', title: 'Межкультурный обмен с девушкой у игровых автоматов' },
+          { time: '19:45', title: 'Отель для нелюдей' },
+        ]},
+        { day: 'Без графика', schedule: [
+          { title: 'Город (понедельник)' },
+          { title: 'Хроники людей и демонов (вторник)' },
+          { title: 'У меня нет любовницы! А может и есть?! (вторник)' },
+          { title: 'Дни Сакамото. Часть 2 (понедельник)' },
+          { title: 'Песнь ночных сов 2 (пятница)' },
+          { title: 'Благоухающий цветок расцветает с достоинством (суббота)' },
+          { title: 'Букет для гадкой девочки (суббота)' },
+          { title: 'Девять: Корона правителя (воскресенье)' },
+          { title: 'Плохая девочка (воскресенье)' },
+          { title: 'Лето, когда погас свет (воскресенье)' },
+          { title: 'Пуля/Пуля' },
+          { title: 'Нукитаси' },
+          { title: 'Сверхкуб' },
+          { title: 'Адский учитель Нубэ (2025)' },
+          { title: 'Мобильный воин Гандам: GQuuuuuuX' },
+          { title: 'Рок — женская скромность' },
+          { title: 'Старик из деревни становится Святым мечом' },
+          { title: 'Боевой отряд «Полный провал» 2' },
+          { title: 'Долги...' },
+        ]}
+      ];
+
+      /* ===== STATE / SETTINGS ===== */
+      const settings = {
+        tzMode: localStorage.getItem('tzMode') || 'system',
+        tzOffsetMin: parseInt(localStorage.getItem('tzOffsetMin') || '180', 10),
+        clock12: localStorage.getItem('clock12') === 'true',
+        viewMode: localStorage.getItem('viewMode') || 'classic'
+      };
+
+      function zoneId(){
+        if(settings.tzMode === 'system'){
+          return Intl.DateTimeFormat().resolvedOptions().timeZone;
+        }else{
+          const m = settings.tzOffsetMin;
+          const sign = m>=0 ? '+' : '-';
+          const abs = Math.abs(m);
+          const hh = String(Math.floor(abs/60)).padStart(2,'0');
+          const mm = String(abs%60).padStart(2,'0');
+          return `UTC${sign}${hh}:${mm}`;
         }
-
-        function updateScheduleTitle() {
-            const timezone = getLocalTimeZone();
-            const title = `График выхода серий (${timezone})`;
-            document.getElementById('schedule-title').textContent = title;
+      }
+      function offsetLabel(mins){
+        const sign = mins>=0 ? '+' : '-';
+        const abs = Math.abs(mins);
+        const hh = String(Math.floor(abs/60)).padStart(2,'0');
+        const mm = String(abs%60).padStart(2,'0');
+        return `UTC${sign}${hh}:${mm}`;
+      }
+      function fmt(dt){
+        if(settings.clock12){
+          return dt.toFormat('hh:mm a').replace(' AM','\u202FAM').replace(' PM','\u202FPM');
         }
+        return dt.toFormat('HH:mm');
+      }
 
-        function convertReferenceTimeToLocal() {
-            // Часовой пояс для расписания
-            const referenceZone = 'Europe/Moscow';
-            const localZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      function updateMeta(){
+        const z = zoneId();
+        const off = DateTime.local().setZone(z).offset;
+        const label = (settings.tzMode === 'system') ? `${z} (${offsetLabel(off)})` : `${offsetLabel(settings.tzOffsetMin)}`;
+        $('#meta-tz').textContent = `Время сейчас: ${label}. База расписания: Europe/Moscow.`;
+      }
 
-            let newDays = days.map(day => ({ day: day.day, schedule: [] }));
+      /* Конвертация */
+      function convertReferenceTimeToLocal(){
+        const referenceZone='Europe/Moscow';
+        const localZone = zoneId();
+        const MON=1;
+        const refNow=DateTime.local().setZone(referenceZone);
+        const baseMondayRef=refNow.minus({ days: refNow.weekday - MON }).startOf('day');
+        const newDays=days.map(d=>({ day:d.day, schedule:[] }));
 
-            days.forEach((day, index) => {
-                day.schedule.forEach(show => {
-                    if (show.time) {
-                        let dateTimeReference = luxon.DateTime.fromFormat(show.time, 'HH:mm', { zone: referenceZone });
-                        let dateTimeLocal = dateTimeReference.setZone(localZone);
-                        let newDayIndex = (index + dateTimeLocal.weekday - dateTimeReference.weekday + 7) % 7;
-                        newDays[newDayIndex].schedule.push({ ...show, time: dateTimeLocal.toFormat('HH:mm') });
-                    } else {
-                        newDays[index].schedule.push({ ...show });
-                    }
-                });
-            });
-
-            newDays.forEach(day => {
-                day.schedule.sort((a, b) => {
-                    if (!a.time) return 1;
-                    if (!b.time) return -1;
-                    return a.time.localeCompare(b.time);
-                });
-            });
-
-            return newDays;
-        }
-
-        function highlightNextShow(days) {
-            // Сначала сбросить все флаги highlighted
-            days.forEach(day => day.schedule.forEach(show => show.highlighted = false));
-            // Определение текущего дня и времени
-            let currentDayIndex = (new Date().getDay() + 6) % 7; // Понедельник=0, Вторник=1, ..., Воскресенье=6
-            let currentTime = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-
-            let foundNextShow = false;
-            for (let i = 0; i < days.length; i++) {
-                let dayIndex = (currentDayIndex + i) % days.length;
-                for (let show of days[dayIndex].schedule) {
-                    if (!show.time) continue;
-                    if (!foundNextShow && (i > 0 || isTimeLater(show.time, currentTime))) {
-                        show.highlighted = true;
-                        console.log(`Highlighting: ${days[dayIndex].day} - ${show.time} - ${show.title}`);
-                        foundNextShow = true;
-                        break;
-                    }
-                }
-                if (foundNextShow) break;
+        days.forEach((day, index)=>{
+          day.schedule.forEach(show=>{
+            if(show.time){
+              const [hh,mm]=show.time.split(':').map(Number);
+              const refDT = baseMondayRef.plus({ days:index }).set({ hour:hh, minute:mm });
+              const locDT = refDT.setZone(localZone);
+              const newDayIndex = (locDT.weekday + 6) % 7;
+              newDays[newDayIndex].schedule.push({
+                ...show,
+                time: fmt(locDT),
+                mins: locDT.hour*60 + locDT.minute
+              });
+            }else{
+              newDays[index].schedule.push({ ...show, mins: Infinity });
             }
-        }
-
-        function createScheduleItem(info) {
-            const scheduleItem = document.createElement('div');
-            scheduleItem.className = 'schedule-item';
-
-            const timeSpan = document.createElement('span');
-            timeSpan.className = 'time';
-            if (info.time) {
-                timeSpan.textContent = info.time;
-                if (info.highlighted) {
-                    scheduleItem.classList.add('highlighted');
-                    console.log(`Adding 'highlighted' class to schedule-item for show: ${info.title}`);
-                }
-            }
-
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'title';
-            titleSpan.textContent = info.title || '';
-
-            // Переход на Shikimori при клике на название
-            titleSpan.addEventListener('click', (event) => {
-                event.stopPropagation();
-                if (!info.title) return;
-                window.open(
-                  "https://shikimori.one/animes?search=" + encodeURIComponent(info.title), 
-                  "_blank"
-                );
-            });
-
-            scheduleItem.appendChild(timeSpan);
-            scheduleItem.appendChild(titleSpan);
-            return scheduleItem;
-        }
-
-        function isTimeLater(time1, time2) {
-            const [hours1, minutes1] = time1.split(':').map(Number);
-            const [hours2, minutes2] = time2.split(':').map(Number);
-            return hours1 > hours2 || (hours1 === hours2 && minutes1 > minutes2);
-        }
-
-        function renderDaySchedule(convertedDays) {
-            const container = document.getElementById('schedule-container');
-            container.innerHTML = '';
-            convertedDays.forEach(day => {
-                const dayElement = document.createElement('div');
-                dayElement.innerHTML = `<h2>${day.day}:</h2>`;
-                const list = document.createElement('ul');
-
-                if (day.schedule.length > 0) {
-                    day.schedule.forEach(show => {
-                        const item = createScheduleItem(show);
-                        list.appendChild(item);
-                    });
-                } else {
-                    const emptyMessage = document.createElement('div');
-                    emptyMessage.className = 'empty-day';
-                    emptyMessage.textContent = 'Пусто';
-                    list.appendChild(emptyMessage);
-                }
-
-                dayElement.appendChild(list);
-                container.appendChild(dayElement);
-            });
-        }
-
-        function resetHighlightTimeout() {
-            if (highlightTimeout) {
-                clearTimeout(highlightTimeout);
-            }
-            highlightTimeout = setTimeout(() => {
-                clearHighlights();
-                updateTimeAndSchedule(); // Обновляем расписание после очистки
-            }, 3000);
-        }
-
-        function clearHighlights() {
-            const highlightedItems = document.querySelectorAll('.schedule-item.highlighted');
-            highlightedItems.forEach(item => {
-                item.classList.remove('highlighted');
-                console.log(`Removed 'highlighted' class from schedule-item.`);
-            });
-            clearTimeout(highlightTimeout);
-        }
-
-        function scrollToTodaySection() {
-            const dayIndex = (new Date().getDay() + 6) % 7;
-            const dayContainers = document.querySelectorAll('#schedule-container > div');
-            if (dayIndex < dayContainers.length) {
-                const targetElement = dayContainers[dayIndex];
-                const offset = 17;
-                const elementPosition = targetElement.getBoundingClientRect().top + window.pageYOffset;
-                const offsetPosition = elementPosition - offset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
-
-                // Запуск анимации обводки
-                targetElement.classList.add('animate-border');
-                // Удаляем класс 'animate-border' после завершения анимации (1 секунда)
-                setTimeout(() => {
-                    targetElement.classList.remove('animate-border');
-                }, 1000); // Соответствует длительности анимации
-            }
-        }
-
-        function scrollToGearSection() {
-            alert('Функциональность в разработке!');
-        }
-
-        function updateTimeAndSchedule() {
-            if (isUpdating) {
-                console.log('Update already in progress, skipping this call.');
-                return;
-            }
-            isUpdating = true;
-            const convertedDays = convertReferenceTimeToLocal();
-            highlightNextShow(convertedDays);
-            renderDaySchedule(convertedDays);
-            isUpdating = false;
-        }
-
-        // Обработчик скролла для показа/скрытия кнопок
-        window.addEventListener('scroll', () => {
-            const buttons = document.querySelectorAll('#scrollTodayButton, #gearButton');
-            if (window.pageYOffset > 40) { 
-                buttons.forEach(button => button.classList.add('hidden'));
-            } else {
-                buttons.forEach(button => button.classList.remove('hidden'));
-            }
+          });
         });
+        newDays.forEach(day=> day.schedule.sort((a,b)=> (a.mins||Infinity) - (b.mins||Infinity)));
+        return newDays;
+      }
 
-        // Инициализация
-        document.addEventListener('DOMContentLoaded', () => {
-            updateScheduleTitle();
-            updateTimeAndSchedule();
+      const NO_TIME = '—';
+      const WD_ABBR = {
+        'понедельник':'Пн','вторник':'Вт','среда':'Ср','четверг':'Чт','пятница':'Пт','суббота':'Сб','воскресенье':'Вс',
+        'пн':'Пн','вт':'Вт','ср':'Ср','чт':'Чт','пт':'Пт','сб':'Сб','вс':'Вс'
+      };
+      function parseNoScheduleTitle(title){
+        const m = title.match(/\(([^)]+)\)\s*$/i);
+        if(!m) return { title, abbr: NO_TIME };
+        const raw = m[1].trim().toLowerCase();
+        const key = raw.replace(/\./g,'');
+        const abbr = WD_ABBR[key] || NO_TIME;
+        return { title: title.replace(/\s*\([^)]+\)\s*$/,'').trim(), abbr };
+      }
+
+      function scheduleItem(info, placeholder=false, placeholderLabel=NO_TIME){
+        const el = document.createElement('div');
+        el.className = 'schedule-item';
+        el.setAttribute('role','button'); el.tabIndex = 0;
+
+        const t = document.createElement('span');
+        t.className = 'time';
+        if(placeholder) t.classList.add('is-placeholder');
+
+        const hasTime = typeof info.time === 'string' && info.time.trim() !== '';
+        t.textContent = hasTime ? info.time : placeholder ? (placeholderLabel || NO_TIME) : NO_TIME;
+        if(!hasTime){ t.setAttribute('aria-label', placeholder ? 'без времени, день выпуска' : 'без времени'); }
+
+        const title = document.createElement('span');
+        title.className = 'title';
+        title.textContent = info.title || '';
+
+        const openLink = ()=>{
+          if(!info.title) return;
+          window.open('https://shikimori.one/animes?search=' + encodeURIComponent(info.title), '_blank');
+        };
+        el.addEventListener('click', openLink);
+        el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); openLink(); } });
+
+        el.appendChild(t);
+        el.appendChild(title);
+        return el;
+      }
+
+      function render(converted){
+        const c = $('#schedule-container');
+        c.innerHTML = '';
+
+        for(let di=0; di<7; di++){
+          const day = converted[di];
+          const block = document.createElement('div');
+          block.className = 'day-block'; block.dataset.di = di;
+
+          const h2 = document.createElement('h2');
+          h2.textContent = `${day.day}:`;
+          block.appendChild(h2);
+
+          const ul = document.createElement('ul');
+          if(day.schedule.length){
+            day.schedule.forEach(show => ul.appendChild(scheduleItem(show, false)));
+          } else {
+            const empty = document.createElement('div');
+            empty.className='empty-day';
+            empty.textContent='Пусто';
+            ul.appendChild(empty);
+          }
+          block.appendChild(ul);
+          c.appendChild(block);
+        }
+
+        // Без графика: день из скобок -> в таймкод (сокр. Пн–Вс)
+        const block = document.createElement('div');
+        block.className = 'day-block';
+        const h2 = document.createElement('h2');
+        h2.textContent = 'Без графика:';
+        block.appendChild(h2);
+        const ul = document.createElement('ul');
+        days[7].schedule.forEach(x => {
+          const parsed = parseNoScheduleTitle(x.title);
+          ul.appendChild(scheduleItem({ title: parsed.title }, true, parsed.abbr));
         });
-        document.addEventListener('click', resetHighlightTimeout);
-        document.addEventListener('touchstart', resetHighlightTimeout);
+        block.appendChild(ul);
+        c.appendChild(block);
+      }
 
-        // Клик по кнопке «На сегодня»
-        document.getElementById('scrollTodayButton').addEventListener('click', scrollToTodaySection);
-        // Клик по кнопке шестерёнки
-        document.getElementById('gearButton').addEventListener('click', scrollToGearSection);
-        // Обновление каждые 60 секунд
-        setInterval(updateTimeAndSchedule, 60000);
-    </script>
+      /* Таймлайн метрики */
+      const metrics = { railTop:0, railH:0, todayTopRel:0, todayH:0 };
+
+      function layoutRail(){
+        const wrap = $('#schedule-wrap');
+        const rail = $('#time-rail');
+        const blocks = [...document.querySelectorAll('#schedule-container > .day-block')].filter(b => b.dataset.di !== undefined);
+        if(blocks.length < 7) return;
+
+        const wrapTop = wrap.getBoundingClientRect().top + window.pageYOffset;
+        const first = blocks[0].getBoundingClientRect();
+        const last  = blocks[6].getBoundingClientRect();
+
+        const railTop = (first.top + window.pageYOffset) - wrapTop;
+        const railBottom = (last.bottom + window.pageYOffset) - wrapTop;
+
+        metrics.railTop = railTop;
+        metrics.railH   = Math.max(0, railBottom - railTop);
+
+        rail.style.top = `${railTop}px`;
+        rail.style.height = `${metrics.railH}px`;
+
+        const now = DateTime.local().setZone(zoneId());
+        const todayIdx = (now.weekday + 6) % 7;
+        const todayBlock = document.querySelector(`.day-block[data-di="${todayIdx}"]`);
+        if(!todayBlock) return;
+
+        const todayRect = todayBlock.getBoundingClientRect();
+        const todayTop = (todayRect.top + window.pageYOffset) - wrapTop;
+        const todayBottom = (todayRect.bottom + window.pageYOffset) - wrapTop;
+
+        metrics.todayTopRel = todayTop - railTop;
+        metrics.todayH = Math.max(1, todayBottom - todayTop);
+      }
+
+      function setNow(y){
+        const tag = document.querySelector('#time-rail .now-tag');
+        const top = Math.max(0, Math.min(metrics.railH, y));
+        tag.style.top = `${top}px`;
+      }
+
+      /* подпись в теге — обновление раз в минуту и при формат/зоне */
+      let lastMinute = -1;
+      function updateNowLabel(force=false){
+        const now = DateTime.local().setZone(zoneId());
+        if(force || now.minute !== lastMinute){
+          lastMinute = now.minute;
+          document.querySelector('#time-rail .badge').textContent = fmt(now);
+        }
+      }
+
+      /* не давать бейджу уезжать за левый край (в минимализме просто не виден) */
+      function clampTagIntoView(){
+        const badge = document.querySelector('#time-rail .now-tag .badge');
+        if(!badge) return;
+        badge.style.setProperty('--tag-nudge','0px');
+        const rect = badge.getBoundingClientRect();
+        const minLeft = 6;
+        if(rect.left < minLeft){
+          const delta = Math.ceil(minLeft - rect.left);
+          badge.style.setProperty('--tag-nudge', delta + 'px');
+        }
+      }
+
+      /* плавное непрерывное движение маркера */
+      function animate(){
+        const now = DateTime.local().setZone(zoneId());
+        const totalMin = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
+        const ratio = Math.max(0, Math.min(1, totalMin/1440));
+        const y = metrics.todayTopRel + metrics.todayH * ratio;
+        setNow(y);
+        updateNowLabel();
+        requestAnimationFrame(animate);
+      }
+
+      /* === ширина таймкода — без накопления, может и уменьшаться === */
+      function recalcTimeWidth(){
+        const sample = settings.clock12 ? '12:00\u202FPM' : '00:00';
+        const probe = document.createElement('span');
+        probe.className = 'time-measure';
+        probe.textContent = sample;
+        document.body.appendChild(probe);
+        const w = probe.offsetWidth;
+        const finalW = Math.max(60, w + 2);
+        document.documentElement.style.setProperty('--time-w-static', finalW + 'px');
+        probe.remove();
+      }
+
+      /* мягкая смена формата — без пересоздания DOM */
+      function smoothFormatSwitch(){
+        document.body.classList.add('format-anim');
+        recalcTimeWidth(); // запустить анимацию ширины
+        const converted = convertReferenceTimeToLocal();
+        for(let di=0; di<7; di++){
+          const block = document.querySelector(`.day-block[data-di="${di}"]`);
+          if(!block) continue;
+          const times = block.querySelectorAll('.schedule-item .time');
+          const list = converted[di].schedule;
+          times.forEach((node, idx)=>{
+            const show = list[idx];
+            if(!show) return;
+            node.textContent = show.time || NO_TIME;
+          });
+        }
+        updateNowLabel(true); // обновить метку таймлайна
+        setTimeout(()=> document.body.classList.remove('format-anim'), 320);
+        requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); });
+      }
+
+      /* ===== Настройки / UI ===== */
+      const settingsModal = $('#settings');
+      const tzModeSel = $('#tzMode');
+      const tzFixedWrap = $('#tzFixedWrap');
+      const tzOffsetText = $('#tzOffsetText');
+      const seg = $('#clockSeg');
+      const segBtns = seg.querySelectorAll('.segbtn');
+      const viewSel = $('#viewMode');
+
+      const setSegActive = (mode)=>{
+        segBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+        seg.classList.toggle('mode12', mode==='12');
+      };
+
+      function parseOffsetText(s){
+        if(!s) return null;
+        s = s.trim();
+        const m = s.match(/^([+-])?\s*(\d{1,2})(?::?(\d{2}))?$/);
+        if(!m) return null;
+        const sign = (m[1] === '-') ? -1 : 1;
+        const hh = parseInt(m[2],10);
+        const mm = parseInt(m[3]||'0',10);
+        if(hh>14 || mm>59) return null;
+        const mmRound = Math.round(mm/15)*15;
+        const total = sign * (hh*60 + mmRound);
+        if(total > 14*60 || total < -12*60) return null;
+        return total;
+      }
+      function formatOffset(mins){
+        const sign = mins>=0 ? '+' : '-';
+        const abs = Math.abs(mins);
+        const hh = String(Math.floor(abs/60)).padStart(2,'0');
+        const mm = String(abs%60).padStart(2,'0');
+        return `${sign}${hh}:${mm}`;
+      }
+
+      function applyViewMode(){
+        document.body.classList.toggle('view-classic', settings.viewMode==='classic');
+        document.body.classList.toggle('view-wide', settings.viewMode==='wide');
+        document.body.classList.toggle('view-minimal', settings.viewMode==='minimal');
+        recalcTimeWidth();
+        layoutRail();
+        clampTagIntoView();
+      }
+
+      function openSettings(){
+        tzModeSel.value = settings.tzMode;
+        tzFixedWrap.classList.toggle('open', settings.tzMode === 'fixed');
+        tzOffsetText.value = formatOffset(settings.tzOffsetMin);
+        tzOffsetText.classList.remove('ok','err');
+
+        setSegActive(settings.clock12 ? '12' : '24');
+        viewSel.value = settings.viewMode;
+
+        settingsModal.classList.add('show');
+        requestAnimationFrame(()=> settingsModal.classList.add('visible'));
+      }
+      function closeSettings(){
+        settingsModal.classList.remove('visible');
+        setTimeout(()=> settingsModal.classList.remove('show'), 240);
+      }
+
+      function persistAndRerender(){
+        localStorage.setItem('tzMode', settings.tzMode);
+        localStorage.setItem('tzOffsetMin', String(settings.tzOffsetMin));
+        localStorage.setItem('clock12', settings.clock12 ? 'true' : 'false');
+        localStorage.setItem('viewMode', settings.viewMode);
+
+        updateMeta();
+        render(convertReferenceTimeToLocal());
+        applyViewMode();
+        updateNowLabel(true);
+      }
+
+      tzModeSel.addEventListener('change', ()=>{
+        settings.tzMode = tzModeSel.value;
+        tzFixedWrap.classList.toggle('open', settings.tzMode === 'fixed');
+        persistAndRerender();
+      });
+
+      let tzDebounce;
+      tzOffsetText && tzOffsetText.addEventListener('input', ()=>{
+        clearTimeout(tzDebounce);
+        tzDebounce = setTimeout(()=>{
+          const parsed = parseOffsetText(tzOffsetText.value);
+          if(parsed === null){
+            tzOffsetText.classList.remove('ok'); tzOffsetText.classList.add('err');
+          }else{
+            tzOffsetText.classList.remove('err'); tzOffsetText.classList.add('ok');
+            settings.tzOffsetMin = parsed;
+            tzOffsetText.value = formatOffset(parsed);
+            persistAndRerender();
+          }
+        }, 160);
+      });
+
+      seg.addEventListener('click', (e)=>{
+        const btn = e.target.closest('.segbtn');
+        if(!btn) return;
+        const want12 = (btn.dataset.mode === '12');
+        if(settings.clock12 === want12) return;
+        settings.clock12 = want12;
+        setSegActive(settings.clock12 ? '12' : '24');
+        localStorage.setItem('clock12', settings.clock12 ? 'true' : 'false');
+        smoothFormatSwitch();
+      });
+
+      viewSel.addEventListener('change', ()=>{
+        settings.viewMode = viewSel.value;
+        applyViewMode();
+        setTimeout(persistAndRerender, 60);
+      });
+
+      $('#gearButton').addEventListener('click', openSettings);
+      $('#closeSettings').addEventListener('click', closeSettings);
+      $('#settings').addEventListener('click', (e)=>{ if(e.target === $('#settings')) closeSettings(); });
+
+      /* Кнопка «На сегодня» */
+      function scrollToToday(){
+        const now = DateTime.local().setZone(zoneId());
+        const di = (now.weekday + 6) % 7;
+        const block = document.querySelector(`.day-block[data-di="${di}"]`);
+        if(block){
+          const y = block.getBoundingClientRect().top + window.pageYOffset - 14;
+          window.scrollTo({ top:y, behavior:'smooth' });
+        }
+      }
+      $('#scrollTodayButton').addEventListener('click', scrollToToday);
+
+      /* Прятать кнопки при скролле */
+      window.addEventListener('scroll', ()=>{
+        const hidden = window.pageYOffset > 40;
+        $('#scrollTodayButton').classList.toggle('hidden', hidden);
+        $('#gearButton').classList.toggle('hidden', hidden);
+      }, { passive:true });
+
+      /* ResizeObserver: пересчёт таймлайна при любых изменениях высоты */
+      let ro;
+      if('ResizeObserver' in window){
+        ro = new ResizeObserver(()=> requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); }));
+      }
+
+      window.addEventListener('resize', ()=>{ layoutRail(); recalcTimeWidth(); clampTagIntoView(); }, { passive:true });
+
+      /* INIT */
+      document.addEventListener('DOMContentLoaded', ()=>{
+        applyViewMode();      // применить сохранённый вид до рендеров
+        recalcTimeWidth();
+        updateMeta();
+        render(convertReferenceTimeToLocal());
+        layoutRail();
+
+        if(ro){ ro.observe($('#schedule-container')); }
+
+        if(document.fonts && document.fonts.ready){
+          document.fonts.ready.then(()=>{ recalcTimeWidth(); layoutRail(); clampTagIntoView(); });
+        }
+
+        // первичное позиционирование без «езда»
+        const now = DateTime.local().setZone(zoneId());
+        const minutes = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
+        const ratio = Math.max(0, Math.min(1, minutes/1440));
+        const y = metrics.todayTopRel + metrics.todayH * ratio;
+        setNow(y);
+        updateNowLabel(true);
+        clampTagIntoView();
+        requestAnimationFrame(()=> document.querySelector('#time-rail .now-tag').classList.add('ready'));
+
+        // плавное непрерывное движение
+        requestAnimationFrame(animate);
+
+        // минутная ресинхронизация
+        const sync=()=>{
+          const n=new Date();
+          const ms=60000 - (n.getSeconds()*1000 + n.getMilliseconds());
+          setTimeout(()=>{ updateMeta(); render(convertReferenceTimeToLocal()); layoutRail(); clampTagIntoView(); sync(); }, Math.max(400, ms));
+        };
+        sync();
+      });
+    })();
+  </script>
 </body>
 </html>
