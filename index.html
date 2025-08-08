@@ -290,9 +290,15 @@
         --fs-h1: 30px; --fs-h2: 18px; --fs-title:15px; --fs-time:15px; --fs-meta:12px; --fs-badge:12px;
         --gutter:14px; --rail-w:2px;
       }
+      /* Минимализм — еще компактнее, чем классика на мобиле */
+      body.view-minimal{
+        --fs-h1: 28px; --fs-h2:16px; --fs-title:15px; --fs-time:14px;
+        --gutter:12px; --rail-w:2px;
+      }
       body{ padding:16px }
       #schedule-wrap{ padding-left: calc(var(--gutter) + 10px) }
       #time-rail{ left:6px }
+      body.view-minimal .schedule-item{ margin-bottom:3px; padding-left:10px; border-radius:6px }
       #button-container{ gap:8px }
       #gearButton{ width:36px; height:36px }
       .btn{ padding:9px 12px; font-size:13px }
@@ -491,7 +497,8 @@
         const z = zoneId();
         const off = DateTime.local().setZone(z).offset;
         const label = (settings.tzMode === 'system') ? `${z} (${offsetLabel(off)})` : `${offsetLabel(settings.tzOffsetMin)}`;
-        $('#meta-tz').textContent = `Время сейчас: ${label}. База расписания: Europe/Moscow.`;
+        // Только указание текущего часового пояса:
+        $('#meta-tz').textContent = `Текущий часовой пояс: ${label}`;
       }
 
       /* конвертация Europe/Moscow -> выбранная зона */
@@ -847,13 +854,14 @@
       const mqMobile = window.matchMedia('(max-width:700px)');
       function adjustForMobile(){
         const isMobile = mqMobile.matches;
+        const wideOption = document.getElementById('viewWideOption');
         if(isMobile){
           if(wideOption){ wideOption.disabled = true; wideOption.hidden = true; }
           if(settings.viewMode === 'wide'){
             settings.viewMode = 'classic';
             localStorage.setItem('viewMode','classic');
             applyViewMode();
-            viewSel.value = 'classic';
+            document.getElementById('viewMode').value = 'classic';
           }
         }else{
           if(wideOption){ wideOption.disabled = false; wideOption.hidden = false; }
