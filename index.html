@@ -497,7 +497,6 @@
         const z = zoneId();
         const off = DateTime.local().setZone(z).offset;
         const label = (settings.tzMode === 'system') ? `${z} (${offsetLabel(off)})` : `${offsetLabel(settings.tzOffsetMin)}`;
-        // Только указание текущего часового пояса:
         $('#meta-tz').textContent = `Текущий часовой пояс: ${label}`;
       }
 
@@ -542,6 +541,7 @@
         return { title: title.replace(/\s*\([^)]+\)\s*$/,'').trim(), abbr };
       }
 
+      /* ===== RENDER ===== */
       function scheduleItem(info, placeholder=false, placeholderLabel=NO_TIME){
         const el = document.createElement('div');
         el.className = 'schedule-item';
@@ -553,6 +553,10 @@
 
         const hasTime = typeof info.time === 'string' && info.time.trim() !== '';
         t.textContent = hasTime ? info.time : placeholder ? (placeholderLabel || NO_TIME) : NO_TIME;
+
+        // сохраняем локальные минуты (0..1440) для таймлайна
+        if (Number.isFinite(info.mins)) el.dataset.mins = String(info.mins);
+
         if(!hasTime){ t.setAttribute('aria-label', placeholder ? 'без времени, день выпуска' : 'без времени'); }
 
         const title = document.createElement('span');
@@ -612,13 +616,14 @@
         c.appendChild(block);
       }
 
-      /* таймлайн метрики */
-      const metrics = { railTop:0, railH:0, todayTopRel:0, todayH:0 };
+      /* ===== TIMELINE METRICS + ANCHORS ===== */
+      const metrics = { railTop:0, railH:0, todayTopRel:0, todayH:0, todayAnchors:[] };
 
       function layoutRail(){
         const wrap = $('#schedule-wrap');
         const rail = $('#time-rail');
-        const blocks = [...document.querySelectorAll('#schedule-container > .day-block')].filter(b => b.dataset.di !== undefined);
+        const blocks = [...document.querySelectorAll('#schedule-container > .day-block')]
+                        .filter(b => b.dataset.di !== undefined);
         if(blocks.length < 7) return;
 
         const wrapTop = wrap.getBoundingClientRect().top + window.pageYOffset;
@@ -645,6 +650,74 @@
 
         metrics.todayTopRel = todayTop - railTop;
         metrics.todayH = Math.max(1, todayBottom - todayTop);
+
+        buildTodayAnchors(todayBlock, todayRect);
+      }
+
+      // якоря внутри текущего дня: «сутки» с небольшими запасами от первой/последней строки
+      function buildTodayAnchors(blockEl, blockRect){
+        const ul = blockEl.querySelector('ul');
+        if (!ul){ metrics.todayAnchors = [{t:0,y:0},{t:1440,y:metrics.todayH}]; return; }
+
+        const ulRect = ul.getBoundingClientRect();
+        const topRel = (ulRect.top - blockRect.top);
+        const botRel = (ulRect.bottom - blockRect.top);
+
+        const allRows = [...ul.querySelectorAll('.schedule-item')];
+        const rows = allRows.filter(r => Number.isFinite(parseFloat(r.dataset.mins)));
+
+        if (!rows.length){
+          metrics.todayAnchors = [{t:0,y:topRel},{t:1440,y:botRel}];
+          return;
+        }
+
+        const rRect = el => el.getBoundingClientRect();
+        const midY  = el => (rRect(el).top + rRect(el).height/2) - blockRect.top;
+
+        const first = rows[0], last = rows[rows.length-1];
+        const yFirst = midY(first), yLast = midY(last);
+
+        let step;
+        if (rows.length >= 2){
+          step = Math.abs(midY(rows[1]) - yFirst);
+        } else {
+          step = rRect(first).height * 0.9;
+        }
+
+        const headSpace = Math.max(0, yFirst - topRel);
+        const tailSpace = Math.max(0, botRel  - yLast);
+
+        const preGap  = Math.min(headSpace, Math.max(12, Math.min(40, step * 0.66)));
+        const postGap = Math.min(tailSpace, Math.max(12, Math.min(40, step * 0.66)));
+
+        const anchors = [];
+        anchors.push({ t:   0, y: yFirst - preGap });
+        anchors.push({ t:1440, y: yLast  + postGap });
+
+        for (const row of rows){
+          const t = parseFloat(row.dataset.mins);
+          anchors.push({ t, y: midY(row) });
+        }
+
+        anchors.sort((a,b)=> a.t - b.t);
+        for (let i=1;i<anchors.length;i++){
+          if (anchors[i].t === anchors[i-1].t) anchors[i].t += 0.001;
+        }
+        metrics.todayAnchors = anchors;
+      }
+
+      function yFromAnchors(anchors, t){
+        if (!anchors || anchors.length === 0) return 0;
+        if (t <= anchors[0].t) return anchors[0].y;
+        for (let i=0; i<anchors.length-1; i++){
+          const a = anchors[i], b = anchors[i+1];
+          if (t <= b.t){
+            const span = Math.max(0.001, b.t - a.t);
+            const k = (t - a.t) / span;
+            return a.y + (b.y - a.y) * k;
+          }
+        }
+        return anchors[anchors.length-1].y;
       }
 
       function setNow(y){
@@ -676,15 +749,25 @@
 
       function animate(){
         const now = DateTime.local().setZone(zoneId());
-        const totalMin = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
-        const ratio = Math.max(0, Math.min(1, totalMin/1440));
-        const y = metrics.todayTopRel + metrics.todayH * ratio;
+        const t = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
+
+        // если anchors не готовы (на старте/смене дня), перестроить
+        const diNow = (now.weekday + 6) % 7;
+        const currBlock = document.querySelector(`.day-block[data-di="${diNow}"]`);
+        if (currBlock && (!metrics.todayAnchors || metrics.todayAnchors.length === 0)){
+          const blockRect = currBlock.getBoundingClientRect();
+          buildTodayAnchors(currBlock, blockRect);
+        }
+
+        const yInside = yFromAnchors(metrics.todayAnchors, t);
+        const y = metrics.todayTopRel + yInside;
+
         setNow(y);
         updateNowLabel();
         requestAnimationFrame(animate);
       }
 
-      /* ширина таймкода — без накопления */
+      /* ===== WIDTH / SMOOTH SWITCH ===== */
       function recalcTimeWidth(){
         const sample = settings.clock12 ? '12:00\u202FPM' : '00:00';
         const probe = document.createElement('span');
@@ -705,10 +788,16 @@
           const block = document.querySelector(`.day-block[data-di="${di}"]`);
           if(!block) continue;
           const times = block.querySelectorAll('.schedule-item .time');
+          const rows  = block.querySelectorAll('.schedule-item');
           const list = converted[di].schedule;
           times.forEach((node, idx)=>{
             const show = list[idx]; if(!show) return;
             node.textContent = show.time || NO_TIME;
+          });
+          // mins оставляем прежними; на всякий — синхронизируем
+          rows.forEach((row, idx)=>{
+            const show = list[idx];
+            if(show && Number.isFinite(show.mins)) row.dataset.mins = String(show.mins);
           });
         }
         updateNowLabel(true);
@@ -716,19 +805,19 @@
         requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); });
       }
 
-      /* ===== настройки / UI ===== */
+      /* ===== SETTINGS / UI ===== */
       const settingsModal = $('#settings');
       const tzModeSel = $('#tzMode');
       const tzFixedWrap = $('#tzFixedWrap');
       const tzOffsetText = $('#tzOffsetText');
       const seg = $('#clockSeg');
-      const segBtns = seg.querySelectorAll('.segbtn');
+      const segBtns = seg ? seg.querySelectorAll('.segbtn') : [];
       const viewSel = $('#viewMode');
       const wideOption = $('#viewWideOption');
 
       const setSegActive = (mode)=>{
         segBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-        seg.classList.toggle('mode12', mode==='12');
+        if(seg) seg.classList.toggle('mode12', mode==='12');
       };
 
       function parseOffsetText(s){
@@ -761,6 +850,7 @@
       }
 
       function openSettings(){
+        if(!settingsModal) return;
         tzModeSel.value = settings.tzMode;
         tzFixedWrap.classList.toggle('open', settings.tzMode === 'fixed');
         tzOffsetText.value = formatOffset(settings.tzOffsetMin);
@@ -811,7 +901,7 @@
         }, 160);
       });
 
-      seg.addEventListener('click', (e)=>{
+      seg && seg.addEventListener('click', (e)=>{
         const btn = e.target.closest('.segbtn'); if(!btn) return;
         const want12 = (btn.dataset.mode === '12');
         if(settings.clock12 === want12) return;
@@ -831,7 +921,7 @@
       $('#closeSettings').addEventListener('click', closeSettings);
       $('#settings').addEventListener('click', (e)=>{ if(e.target === $('#settings')) closeSettings(); });
 
-      /* кнопка «На сегодня» */
+      /* «На сегодня» */
       function scrollToToday(){
         const now = DateTime.local().setZone(zoneId());
         const di = (now.weekday + 6) % 7;
@@ -850,18 +940,17 @@
         $('#gearButton').classList.toggle('hidden', hidden);
       }, { passive:true });
 
-      /* адаптация под телефон: компоновка + скрыть «Широкий (TV)» */
+      /* мобайл: скрыть wide */
       const mqMobile = window.matchMedia('(max-width:700px)');
       function adjustForMobile(){
         const isMobile = mqMobile.matches;
-        const wideOption = document.getElementById('viewWideOption');
         if(isMobile){
           if(wideOption){ wideOption.disabled = true; wideOption.hidden = true; }
           if(settings.viewMode === 'wide'){
             settings.viewMode = 'classic';
             localStorage.setItem('viewMode','classic');
             applyViewMode();
-            document.getElementById('viewMode').value = 'classic';
+            viewSel.value = 'classic';
           }
         }else{
           if(wideOption){ wideOption.disabled = false; wideOption.hidden = false; }
@@ -879,8 +968,8 @@
 
       /* INIT */
       document.addEventListener('DOMContentLoaded', ()=>{
-        adjustForMobile();           // убрать wide на телефоне
-        applyViewMode();             // применить вид до рендеров
+        adjustForMobile();
+        applyViewMode();
 
         recalcTimeWidth();
         updateMeta();
@@ -893,24 +982,29 @@
           document.fonts.ready.then(()=>{ recalcTimeWidth(); layoutRail(); clampTagIntoView(); });
         }
 
-        // первичное позиционирование метки без «езда»
+        // первичное позиционирование без «езда»
         const now = DateTime.local().setZone(zoneId());
-        const minutes = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
-        const ratio = Math.max(0, Math.min(1, minutes/1440));
-        const y = metrics.todayTopRel + metrics.todayH * ratio;
-        setNow(y);
+        const t0 = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
+        const yInside0 = yFromAnchors(metrics.todayAnchors, t0);
+        setNow(metrics.todayTopRel + yInside0);
         updateNowLabel(true);
         clampTagIntoView();
         requestAnimationFrame(()=> document.querySelector('#time-rail .now-tag').classList.add('ready'));
 
-        // плавное непрерывное движение
+        // непрерывное движение
         requestAnimationFrame(animate);
 
         // минутная ресинхронизация
         const sync=()=>{
           const n=new Date();
           const ms=60000 - (n.getSeconds()*1000 + n.getMilliseconds());
-          setTimeout(()=>{ updateMeta(); render(convertReferenceTimeToLocal()); layoutRail(); clampTagIntoView(); sync(); }, Math.max(400, ms));
+          setTimeout(()=>{
+            updateMeta();
+            render(convertReferenceTimeToLocal());
+            layoutRail();
+            clampTagIntoView();
+            sync();
+          }, Math.max(400, ms));
         };
         sync();
       });
