@@ -15,7 +15,6 @@
 
   <style>
     :root{
-      /* типографика по умолчанию (перекрывается режимами) */
       --fs-h1: 36px; --fs-h2: 24px; --fs-title:16px; --fs-time:16px; --fs-meta:13px; --fs-badge:12px;
 
       /* таймлайн */
@@ -26,28 +25,27 @@
       --tag-h:26px; --tag-pad-x:8px; --tag-nudge:0px;
       --tag-bg:rgba(255,255,255,.10); --tag-br:rgba(255,255,255,.22); --tag-text:#ececec;
       --tag-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 10px rgba(255,255,255,.12);
+      --conn-w: 32px; /* ширина коннектора, обновляется JS */
 
-      /* таймкоды — единый стиль */
-      --time-w-static: 90px;
+      /* таймкоды (число px — анимируем JS) */
+      --time-w: 90;
+
       --time-bg: rgba(255,255,255,.12);
       --time-bg-hover: rgba(255,255,255,.18);
       --time-border: rgba(255,255,255,.10);
       --time-color: #e2e2e2;
 
-      /* placeholder для «Без графика» */
+      /* placeholder */
       --ph-bg: rgba(255,255,255,.09);
       --ph-border: rgba(255,255,255,.10);
       --ph-color:#bdbdbd;
 
-      /* hover строк */
       --row-hover: rgba(170,170,170,.10);
     }
 
-    /* ==== режимы вида ==== */
-    body.view-classic{ }
     body.view-wide{
       max-width:1100px !important;
-      --fs-h1: 42px; --fs-h2:26px; --fs-title:18px; --fs-time:18px; --fs-badge:12px;
+      --fs-h1: 42px; --fs-h2:26px; --fs-title:18px; --fs-time:18px;
       --gutter:28px; --rail-w:5px;
       --time-bg: rgba(255,255,255,.14);
       --time-bg-hover: rgba(255,255,255,.22);
@@ -56,7 +54,7 @@
       --tag-h:28px; --tag-pad-x:10px;
     }
     body.view-minimal{
-      --fs-h1: 34px; --fs-h2:20px; --fs-title:16px; --fs-time:16px; --fs-badge:12px;
+      --fs-h1: 34px; --fs-h2:20px; --fs-title:16px; --fs-time:16px;
       --gutter:18px; --rail-w:2px;
       --rail-c1: rgba(255,255,255,.10);
       --rail-c2: rgba(255,255,255,.16);
@@ -68,20 +66,6 @@
       --tag-bg: transparent; --tag-br: transparent; --tag-shadow:none;
     }
 
-    /* минималистичный маркер (только точка) */
-    @keyframes miniPulse{
-      0%,100%{ box-shadow:0 0 0 2px rgba(255,255,255,.18), 0 0 8px rgba(255,255,255,.10) }
-      50%    { box-shadow:0 0 0 3px rgba(255,255,255,.26), 0 0 14px rgba(255,255,255,.18) }
-    }
-    body.view-minimal #time-rail .now-tag .badge,
-    body.view-minimal #time-rail .now-tag .ring,
-    body.view-minimal #time-rail .now-tag .connector{ display:none !important; }
-    body.view-minimal #time-rail .now-tag .dot{
-      width:8px; height:8px; left:calc(var(--rail-w)/2 - 4px); top:-4px;
-      background:#fff; border-radius:50%;
-      animation: miniPulse 2.8s ease-in-out infinite;
-    }
-
     *{ box-sizing:border-box }
     html,body{ height:100% }
     body{
@@ -91,53 +75,66 @@
       margin:0; padding:20px;
       display:flex; flex-direction:column; align-items:center;
       max-width:620px; margin-left:auto; margin-right:auto;
-      user-select:none; cursor:default;
-      transition: max-width .28s cubic-bezier(.2,.6,.2,1);
+
+      /* глобально запрещаем выделение */
+      user-select:none; -webkit-user-select:none; -ms-user-select:none;
+      cursor:default;
+      transition:max-width .28s cubic-bezier(.2,.6,.2,1);
     }
 
-    h1{ text-align:center; margin-top:.1em; font-size:var(--fs-h1); color:#fff; transition: font-size .28s ease }
-    #meta-tz{ margin:-14px 0 12px; font-size:var(--fs-meta); color:#9a9a9a; text-align:center; transition: font-size .28s ease }
+    h1{ text-align:center; margin-top:.1em; font-size:var(--fs-h1); color:#fff; transition:font-size .28s ease }
+    #meta-tz{ margin:-14px 0 12px; font-size:var(--fs-meta); color:#9a9a9a; text-align:center }
 
-    h2{ font-size:var(--fs-h2); margin:25px 0 5px; position:relative; z-index:1; transition: font-size .28s ease }
+    /* заголовки дней — разрешаем выделение */
+    h2{
+      font-size:var(--fs-h2); margin:25px 0 5px; position:relative; z-index:1; transition:font-size .28s ease;
+      user-select:text; -webkit-user-select:text;
+    }
     ul{ padding-left:0; margin:0 0 7px; display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1 }
 
-    /* строка списка — кликабельна целиком */
+    /* кликабельная строка */
     .schedule-item{
       display:flex; align-items:flex-start;
       margin-bottom:5px; width:100%; padding-left:15px; border-radius:8px;
-      transition: background-color .18s ease, padding .18s ease;
+      transition:background-color .18s ease, padding .18s ease;
       cursor:pointer;
     }
     body.view-minimal .schedule-item{ margin-bottom:4px; padding-left:12px; border-radius:6px }
     .schedule-item:hover{ background:var(--row-hover) }
 
-    /* таймкод — фикс ширина */
+    /* таймкод — можно выделять */
     .time{
       display:flex; align-items:center; justify-content:center;
       margin-right:5px; padding:0 6px;
-      width:var(--time-w-static); min-width:var(--time-w-static); max-width:var(--time-w-static);
-      flex:0 0 var(--time-w-static);
+      width:calc(var(--time-w) * 1px); flex:0 0 calc(var(--time-w) * 1px);
       text-align:center; white-space:nowrap;
       border-radius:7px; color:var(--time-color);
       background:var(--time-bg); border:1px solid var(--time-border);
       font-size:var(--fs-time);
       font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
-      transition: background .18s ease, color .18s ease, border-color .18s ease, width .28s cubic-bezier(.2,.6,.2,1), opacity .2s ease, font-size .28s ease;
+      transition:background .18s ease, color .18s ease, border-color .18s ease, font-size .28s ease;
+      user-select:text; -webkit-user-select:text;
     }
     .schedule-item:hover .time{ background:var(--time-bg-hover) }
     .time:empty{ visibility:hidden }
     .time.is-placeholder{ background:var(--ph-bg); border-color:var(--ph-border); color:var(--ph-color) }
-    body.view-minimal .time.is-placeholder{ border-style: dashed; color:#a9a9a9; border-color: rgba(255,255,255,.12) }
-    .format-anim .time{ opacity:.35 }
+    body.view-minimal .time.is-placeholder{
+      background:transparent !important;
+      border-color:rgba(255,255,255,.22);
+      border-style:dashed;
+      color:#a9a9a9;
+    }
 
+    /* название — можно выделять */
     .title{
-      flex:1 1 auto;
-      font-size:var(--fs-title); margin-left:5px; padding-right:15px; color:#ddd;
-      text-decoration:none; cursor:inherit; transition: font-size .28s ease;
+      flex:1 1 auto; font-size:var(--fs-title); margin-left:5px; padding-right:15px; color:#ddd;
+      text-decoration:none; cursor:inherit; transition:font-size .28s ease;
+      user-select:text; -webkit-user-select:text;
     }
     body.view-minimal .title{ color:#e3e3e3 }
 
     .empty-day{ color:#666; font-style:italic; margin-left:15px }
+    .day-block{ user-select:text; -webkit-user-select:text; } /* для копирования целого дня */
 
     /* кнопки */
     #button-container{ position:fixed; top:20px; right:20px; display:flex; gap:10px; z-index:50 }
@@ -146,9 +143,9 @@
       background:rgba(51,51,51,.85); color:#fff; border:1px solid #666; border-radius:10px;
       display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
       padding:10px 14px; font-size:14px; letter-spacing:.2px;
-      transition: background-color .18s ease, transform .06s ease, opacity .3s ease, border-color .18s ease;
+      transition:background-color .18s ease, opacity .3s ease, border-color .18s ease;
     }
-    .btn:hover{ background:rgba(68,68,68,.9); transform:translateY(-1px); border-color:#777 }
+    .btn:hover{ background:rgba(68,68,68,.9); border-color:#777; transform:none }
     .btn.hidden{ opacity:0; pointer-events:none }
     #scrollTodayButton{ text-transform:uppercase; letter-spacing:.6px }
     #gearButton{ width:40px; height:40px; padding:0; border-radius:10px }
@@ -156,9 +153,9 @@
     .icon-gear path, .icon-gear circle{ fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
 
     /* контент + левый таймлайн */
-    #schedule-wrap{ position:relative; width:100%; padding-left:calc(var(--gutter) + 12px); transition: padding-left .28s ease }
+    #schedule-wrap{ position:relative; width:100%; padding-left:calc(var(--gutter) + 12px); transition:padding-left .28s ease }
 
-    /* рельса времени */
+    /* рельса */
     #time-rail{ position:absolute; left:8px; top:0; width:var(--gutter); height:0; pointer-events:none; z-index:0 }
     #time-rail .rail-line{
       position:absolute; top:0; bottom:0; left:calc(var(--gutter)/2 - var(--rail-w)/2);
@@ -167,154 +164,182 @@
       -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
               mask-image:linear-gradient(to bottom, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
       box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);
-      transition: height .24s ease, width .28s ease, left .28s ease;
     }
 
-    /* маркер (классика/широкий вид) */
-    #time-rail .now-tag{
-      position:absolute; top:0; left:calc(50% - var(--rail-w)/2);
-      width:0; height:0; opacity:0; transition:none;
-    }
+    /* маркер и коннектор */
+    #time-rail .now-tag{ position:absolute; top:0; left:0; width:0; height:0; opacity:0; transition:none; }
     .now-tag .dot{
-      position:absolute; left:calc(var(--rail-w)/2 - 5px); top:-5px;
+      position:absolute; left:calc(var(--gutter)/2 - 5px); top:-5px;
       width:10px; height:10px; border-radius:50%;
       background:#f8f8f8;
-      box-shadow:0 0 0 2px rgba(255,255,255,.28), 0 0 12px rgba(255,255,255,.18);
-      transition: left .28s ease;
+      animation:pulseClassic 2.6s cubic-bezier(.4,0,.2,1) infinite;
+      box-shadow:0 0 0 0 rgba(255,255,255,.18), 0 0 10px rgba(255,255,255,.12);
+      will-change:transform, box-shadow;
     }
     .now-tag .ring{
-      position:absolute; left:calc(var(--rail-w)/2 - 9px); top:-9px;
+      position:absolute; left:calc(var(--gutter)/2 - 9px); top:-9px;
       width:18px; height:18px; border-radius:50%;
-      border:1px solid rgba(255,255,255,.20);
-      transition: left .28s ease;
+      border:1px solid rgba(255,255,255,.22);
+      animation:ringFade 2.6s cubic-bezier(.4,0,.2,1) infinite;
     }
     .now-tag .connector{
-      position:absolute; top:0; left:-6px; width:6px; height:1px;
-      background:linear-gradient(to left, rgba(255,255,255,.24), rgba(255,255,255,0));
+      position:absolute; top:-1px;
+      left:calc(var(--gutter)/2 - var(--conn-w));
+      width:var(--conn-w); height:1.5px;
+      background:linear-gradient(to left, rgba(255,255,255,.38), rgba(255,255,255,0));
+      transition:left .18s ease, width .18s ease, opacity .18s ease;
     }
     .now-tag .badge{
-      position:absolute; left:calc(-8px - var(--tag-nudge)); top:calc(-1 * (var(--tag-h)/2) + .5px);
+      position:absolute; left:calc(-3px - var(--tag-nudge)); /* ближе к точке */
+      top:calc(-1 * (var(--tag-h)/2) + .5px);
       transform:translateX(-100%);
       display:flex; align-items:center; justify-content:center;
       min-width:54px; max-width:160px; height:var(--tag-h);
       padding:0 var(--tag-pad-x); white-space:nowrap;
       font-size:var(--fs-badge); color:var(--tag-text);
       background:var(--tag-bg); border:1px solid var(--tag-br); border-radius:8px;
-      box-shadow:var(--tag-shadow);
-      backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
-      transition: width .18s ease, left .18s ease, opacity .18s ease, height .28s ease, font-size .28s ease, padding .28s ease;
+      box-shadow:var(--tag-shadow); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+      transition:left .18s ease, opacity .18s ease, height .28s ease, font-size .28s ease, padding .28s ease;
     }
-    #time-rail .now-tag.ready{ opacity:1; transition: top .12s linear, opacity .18s ease; }
+    #time-rail .now-tag.ready{ opacity:1; transition:top .12s linear, opacity .18s ease; }
 
-    /* модалка настроек */
-    .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,.45);
-      display:none; align-items:center; justify-content:center; z-index:100;
-      opacity:0; transition: opacity .2s ease;
+    body.view-minimal #time-rail .now-tag .badge,
+    body.view-minimal #time-rail .now-tag .ring,
+    body.view-minimal #time-rail .now-tag .connector{ display:none !important; }
+    body.view-minimal #time-rail .now-tag .dot{
+      animation:pulseMinimal 2.8s cubic-bezier(.4,0,.2,1) infinite;
+      box-shadow:0 0 0 0 rgba(255,255,255,.16), 0 0 8px rgba(255,255,255,.10);
     }
-    .modal-backdrop.show{ display:flex; }
-    .modal-backdrop.show.visible{ opacity:1; }
+
+    @keyframes pulseClassic{
+      0%   { transform:scale(.96); box-shadow:0 0 0 0 rgba(255,255,255,.18), 0 0 8px rgba(255,255,255,.14) }
+      50%  { transform:scale(1.08); box-shadow:0 0 0 4px rgba(255,255,255,.24), 0 0 18px rgba(255,255,255,.22) }
+      100% { transform:scale(.96); box-shadow:0 0 0 0 rgba(255,255,255,.18), 0 0 8px rgba(255,255,255,.14) }
+    }
+    @keyframes ringFade{ 0%,100%{ opacity:.45 } 50%{ opacity:.8 } }
+    @keyframes pulseMinimal{
+      0%   { transform:scale(.92); box-shadow:0 0 0 0 rgba(255,255,255,.16) }
+      50%  { transform:scale(1.10); box-shadow:0 0 0 3px rgba(255,255,255,.22) }
+      100% { transform:scale(.92); box-shadow:0 0 0 0 rgba(255,255,255,.16) }
+    }
+    @media (prefers-reduced-motion:reduce){
+      .now-tag .dot, .now-tag .ring{ animation:none }
+    }
+
+    /* ==== КАСТОМНЫЕ SELECT (dropdown) ==== */
+    .dd{ position:relative; width:100% }
+    .dd-toggle{
+      width:100%;
+      background:#2a2a2a; color:#fff; border:1px solid #3a3a3a; border-radius:10px;
+      padding:10px 36px 10px 12px; font-size:14px; line-height:1; text-align:left;
+      display:flex; align-items:center; gap:8px; cursor:pointer;
+      transition:border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+    .dd-toggle:focus{ outline:none; border-color:#666; box-shadow:0 0 0 2px rgba(255,255,255,.06) }
+    .dd-chev{
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      width:14px; height:14px; pointer-events:none; opacity:.9;
+    }
+    .dd-menu{
+      position:absolute; left:0; right:0; top:calc(100% + 6px);
+      background:#232323; border:1px solid #333; border-radius:12px; padding:6px;
+      box-shadow:0 12px 30px rgba(0,0,0,.55); display:none; z-index:200;
+      transform:translateY(-6px); opacity:0;
+      transition:transform .22s cubic-bezier(.2,.6,.2,1), opacity .22s ease;
+    }
+    .dd.open .dd-menu{ display:block }
+    .dd.open.visible .dd-menu{ transform:none; opacity:1 }
+    .dd-item{
+      width:100%; background:transparent; border:0; color:#ddd; text-align:left;
+      padding:9px 10px; border-radius:8px; cursor:pointer; font-size:14px;
+      transition:background-color .15s ease, color .15s ease;
+    }
+    .dd-item:hover{ background:#2f2f2f; color:#fff }
+    .dd-item[aria-selected="true"]{ background:#3a3a3a; color:#fff }
+
+    /* ==== UTC± КОНТРОЛ (прячется, если не выбран) ==== */
+    .tz-collapsible{
+      overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
+      transition:max-height .28s cubic-bezier(.2,.6,.2,1), opacity .28s ease, transform .28s ease;
+    }
+    .tz-collapsible.open{ max-height:140px; opacity:1; transform:none }
+    .tz-inline{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
+    .tz-chip{ display:inline-flex; align-items:center; gap:8px; background:#2a2a2a; border:1px solid #3a3a3a; border-radius:12px; padding:8px 10px }
+    .tz-prefix{ color:#d9d9d9; font-size:14px }
+    .seg-mini{
+      position:relative; display:inline-flex;
+      background:#1f1f1f; border:1px solid #3a3a3a; border-radius:10px;
+      padding:3px; gap:3px;
+    }
+    /* thumb для тумблера — будет только внутри #clockSeg */
+    #clockSeg .seg-thumb{
+      position:absolute; top:3px; bottom:3px; left:3px;
+      width:calc(50% - 3px);
+      background:#333; border-radius:8px;
+      transition:left .22s cubic-bezier(.2,.6,.2,1), width .22s cubic-bezier(.2,.6,.2,1), background-color .18s ease;
+      z-index:0; pointer-events:none;
+    }
+    .seg-mini button{
+      position:relative; z-index:1;
+      background:#333; color:#dcdcdc; border:0; border-radius:8px; padding:6px 10px; cursor:pointer; font-size:14px;
+      transition:background-color .18s ease, color .18s ease;
+    }
+    .seg-mini button.off{ background:transparent; color:#bdbdbd }
+    .seg-mini button:hover{ transform:none } /* без подпрыгивания */
+
+    .input-mini{
+      width:60px; text-align:center; background:#2a2a2a; color:#fff; border:1px solid #3a3a3a; border-radius:10px; padding:8px 8px;
+      font-size:14px; font-variant-numeric:tabular-nums; outline:none; transition:border-color .18s ease, box-shadow .18s ease;
+      -moz-appearance:textfield;
+    }
+    .input-mini::-webkit-outer-spin-button,.input-mini::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
+    .input-mini:focus{ border-color:#666; box-shadow:0 0 0 2px rgba(255,255,255,.06) }
+    .colon{ color:#aaa; user-select:none }
+    .note{ font-size:12px; color:#9a9a9a }
+    .tz-inline .note{ width:100%; margin:4px 2px 0 2px } /* ближе к контролу */
+
+    /* модалка */
+    .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:100; opacity:0; transition:opacity .2s ease }
+    .modal-backdrop.show{ display:flex } .modal-backdrop.show.visible{ opacity:1 }
     .modal{
       background:#1e1e1e; color:#e6e6e6; border:1px solid #333; border-radius:14px; padding:16px;
       width:min(560px, 92vw); box-shadow:0 12px 40px rgba(0,0,0,.55);
-      transform: translateY(8px); opacity:.98; transition: transform .24s cubic-bezier(.2,.6,.2,1), opacity .24s ease;
+      transform:translateY(8px); opacity:.98; transition:transform .24s cubic-bezier(.2,.6,.2,1), opacity .24s ease;
     }
-    .modal-backdrop.visible .modal{ transform:none; opacity:1; }
+    .modal-backdrop.visible .modal{ transform:none; opacity:1 }
     .modal h3{ margin:0 0 12px; font-size:18px; font-weight:600 }
-    /* Ровная сетка: слева лейбл, справа контрол; на мобиле — столбцом */
-    .row{
-      display:grid;
-      grid-template-columns: 160px 1fr;
-      gap:12px;
-      align-items:center;
-      margin:12px 0;
-    }
+    .row{ display:grid; grid-template-columns:160px 1fr; gap:12px; align-items:center; margin:12px 0 }
     .row label{ font-size:14px; color:#bbb }
-
-    .control{
-      background:#2a2a2a; color:#fff; border:1px solid #3a3a3a; border-radius:10px;
-      padding:10px 12px; font-size:14px; line-height:1; outline:none;
-      transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
-      width:100%;
-    }
-    .control:focus{ border-color:#666; box-shadow:0 0 0 2px rgba(255,255,255,.06) }
-
-    .select{
-      appearance:none; -webkit-appearance:none; -moz-appearance:none;
-      padding-right:34px; position:relative;
-      background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="%23cfcfcf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5l4 4 4-4"/></svg>');
-      background-repeat:no-repeat; background-position:right 10px center; background-size:14px;
-      cursor:pointer;
-    }
-
-    .seg-toggle{
-      position:relative; display:grid; grid-template-columns:1fr 1fr;
-      background:#2a2a2a; border:1px solid #3a3a3a; border-radius:10px; padding:4px; gap:4px;
-      --seg-x:0%;
-      transition: border-color .18s ease, background-color .18s ease;
-      width:100%;
-    }
-    .seg-toggle.mode12{ --seg-x:100%; }
-    .seg-indicator{
-      position:absolute; top:4px; left:4px; width:calc(50% - 4px); height:calc(100% - 8px);
-      background:#3a3a3a; border-radius:8px; transition: transform .28s cubic-bezier(.2,.6,.2,1);
-      transform: translateX(var(--seg-x));
-      box-shadow:0 1px 0 rgba(255,255,255,.06), inset 0 0 0 .5px rgba(0,0,0,.25);
-    }
-    .segbtn{
-      position:relative; z-index:1; background:transparent; border:0; border-radius:8px; color:#cfcfcf;
-      padding:8px 10px; font-size:14px; cursor:pointer; transition: color .18s ease, transform .06s ease;
-    }
-    .segbtn:hover{ color:#fff; transform:translateY(-1px) }
-    .segbtn.active{ color:#fff }
-
-    .tz-collapsible{ overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
-      transition: max-height .28s cubic-bezier(.2,.6,.2,1), opacity .28s ease, transform .28s ease; }
-    .tz-collapsible.open{ max-height:84px; opacity:1; transform:none; }
-
-    .note{ font-size:12px; color:#9a9a9a }
 
     /* измеритель ширины таймкода */
     .time-measure{
-      position:absolute; visibility:hidden; left:-9999px; top:-9999px;
-      display:inline-block;
+      position:absolute; visibility:hidden; left:-9999px; top:-9999px; display:inline-block;
       padding:0 6px; border:1px solid transparent; border-radius:7px;
       white-space:nowrap; font-family:'Open Sans',sans-serif; font-size:var(--fs-time);
       font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
-      min-width:0; max-width:none; flex:0 0 auto;
     }
 
-    /* ===== мобильные настройки (≤ 700px) ===== */
+    /* мобильные */
     @media (max-width:700px){
-      :root{
-        --fs-h1: 30px; --fs-h2: 18px; --fs-title:15px; --fs-time:15px; --fs-meta:12px; --fs-badge:12px;
-        --gutter:14px; --rail-w:2px;
-      }
-      /* Минимализм — еще компактнее, чем классика на мобиле */
-      body.view-minimal{
-        --fs-h1: 28px; --fs-h2:16px; --fs-title:15px; --fs-time:14px;
-        --gutter:12px; --rail-w:2px;
-      }
+      :root{ --fs-h1:30px; --fs-h2:18px; --fs-title:15px; --fs-time:15px; --fs-meta:12px; --gutter:14px; --rail-w:2px }
+      body.view-minimal{ --fs-h1:28px; --fs-h2:16px; --fs-title:15px; --fs-time:14px; --gutter:12px; --rail-w:2px }
       body{ padding:16px }
-      #schedule-wrap{ padding-left: calc(var(--gutter) + 10px) }
+      #schedule-wrap{ padding-left:calc(var(--gutter) + 10px) }
       #time-rail{ left:6px }
       body.view-minimal .schedule-item{ margin-bottom:3px; padding-left:10px; border-radius:6px }
       #button-container{ gap:8px }
       #gearButton{ width:36px; height:36px }
       .btn{ padding:9px 12px; font-size:13px }
       .modal{ width:min(560px, 96vw); padding:12px }
-      .row{ grid-template-columns: 1fr; gap:8px; margin:10px 0 }
+      .row{ grid-template-columns:1fr; gap:8px; margin:10px 0 }
       .row label{ font-size:13px }
-      .segbtn{ padding:7px 8px; font-size:13px }
-      .control{ padding:9px 10px; font-size:13px }
     }
   </style>
 </head>
 <body class="view-classic">
-  <!-- кнопки -->
   <div id="button-container">
     <button id="scrollTodayButton" class="btn" aria-label="Прокрутить к сегодняшнему дню">На сегодня</button>
-    <button id="gearButton" class="btn" aria-label="Настройки" title="Настройки">
+    <button id="gearButton" class="btn" aria-label="Настройки" title="Настройки" style="cursor:pointer">
       <svg class="icon-gear" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="3"></circle>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 3.9l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -325,7 +350,6 @@
   <h1 id="schedule-title">График выхода серий</h1>
   <div id="meta-tz"></div>
 
-  <!-- контент + левый таймлайн -->
   <div id="schedule-wrap">
     <div id="time-rail" aria-hidden="true">
       <div class="rail-line"></div>
@@ -345,40 +369,55 @@
       <h3 id="settings-title">Настройки</h3>
 
       <div class="row">
-        <label for="tzMode">Часовой пояс:</label>
-        <select id="tzMode" class="control select">
-          <option value="system">Авто (системный)</option>
-          <option value="fixed">Пользовательский UTC±</option>
-        </select>
+        <label>Часовой пояс:</label>
+        <div id="dd-tzMode" class="dd" style="cursor:pointer">
+          <button class="dd-toggle"><span class="dd-label">Авто (системный)</span>
+            <svg class="dd-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="#cfcfcf" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <div class="dd-menu" role="listbox"></div>
+        </div>
       </div>
 
       <div id="tzFixedWrap" class="tz-collapsible">
         <div class="row" style="margin-top:0">
-          <input id="tzOffsetText" class="control" inputmode="text" autocomplete="off" spellcheck="false" placeholder="+03:00" aria-label="Смещение, формат ±HH:MM" style="width:120px; text-align:center; font-variant-numeric:tabular-nums; letter-spacing:.04em">
-          <span class="note">формат: ±HH:MM (шаг 15 мин)</span>
+          <label>Пользовательский UTC±:</label>
+          <div class="tz-inline">
+            <div class="tz-chip">
+              <span class="tz-prefix">UTC</span>
+              <div class="seg-mini" id="tzSign">
+                <button data-s="+" id="tzPlus">+</button>
+                <button data-s="-" id="tzMinus" class="off">−</button>
+              </div>
+              <input id="tzHH" class="input-mini" type="number" min="0" max="14" step="1" value="03" aria-label="Часы">
+              <span class="colon">:</span>
+              <input id="tzMM" class="input-mini" type="number" min="0" max="59" step="15" value="00" aria-label="Минуты (шаг 15)">
+            </div>
+            <div class="note">минуты округляются кратно 15</div>
+          </div>
         </div>
       </div>
 
       <div class="row">
         <label>Формат времени:</label>
-        <div id="clockSeg" class="seg-toggle" role="group" aria-label="Формат времени">
-          <div class="seg-indicator" aria-hidden="true"></div>
-          <button type="button" class="segbtn" data-mode="24">24ч</button>
-          <button type="button" class="segbtn" data-mode="12">12ч AM/PM</button>
+        <div id="clockSeg" class="seg-mini" role="group" aria-label="Формат времени" style="width:fit-content; cursor:pointer">
+          <span class="seg-thumb" aria-hidden="true"></span>
+          <button class="on" data-mode="24">24ч</button>
+          <button class="off" data-mode="12">12ч AM/PM</button>
         </div>
       </div>
 
       <div class="row">
-        <label for="viewMode">Вид:</label>
-        <select id="viewMode" class="control select">
-          <option value="classic">Классический</option>
-          <option id="viewWideOption" value="wide">Широкий (TV)</option>
-          <option value="minimal">Минимализм</option>
-        </select>
+        <label>Вид:</label>
+        <div id="dd-viewMode" class="dd" style="cursor:pointer">
+          <button class="dd-toggle"><span class="dd-label">Классический</span>
+            <svg class="dd-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="#cfcfcf" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+          <div class="dd-menu" role="listbox"></div>
+        </div>
       </div>
 
       <div class="row" style="justify-content:flex-end; grid-template-columns:1fr">
-        <button id="closeSettings" class="btn" style="justify-self:end">Закрыть</button>
+        <button id="closeSettings" class="btn" style="justify-self:end; cursor:pointer">Закрыть</button>
       </div>
     </div>
   </div>
@@ -554,9 +593,7 @@
         const hasTime = typeof info.time === 'string' && info.time.trim() !== '';
         t.textContent = hasTime ? info.time : placeholder ? (placeholderLabel || NO_TIME) : NO_TIME;
 
-        // сохраняем локальные минуты (0..1440) для таймлайна
         if (Number.isFinite(info.mins)) el.dataset.mins = String(info.mins);
-
         if(!hasTime){ t.setAttribute('aria-label', placeholder ? 'без времени, день выпуска' : 'без времени'); }
 
         const title = document.createElement('span');
@@ -565,6 +602,7 @@
 
         const openLink = ()=>{
           if(!info.title) return;
+          if (window.getSelection && window.getSelection().toString().length) return;
           window.open('https://shikimori.one/animes?search=' + encodeURIComponent(info.title), '_blank');
         };
         el.addEventListener('click', openLink);
@@ -652,9 +690,9 @@
         metrics.todayH = Math.max(1, todayBottom - todayTop);
 
         buildTodayAnchors(todayBlock, todayRect);
+        updateConnector();
       }
 
-      // якоря внутри текущего дня: «сутки» с небольшими запасами от первой/последней строки
       function buildTodayAnchors(blockEl, blockRect){
         const ul = blockEl.querySelector('ul');
         if (!ul){ metrics.todayAnchors = [{t:0,y:0},{t:1440,y:metrics.todayH}]; return; }
@@ -678,11 +716,8 @@
         const yFirst = midY(first), yLast = midY(last);
 
         let step;
-        if (rows.length >= 2){
-          step = Math.abs(midY(rows[1]) - yFirst);
-        } else {
-          step = rRect(first).height * 0.9;
-        }
+        if (rows.length >= 2){ step = Math.abs(midY(rows[1]) - yFirst); }
+        else { step = rRect(first).height * 0.9; }
 
         const headSpace = Math.max(0, yFirst - topRel);
         const tailSpace = Math.max(0, botRel  - yLast);
@@ -732,6 +767,7 @@
         if(force || now.minute !== lastMinute){
           lastMinute = now.minute;
           document.querySelector('#time-rail .badge').textContent = fmt(now);
+          updateConnector();
         }
       }
 
@@ -745,13 +781,24 @@
           const delta = Math.ceil(minLeft - rect.left);
           badge.style.setProperty('--tag-nudge', delta + 'px');
         }
+        updateConnector();
+      }
+
+      function updateConnector(){
+        const dot = document.querySelector('#time-rail .now-tag .dot');
+        const badge = document.querySelector('#time-rail .now-tag .badge');
+        const tag = document.querySelector('#time-rail .now-tag');
+        if(!dot || !badge || !tag) return;
+        const dr = dot.getBoundingClientRect();
+        const br = badge.getBoundingClientRect();
+        const gap = Math.max(10, Math.min(140, dr.left - br.right));
+        tag.style.setProperty('--conn-w', gap + 'px');
       }
 
       function animate(){
         const now = DateTime.local().setZone(zoneId());
         const t = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
 
-        // если anchors не готовы (на старте/смене дня), перестроить
         const diNow = (now.weekday + 6) % 7;
         const currBlock = document.querySelector(`.day-block[data-di="${diNow}"]`);
         if (currBlock && (!metrics.todayAnchors || metrics.todayAnchors.length === 0)){
@@ -763,108 +810,204 @@
         const y = metrics.todayTopRel + yInside;
 
         setNow(y);
-        updateNowLabel();
         requestAnimationFrame(animate);
       }
 
-      /* ===== WIDTH / SMOOTH SWITCH ===== */
-      function recalcTimeWidth(){
+      /* ===== ШИРИНА ТАЙМКОДОВ ===== */
+      let currentTimeW = 90;
+      function measureTimeWidth(){
         const sample = settings.clock12 ? '12:00\u202FPM' : '00:00';
         const probe = document.createElement('span');
         probe.className = 'time-measure';
         probe.textContent = sample;
         document.body.appendChild(probe);
-        const w = probe.offsetWidth;
-        const finalW = Math.max(60, w + 2);
-        document.documentElement.style.setProperty('--time-w-static', finalW + 'px');
+        const w = Math.ceil(probe.getBoundingClientRect().width);
         probe.remove();
+        return Math.max(60, w + 2);
+      }
+      function setTimeW(px){ currentTimeW = px; document.documentElement.style.setProperty('--time-w', String(Math.round(px))); }
+      function animateTimeW(to, dur=360){
+        const from = currentTimeW;
+        if(Math.abs(to-from) < 1){ setTimeW(to); return; }
+        const t0 = performance.now();
+        const ease = t => (t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2);
+        function step(now){
+          const p = Math.min(1, (now - t0)/dur);
+          const v = from + (to - from) * ease(p);
+          setTimeW(v);
+          if(p<1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
       }
 
       function smoothFormatSwitch(){
-        document.body.classList.add('format-anim');
-        recalcTimeWidth();
+        animateTimeW(measureTimeWidth());
         const converted = convertReferenceTimeToLocal();
         for(let di=0; di<7; di++){
-          const block = document.querySelector(`.day-block[data-di="${di}"]`);
-          if(!block) continue;
+          const block = document.querySelector(`.day-block[data-di="${di}"]`); if(!block) continue;
           const times = block.querySelectorAll('.schedule-item .time');
           const rows  = block.querySelectorAll('.schedule-item');
           const list = converted[di].schedule;
-          times.forEach((node, idx)=>{
-            const show = list[idx]; if(!show) return;
-            node.textContent = show.time || NO_TIME;
-          });
-          // mins оставляем прежними; на всякий — синхронизируем
-          rows.forEach((row, idx)=>{
-            const show = list[idx];
-            if(show && Number.isFinite(show.mins)) row.dataset.mins = String(show.mins);
-          });
+          times.forEach((node, idx)=>{ const show = list[idx]; if(show) node.textContent = show.time || NO_TIME; });
+          rows.forEach((row, idx)=>{ const show = list[idx]; if(show && Number.isFinite(show.mins)) row.dataset.mins = String(show.mins); });
         }
         updateNowLabel(true);
-        setTimeout(()=> document.body.classList.remove('format-anim'), 320);
         requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); });
       }
 
-      /* ===== SETTINGS / UI ===== */
+      /* ===== КАСТОМНЫЕ DROPDOWN ===== */
+      function initDropdown(root, items, value, onChange){
+        const btn = root.querySelector('.dd-toggle');
+        const labelEl = root.querySelector('.dd-label');
+        const menu = root.querySelector('.dd-menu');
+        menu.innerHTML = '';
+        items.forEach(({value:v,label})=>{
+          const it = document.createElement('button');
+          it.className='dd-item';
+          it.type='button';
+          it.textContent=label;
+          it.setAttribute('role','option');
+          it.dataset.val=v;
+          if(v===value) it.setAttribute('aria-selected','true');
+          it.addEventListener('click', ()=>{
+            value=v;
+            labelEl.textContent=label;
+            [...menu.children].forEach(x=>x.removeAttribute('aria-selected'));
+            it.setAttribute('aria-selected','true');
+            close();
+            btn.blur();
+            onChange(v);
+          });
+          menu.appendChild(it);
+        });
+        function open(){
+          root.classList.add('open');
+          requestAnimationFrame(()=> root.classList.add('visible'));
+          window.addEventListener('click', outside, { once:true });
+        }
+        function close(){
+          root.classList.remove('visible');
+          setTimeout(()=> root.classList.remove('open'), 180);
+        }
+        function outside(e){ if(!root.contains(e.target)) close(); }
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); root.classList.contains('open') ? close() : open(); });
+        labelEl.textContent = (items.find(x=>x.value===value)||items[0]).label;
+        return { update(v){
+          value=v;
+          const item = items.find(x=>x.value===v);
+          if(item) labelEl.textContent=item.label;
+          [...menu.children].forEach(x=> x.dataset.val===v ? x.setAttribute('aria-selected','true') : x.removeAttribute('aria-selected'));
+        }};
+      }
+
+      /* ===== настройки / UI ===== */
       const settingsModal = $('#settings');
-      const tzModeSel = $('#tzMode');
-      const tzFixedWrap = $('#tzFixedWrap');
-      const tzOffsetText = $('#tzOffsetText');
+
+      const viewDD = initDropdown(
+        $('#dd-viewMode'),
+        [{value:'classic',label:'Классический'},{value:'wide',label:'Широкий (TV)'},{value:'minimal',label:'Минимализм'}],
+        settings.viewMode,
+        v=>{ settings.viewMode=v; applyViewMode(); setTimeout(persistAndRerender, 60); }
+      );
+
+      const tzDD = initDropdown(
+        $('#dd-tzMode'),
+        [{value:'system',label:'Авто (системный)'},{value:'fixed',label:'Пользовательский UTC±'}],
+        settings.tzMode,
+        v=>{ settings.tzMode=v; toggleTzFixed(v==='fixed'); persistAndRerender(); }
+      );
+
+      // Тумблер формата времени с «ползунком»
       const seg = $('#clockSeg');
-      const segBtns = seg ? seg.querySelectorAll('.segbtn') : [];
-      const viewSel = $('#viewMode');
-      const wideOption = $('#viewWideOption');
+      const segBtns = seg.querySelectorAll('button');
+      const thumb = seg.querySelector('.seg-thumb');
 
-      const setSegActive = (mode)=>{
-        segBtns.forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-        if(seg) seg.classList.toggle('mode12', mode==='12');
-      };
+      function moveThumb(mode){
+        const idx = (mode === '12') ? 1 : 0;
+        const btn = segBtns[idx];
+        // позиция и ширина ползунка — ровно под активной кнопкой
+        thumb.style.left  = btn.offsetLeft + 'px';
+        thumb.style.width = btn.offsetWidth + 'px';
+      }
+      function setSeg(mode){
+        segBtns.forEach(b=>{
+          const on = (b.dataset.mode===mode);
+          b.classList.toggle('off', !on);
+          b.classList.toggle('on', on);
+        });
+        moveThumb(mode);
+      }
+      setSeg(settings.clock12 ? '12':'24');
+      seg.addEventListener('click', (e)=>{
+        const btn = e.target.closest('button'); if(!btn) return;
+        const want12 = (btn.dataset.mode === '12');
+        if(settings.clock12 === want12) return;
+        settings.clock12 = want12;
+        localStorage.setItem('clock12', want12 ? 'true':'false');
+        setSeg(want12 ? '12':'24');
+        smoothFormatSwitch();
+      });
+      window.addEventListener('resize', ()=> moveThumb(settings.clock12 ? '12':'24'), { passive:true });
 
-      function parseOffsetText(s){
-        if(!s) return null;
-        s = s.trim();
-        const m = s.match(/^([+-])?\s*(\d{1,2})(?::?(\d{2}))?$/);
-        if(!m) return null;
-        const sign = (m[1] === '-') ? -1 : 1;
-        const hh = parseInt(m[2],10);
-        const mm = parseInt(m[3]||'0',10);
-        if(hh>14 || mm>59) return null;
-        const mmRound = Math.round(mm/15)*15;
-        const total = sign * (hh*60 + mmRound);
-        if(total > 14*60 || total < -12*60) return null;
-        return total;
+      // UTC± контрол
+      const tzFixedWrap = $('#tzFixedWrap');
+      const hh = $('#tzHH'), mm = $('#tzMM'), plus = $('#tzPlus'), minus = $('#tzMinus');
+
+      function toggleTzFixed(open){
+        tzFixedWrap.classList.toggle('open', !!open);
       }
-      function formatOffset(mins){
-        const sign = mins>=0 ? '+' : '-';
-        const abs = Math.abs(mins);
-        const hh = String(Math.floor(abs/60)).padStart(2,'0');
-        const mm = String(abs%60).padStart(2,'0');
-        return `${sign}${hh}:${mm}`;
+      function setSign(plusSign){
+        plus.classList.toggle('off', !plusSign);
+        minus.classList.toggle('off', plusSign);
       }
+      function setFromMins(total){
+        const signPlus = total>=0; const abs = Math.abs(total);
+        const H = Math.min(14, Math.floor(abs/60));
+        const M = Math.min(59, Math.round((abs%60)/15)*15);
+        setSign(signPlus);
+        hh.value = String(H).padStart(2,'0');
+        mm.value = String(M).padStart(2,'0');
+      }
+      function currentMins(){
+        const signPlus = !plus.classList.contains('off'); // читаем состояние «+»
+        const H = Math.max(0, Math.min(14, parseInt(hh.value||'0',10)));
+        const Mraw = Math.max(0, Math.min(59, parseInt(mm.value||'0',10)));
+        const M = Math.round(Mraw/15)*15;
+        mm.value = String(M).padStart(2,'0');
+        return (signPlus?1:-1) * (H*60 + M);
+      }
+      plus.addEventListener('click', ()=>{ setSign(true);  settings.tzOffsetMin=currentMins(); persistAndRerender(); });
+      minus.addEventListener('click', ()=>{ setSign(false); settings.tzOffsetMin=currentMins(); persistAndRerender(); });
+      hh.addEventListener('input', ()=>{ settings.tzOffsetMin=currentMins(); persistAndRerender(); });
+      mm.addEventListener('input', ()=>{ settings.tzOffsetMin=currentMins(); persistAndRerender(); });
+      // шаг минут колёсиком/стрелками по 15
+      mm.addEventListener('keydown', (e)=>{
+        if(e.key==='ArrowUp' || e.key==='ArrowDown'){
+          e.preventDefault();
+          const v = parseInt(mm.value||'0',10);
+          const d = e.key==='ArrowUp' ? 15 : -15;
+          let nv = Math.max(0, Math.min(59, v + d));
+          nv = Math.round(nv/15)*15;
+          mm.value = String(nv).padStart(2,'0');
+          settings.tzOffsetMin=currentMins(); persistAndRerender();
+        }
+      });
+      mm.addEventListener('wheel', (e)=>{
+        e.preventDefault();
+        const dir = e.deltaY<0 ? 1 : -1;
+        const v = parseInt(mm.value||'0',10);
+        let nv = Math.max(0, Math.min(59, v + dir*15));
+        nv = Math.round(nv/15)*15;
+        mm.value = String(nv).padStart(2,'0');
+        settings.tzOffsetMin=currentMins(); persistAndRerender();
+      }, { passive:false });
 
       function applyViewMode(){
         document.body.classList.toggle('view-classic', settings.viewMode==='classic');
         document.body.classList.toggle('view-wide', settings.viewMode==='wide');
         document.body.classList.toggle('view-minimal', settings.viewMode==='minimal');
-        recalcTimeWidth(); layoutRail(); clampTagIntoView();
-      }
-
-      function openSettings(){
-        if(!settingsModal) return;
-        tzModeSel.value = settings.tzMode;
-        tzFixedWrap.classList.toggle('open', settings.tzMode === 'fixed');
-        tzOffsetText.value = formatOffset(settings.tzOffsetMin);
-        tzOffsetText.classList.remove('ok','err');
-
-        setSegActive(settings.clock12 ? '12' : '24');
-        viewSel.value = settings.viewMode;
-
-        settingsModal.classList.add('show');
-        requestAnimationFrame(()=> settingsModal.classList.add('visible'));
-      }
-      function closeSettings(){
-        settingsModal.classList.remove('visible');
-        setTimeout(()=> settingsModal.classList.remove('show'), 240);
+        animateTimeW(measureTimeWidth());
+        layoutRail(); clampTagIntoView();
       }
 
       function persistAndRerender(){
@@ -879,43 +1022,22 @@
         updateNowLabel(true);
       }
 
-      tzModeSel.addEventListener('change', ()=>{
-        settings.tzMode = tzModeSel.value;
-        tzFixedWrap.classList.toggle('open', settings.tzMode === 'fixed');
-        persistAndRerender();
-      });
+      function openSettings(){
+        tzDD.update(settings.tzMode);
+        toggleTzFixed(settings.tzMode === 'fixed');
+        setFromMins(settings.tzOffsetMin);
+        setSeg(settings.clock12 ? '12':'24');
+        viewDD.update(settings.viewMode);
 
-      let tzDebounce;
-      tzOffsetText && tzOffsetText.addEventListener('input', ()=>{
-        clearTimeout(tzDebounce);
-        tzDebounce = setTimeout(()=>{
-          const parsed = parseOffsetText(tzOffsetText.value);
-          if(parsed === null){
-            tzOffsetText.classList.remove('ok'); tzOffsetText.classList.add('err');
-          }else{
-            tzOffsetText.classList.remove('err'); tzOffsetText.classList.add('ok');
-            settings.tzOffsetMin = parsed;
-            tzOffsetText.value = formatOffset(parsed);
-            persistAndRerender();
-          }
-        }, 160);
-      });
-
-      seg && seg.addEventListener('click', (e)=>{
-        const btn = e.target.closest('.segbtn'); if(!btn) return;
-        const want12 = (btn.dataset.mode === '12');
-        if(settings.clock12 === want12) return;
-        settings.clock12 = want12;
-        setSegActive(settings.clock12 ? '12' : '24');
-        localStorage.setItem('clock12', settings.clock12 ? 'true' : 'false');
-        smoothFormatSwitch();
-      });
-
-      viewSel.addEventListener('change', ()=>{
-        settings.viewMode = viewSel.value;
-        applyViewMode();
-        setTimeout(persistAndRerender, 60);
-      });
+        settingsModal.classList.add('show');
+        requestAnimationFrame(()=> settingsModal.classList.add('visible'));
+        // после открытия модалки пересчитаем позицию ползунка (точные размеры кнопок)
+        requestAnimationFrame(()=> moveThumb(settings.clock12 ? '12':'24'));
+      }
+      function closeSettings(){
+        settingsModal.classList.remove('visible');
+        setTimeout(()=> settingsModal.classList.remove('show'), 240);
+      }
 
       $('#gearButton').addEventListener('click', openSettings);
       $('#closeSettings').addEventListener('click', closeSettings);
@@ -940,71 +1062,114 @@
         $('#gearButton').classList.toggle('hidden', hidden);
       }, { passive:true });
 
-      /* мобайл: скрыть wide */
+      /* мобайл: скрыть wide в меню вида */
       const mqMobile = window.matchMedia('(max-width:700px)');
       function adjustForMobile(){
         const isMobile = mqMobile.matches;
-        if(isMobile){
-          if(wideOption){ wideOption.disabled = true; wideOption.hidden = true; }
-          if(settings.viewMode === 'wide'){
-            settings.viewMode = 'classic';
-            localStorage.setItem('viewMode','classic');
-            applyViewMode();
-            viewSel.value = 'classic';
-          }
-        }else{
-          if(wideOption){ wideOption.disabled = false; wideOption.hidden = false; }
+        const viewMenu = $('#dd-viewMode .dd-menu');
+        if(viewMenu){
+          [...viewMenu.children].forEach(btn=>{
+            if(btn.dataset.val==='wide') btn.style.display = isMobile ? 'none' : 'block';
+          });
+        }
+        if(isMobile && settings.viewMode==='wide'){
+          settings.viewMode='classic'; localStorage.setItem('viewMode','classic'); applyViewMode(); viewDD.update('classic');
         }
       }
       mqMobile.addEventListener ? mqMobile.addEventListener('change', adjustForMobile)
                                 : mqMobile.addListener(adjustForMobile);
 
-      /* ResizeObserver: пересчёт таймлайна при изменениях высоты */
+      /* ResizeObserver */
       let ro;
       if('ResizeObserver' in window){
         ro = new ResizeObserver(()=> requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); }));
       }
-      window.addEventListener('resize', ()=>{ layoutRail(); recalcTimeWidth(); clampTagIntoView(); }, { passive:true });
+      window.addEventListener('resize', ()=>{ layoutRail(); animateTimeW(measureTimeWidth()); clampTagIntoView(); }, { passive:true });
+
+      /* Копирование: только «время — тайтл» или целый день, формат — буллеты */
+      document.addEventListener('copy', (e)=>{
+        const sel = window.getSelection();
+        if(!sel || sel.rangeCount === 0) return;
+
+        const range = sel.getRangeAt(0);
+        const items = [...document.querySelectorAll('.schedule-item')].filter(node => intersects(range, node));
+        let output = '';
+
+        const dayH2 = closestInRange(range, 'h2');
+        if(dayH2){
+          const dayBlock = dayH2.closest('.day-block');
+          if(dayBlock){
+            const title = dayH2.textContent.replace(/:\s*$/,'').trim();
+            const lines = [...dayBlock.querySelectorAll('.schedule-item')].map(item => lineText(item)).filter(Boolean);
+            output = `${title}\n` + lines.map(l => `• ${l}`).join('\n');
+          }
+        } else if(items.length){
+          output = items.map(item => `• ${lineText(item)}`).filter(Boolean).join('\n');
+        } else {
+          e.preventDefault();
+          return;
+        }
+
+        e.clipboardData.setData('text/plain', output);
+        e.preventDefault();
+      });
+      function lineText(item){
+        const t = (item.querySelector('.time')?.textContent || '').trim();
+        const name = (item.querySelector('.title')?.textContent || '').trim();
+        if(!name) return '';
+        return `${t} — ${name}`;
+      }
+      function intersects(range, node){
+        const r = document.createRange(); r.selectNodeContents(node);
+        return !(range.compareBoundaryPoints(Range.END_TO_START, r) <= 0 ||
+                 range.compareBoundaryPoints(Range.START_TO_END, r) >= 0);
+      }
+      function closestInRange(range, selector){
+        const nodes = [...document.querySelectorAll(selector)];
+        for(const n of nodes){
+          const r = document.createRange(); r.selectNodeContents(n);
+          if(!(range.compareBoundaryPoints(Range.END_TO_START, r) <= 0 ||
+               range.compareBoundaryPoints(Range.START_TO_END, r) >= 0)) return n;
+        }
+        return null;
+      }
 
       /* INIT */
       document.addEventListener('DOMContentLoaded', ()=>{
         adjustForMobile();
-        applyViewMode();
 
-        recalcTimeWidth();
+        document.body.classList.add(settings.viewMode==='wide'?'view-wide':(settings.viewMode==='minimal'?'view-minimal':'view-classic'));
         updateMeta();
+
+        // показать/спрятать UTC-блок по текущей настройке
+        toggleTzFixed(settings.tzMode === 'fixed');
+        // установить стартовые размеры таймкода
+        setTimeW(measureTimeWidth());
+
         render(convertReferenceTimeToLocal());
         layoutRail();
 
         if(ro){ ro.observe($('#schedule-container')); }
-
         if(document.fonts && document.fonts.ready){
-          document.fonts.ready.then(()=>{ recalcTimeWidth(); layoutRail(); clampTagIntoView(); });
+          document.fonts.ready.then(()=>{ setTimeW(measureTimeWidth()); layoutRail(); clampTagIntoView(); moveThumb(settings.clock12 ? '12':'24'); });
         }
 
-        // первичное позиционирование без «езда»
+        // первичное позиционирование маркера
         const now = DateTime.local().setZone(zoneId());
         const t0 = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
         const yInside0 = yFromAnchors(metrics.todayAnchors, t0);
         setNow(metrics.todayTopRel + yInside0);
-        updateNowLabel(true);
+        document.querySelector('#time-rail .badge').textContent = fmt(now);
         clampTagIntoView();
         requestAnimationFrame(()=> document.querySelector('#time-rail .now-tag').classList.add('ready'));
 
-        // непрерывное движение
         requestAnimationFrame(animate);
 
-        // минутная ресинхронизация
+        // минутная ресинхронизация (без перезагрузки)
         const sync=()=>{
           const n=new Date();
           const ms=60000 - (n.getSeconds()*1000 + n.getMilliseconds());
-          setTimeout(()=>{
-            updateMeta();
-            render(convertReferenceTimeToLocal());
-            layoutRail();
-            clampTagIntoView();
-            sync();
-          }, Math.max(400, ms));
+          setTimeout(()=>{ updateMeta(); render(convertReferenceTimeToLocal()); layoutRail(); clampTagIntoView(); sync(); }, Math.max(400, ms));
         };
         sync();
       });
