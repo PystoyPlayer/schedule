@@ -598,35 +598,93 @@
     }
 
     function buildTodayAnchors(blockEl, blockRect){
-      const ul=blockEl.querySelector('ul');
-      if(!ul){ metrics.todayAnchors=[{t:0,y:0},{t:1440,y:metrics.todayH}]; return; }
-      const all=[...ul.querySelectorAll('.schedule-item')];
-      const rows=all.filter(r=> Number.isFinite(parseFloat(r.dataset.mins)));
-      if(!rows.length){ metrics.todayAnchors=[{t:0,y:0},{t:1440,y:metrics.todayH}]; return; }
-
-      const R=el=>el.getBoundingClientRect();
-      const yTop=el=> (R(el).top    - blockRect.top);
-      const yBot=el=> (R(el).bottom - blockRect.top);
-      const yMid=el=> (yTop(el)+yBot(el))/2;
-
-      const anchors=[];
-      const first=rows[0], last=rows[rows.length-1];
-      const tFirst=parseFloat(first.dataset.mins), tLast=parseFloat(last.dataset.mins);
-
-      anchors.push({t:0, y:yTop(first)});
-      anchors.push({t:Math.max(0, tFirst-15), y:yTop(first)});
-      for(const row of rows){
-        const t=parseFloat(row.dataset.mins);
-        anchors.push({t:Math.max(0, t-15), y:yTop(row)});
-        anchors.push({t:t,               y:yMid(row)});
-        anchors.push({t:Math.min(1440, t+15), y:yBot(row)});
+      const ul = blockEl.querySelector('ul');
+      // нет строк — привязываемся к границам дня
+      if (!ul){
+        metrics.todayAnchors = [{ t: 0, y: 0 }, { t: 1440, y: metrics.todayH }];
+        return;
       }
-      anchors.push({t:Math.min(1440, tLast+15), y:yBot(last)});
-      anchors.push({t:1440, y:yBot(last)});
 
-      anchors.sort((a,b)=>a.t-b.t);
-      for(let i=1;i<anchors.length;i++){ if(anchors[i].t<=anchors[i-1].t) anchors[i].t=anchors[i-1].t+0.001; }
-      metrics.todayAnchors=anchors;
+      // только строки с валидным временем (dataset.mins проставлен при рендере)
+      const rowsAll = [...ul.querySelectorAll('.schedule-item')];
+      const rows = rowsAll.filter(r => Number.isFinite(parseFloat(r.dataset.mins)));
+
+      if (!rows.length){
+        metrics.todayAnchors = [{ t: 0, y: 0 }, { t: 1440, y: metrics.todayH }];
+        return;
+      }
+
+      const pos = (el) => {
+        const r = el.getBoundingClientRect();
+        const top = (r.top - blockRect.top);
+        const bot = (r.bottom - blockRect.top);
+        return { top, mid: (top + bot) / 2, bot };
+      };
+
+      const clampT = (t) => Math.min(1440, Math.max(0, t));
+
+      const anchors = [];
+      const first = rows[0];
+      const last  = rows[rows.length - 1];
+      const tFirst = parseFloat(first.dataset.mins);
+      const tLast  = parseFloat(last.dataset.mins);
+      const pFirst = pos(first);
+      const pLast  = pos(last);
+
+      // перед первым: держим у верхней границы первого таймкода
+      anchors.push({ t: 0, y: pFirst.top });
+      anchors.push({ t: clampT(tFirst - 15), y: pFirst.top });
+
+      // для каждой строки: (t-15)->top, t->mid, (t+15)->bot
+      for (let i = 0; i < rows.length; i++){
+        const row = rows[i];
+        const t   = parseFloat(row.dataset.mins);
+        const p   = pos(row);
+
+        const tTop = clampT(t - 15);
+        const tMid = clampT(t);
+        const tBot = clampT(t + 15);
+
+        anchors.push({ t: tTop, y: p.top });
+        anchors.push({ t: tMid, y: p.mid });
+        anchors.push({ t: tBot, y: p.bot });
+
+        // мост до следующей строки: от (t+15, bot) к (tNext-15, top)
+        if (i < rows.length - 1){
+          const row2 = rows[i + 1];
+          const t2   = parseFloat(row2.dataset.mins);
+          const p2   = pos(row2);
+
+          const endPrev   = clampT(t + 15);
+          const startNext = clampT(t2 - 15);
+
+          if (startNext > endPrev){
+            // обычный случай — линейная интерполяция по времени
+            anchors.push({ t: endPrev,   y: p.bot });
+            anchors.push({ t: startNext, y: p2.top });
+          } else {
+            // перекрытие окон (<30 минут между тайтлами):
+            // плавно сводим к середине, чтобы не было «бесконечной» скорости
+            const midT = (endPrev + startNext) / 2;
+            const midY = (p.bot + p2.top) / 2;
+            anchors.push({ t: midT, y: midY });
+          }
+        }
+      }
+
+      // после последнего: держим у нижней границы последнего таймкода
+      anchors.push({ t: clampT(tLast + 15), y: pLast.bot });
+      anchors.push({ t: 1440, y: pLast.bot });
+
+      // сортировка по времени + защита от одинаковых t (строго монотонно)
+      anchors.sort((a, b) => a.t - b.t);
+      for (let i = 1; i < anchors.length; i++){
+        if (anchors[i].t <= anchors[i - 1].t){
+          anchors[i].t = anchors[i - 1].t + 0.001; // минимальный шаг по времени
+        }
+      }
+
+      metrics.todayAnchors = anchors;
     }
 
     const yFromAnchors=(anchors,t)=>{
