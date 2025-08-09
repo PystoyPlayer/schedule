@@ -2,344 +2,275 @@
 <html lang="ru">
 <head>
   <title>График</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="shrink-to-fit=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-  <meta name="description" content="Расписание серий в Telegram канале @SubVost">
-  <meta name="theme-color" content="#181818">
-  <meta property="og:title" content="График выхода серий">
-  <meta property="og:description" content="Расписание серий в Telegram канале @SubVost">
-  <meta property="og:type" content="website">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="shrink-to-fit=no, width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
+  <meta name="description" content="Расписание серий в Telegram канале @SubVost" />
+  <meta name="theme-color" content="#181818" />
+  <meta property="og:title" content="График выхода серий" />
+  <meta property="og:description" content="Расписание серий в Telegram канале @SubVost" />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.25.0/luxon.min.js"></script>
 
   <style>
     :root{
-      --fs-h1: 36px; --fs-h2: 24px; --fs-title:16px; --fs-time:16px; --fs-meta:13px; --fs-badge:12px;
-
-      /* таймлайн */
-      --gutter:20px; --rail-w:4px;
-      --rail-c1:rgba(255,255,255,.16); --rail-c2:rgba(255,255,255,.28);
-
-      /* маркер «сейчас» */
-      --tag-h:26px; --tag-pad-x:8px; --tag-nudge:0px;
-      --tag-bg:rgba(255,255,255,.10); --tag-br:rgba(255,255,255,.22); --tag-text:#ececec;
-      --tag-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 10px rgba(255,255,255,.12);
-      --conn-w: 32px; /* ширина коннектора, обновляется JS */
-
-      /* таймкоды (число px — анимируем JS) */
-      --time-w: 90;
+      --fs-h1:36px; --fs-h2:24px; --fs-title:16px; --fs-time:16px; --fs-meta:13px; --fs-badge:12px;
 
       --time-bg: rgba(255,255,255,.12);
       --time-bg-hover: rgba(255,255,255,.18);
       --time-border: rgba(255,255,255,.10);
-      --time-color: #e2e2e2;
+      --time-color:#e2e2e2;
 
-      /* placeholder */
-      --ph-bg: rgba(255,255,255,.09);
-      --ph-border: rgba(255,255,255,.10);
-      --ph-color:#bdbdbd;
+      --gutter:20px; --rail-w:4px;
+      --rail-c1: var(--time-bg); --rail-c2: var(--time-bg);
 
-      --row-hover: rgba(170,170,170,.10);
+      --tag-h:26px; --tag-pad-x:8px; --tag-nudge:0px;
+      --tag-bg:rgba(255,255,255,.10); --tag-br:rgba(255,255,255,.22); --tag-text:#ececec;
+      --tag-shadow:0 8px 24px rgba(0,0,0,.35), 0 0 10px rgba(255,255,255,.12);
+      --conn-w:36px;
+
+      --row-hover:rgba(170,170,170,.10);
+
+      --ui-bg:#2a2a2a; --ui-br:#3a3a3a; --ui-bg-weak:#1f1f1f;
+      --ui-hover:#2f2f2f; --ui-ring:rgba(255,255,255,.06);
+      --ui-text:#ddd; --ui-text-weak:#bdbdbd;
+      --btn-radius:10px; --chip-radius:12px;
     }
-
     body.view-wide{
       max-width:1100px !important;
-      --fs-h1: 42px; --fs-h2:26px; --fs-title:18px; --fs-time:18px;
+      --fs-h1:42px; --fs-h2:26px; --fs-title:18px; --fs-time:18px;
       --gutter:28px; --rail-w:5px;
-      --time-bg: rgba(255,255,255,.14);
-      --time-bg-hover: rgba(255,255,255,.22);
-      --time-border: rgba(255,255,255,.14);
-      --row-hover: rgba(170,170,170,.12);
+      --time-bg:rgba(255,255,255,.14);
+      --time-bg-hover:rgba(255,255,255,.22);
+      --time-border:rgba(255,255,255,.14);
       --tag-h:28px; --tag-pad-x:10px;
     }
     body.view-minimal{
-      --fs-h1: 34px; --fs-h2:20px; --fs-title:16px; --fs-time:16px;
+      --fs-h1:34px; --fs-h2:20px; --fs-title:16px; --fs-time:16px;
       --gutter:18px; --rail-w:2px;
-      --rail-c1: rgba(255,255,255,.10);
-      --rail-c2: rgba(255,255,255,.16);
-      --time-bg: transparent;
-      --time-bg-hover: rgba(255,255,255,.06);
-      --time-border: rgba(255,255,255,.16);
+      --time-bg:rgba(255,255,255,.08);
+      --time-bg-hover:rgba(255,255,255,.12);
+      --time-border:rgba(255,255,255,.16);
       --time-color:#dcdcdc;
-      --row-hover: rgba(255,255,255,.035);
-      --tag-bg: transparent; --tag-br: transparent; --tag-shadow:none;
+      --row-hover:rgba(255,255,255,.035);
+      --tag-bg:transparent; --tag-br:transparent; --tag-shadow:none;
     }
 
     *{ box-sizing:border-box }
     html,body{ height:100% }
     body{
       font-family:'Open Sans',sans-serif;
-      line-height:1.5;
-      background:#181818; color:#dddddd;
-      margin:0; padding:20px;
+      line-height:1.5; background:#181818; color:#ddd;
+      margin:0; padding:20px; max-width:620px; margin-inline:auto;
       display:flex; flex-direction:column; align-items:center;
-      max-width:620px; margin-left:auto; margin-right:auto;
-
-      /* глобально запрещаем выделение */
-      user-select:none; -webkit-user-select:none; -ms-user-select:none;
-      cursor:default;
+      user-select:none; -webkit-user-select:none; cursor:default;
       transition:max-width .28s cubic-bezier(.2,.6,.2,1);
     }
 
     h1{ text-align:center; margin-top:.1em; font-size:var(--fs-h1); color:#fff; transition:font-size .28s ease }
     #meta-tz{ margin:-14px 0 12px; font-size:var(--fs-meta); color:#9a9a9a; text-align:center }
 
-    /* заголовки дней — разрешаем выделение */
     h2{
-      font-size:var(--fs-h2); margin:25px 0 5px; position:relative; z-index:1; transition:font-size .28s ease;
-      user-select:text; -webkit-user-select:text;
+      font-size:var(--fs-h2); margin:25px 0 5px; position:relative; z-index:1;
+      user-select:text !important;
     }
+
+    /* можно копировать расписание, но не тайм-рейл */
+    #schedule-wrap, #schedule-container, #schedule-container *{ user-select:text !important; }
+    #time-rail, #time-rail *{ user-select:none !important; }
+
     ul{ padding-left:0; margin:0 0 7px; display:flex; flex-direction:column; align-items:flex-start; position:relative; z-index:1 }
 
-    /* кликабельная строка */
     .schedule-item{
-      display:flex; align-items:flex-start;
-      margin-bottom:5px; width:100%; padding-left:15px; border-radius:8px;
-      transition:background-color .18s ease, padding .18s ease;
-      cursor:pointer;
+      display:flex; align-items:flex-start; width:100%;
+      padding-left:15px; margin-bottom:5px; border-radius:8px; cursor:pointer;
+      transition:background-color .18s ease;
     }
-    body.view-minimal .schedule-item{ margin-bottom:4px; padding-left:12px; border-radius:6px }
+    body.view-minimal .schedule-item{ padding-left:12px; margin-bottom:4px; border-radius:6px }
     .schedule-item:hover{ background:var(--row-hover) }
 
-    /* таймкод — можно выделять */
     .time{
       display:flex; align-items:center; justify-content:center;
       margin-right:5px; padding:0 6px;
       width:calc(var(--time-w) * 1px); flex:0 0 calc(var(--time-w) * 1px);
-      text-align:center; white-space:nowrap;
-      border-radius:7px; color:var(--time-color);
-      background:var(--time-bg); border:1px solid var(--time-border);
-      font-size:var(--fs-time);
-      font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
-      transition:background .18s ease, color .18s ease, border-color .18s ease, font-size .28s ease;
-      user-select:text; -webkit-user-select:text;
+      text-align:center; white-space:nowrap; font-size:var(--fs-time);
+      color:var(--time-color); background:var(--time-bg); border:1px solid var(--time-border);
+      border-radius:7px; font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
+      transition:background .18s ease, border-color .18s ease, color .18s ease, opacity .18s ease;
     }
     .schedule-item:hover .time{ background:var(--time-bg-hover) }
     .time:empty{ visibility:hidden }
-    .time.is-placeholder{ background:var(--ph-bg); border-color:var(--ph-border); color:var(--ph-color) }
-    body.view-minimal .time.is-placeholder{
-      background:transparent !important;
-      border-color:rgba(255,255,255,.22);
-      border-style:dashed;
-      color:#a9a9a9;
-    }
 
-    /* название — можно выделять */
-    .title{
-      flex:1 1 auto; font-size:var(--fs-title); margin-left:5px; padding-right:15px; color:#ddd;
-      text-decoration:none; cursor:inherit; transition:font-size .28s ease;
-      user-select:text; -webkit-user-select:text;
-    }
-    body.view-minimal .title{ color:#e3e3e3 }
+    /* без графика: фон оставляем, обводка — пунктир */
+    .time.is-placeholder{ background:var(--time-bg); border:1px dashed var(--time-border); color:var(--time-color) }
+    body.view-minimal .time.is-placeholder{ background:transparent; border-style:dashed; color:#bdbdbd }
+
+    .title{ flex:1 1 auto; font-size:var(--fs-title); margin-left:5px; padding-right:15px; color:#ddd; text-decoration:none; cursor:inherit }
 
     .empty-day{ color:#666; font-style:italic; margin-left:15px }
-    .day-block{ user-select:text; -webkit-user-select:text; } /* для копирования целого дня */
+    .day-block{ user-select:text !important; }
 
-    /* кнопки */
     #button-container{ position:fixed; top:20px; right:20px; display:flex; gap:10px; z-index:50 }
     @media (max-width:1024px){ #button-container{ top:auto; bottom:20px } }
     .btn{
-      background:rgba(51,51,51,.85); color:#fff; border:1px solid #666; border-radius:10px;
+      background:rgba(51,51,51,.85); color:#fff; border:1px solid #666; border-radius:var(--btn-radius);
       display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
       padding:10px 14px; font-size:14px; letter-spacing:.2px;
       transition:background-color .18s ease, opacity .3s ease, border-color .18s ease;
     }
-    .btn:hover{ background:rgba(68,68,68,.9); border-color:#777; transform:none }
+    .btn:hover{ background:rgba(68,68,68,.9); border-color:#777 }
     .btn.hidden{ opacity:0; pointer-events:none }
     #scrollTodayButton{ text-transform:uppercase; letter-spacing:.6px }
-    #gearButton{ width:40px; height:40px; padding:0; border-radius:10px }
+    #gearButton{ width:40px; height:40px; padding:0; border-radius:var(--btn-radius) }
     .icon-gear{ width:20px; height:20px; display:block }
     .icon-gear path, .icon-gear circle{ fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
 
-    /* контент + левый таймлайн */
-    #schedule-wrap{ position:relative; width:100%; padding-left:calc(var(--gutter) + 12px); transition:padding-left .28s ease }
+    /* === ключ: контент всегда оставляет место под рейл === */
+    #schedule-wrap{
+      position:relative;
+      width:100%;
+      padding-left:calc(var(--gutter) + 12px) !important; /* место под таймлайн слева */
+      transition:padding-left .28s ease;
+    }
 
-    /* рельса */
-    #time-rail{ position:absolute; left:8px; top:0; width:var(--gutter); height:0; pointer-events:none; z-index:0 }
+    /* тайм-рейл */
+    #time-rail{
+      position:absolute;
+      left:8px !important;
+      top:0;
+      width:var(--gutter);
+      height:0; /* выставляется из JS */
+      pointer-events:none;
+      z-index:0; /* под контентом */
+    }
     #time-rail .rail-line{
       position:absolute; top:0; bottom:0; left:calc(var(--gutter)/2 - var(--rail-w)/2);
       width:var(--rail-w); border-radius:3px;
       background:linear-gradient(180deg, var(--rail-c1), var(--rail-c2));
-      -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
-              mask-image:linear-gradient(to bottom, transparent 0%, #000 20px, #000 calc(100% - 20px), transparent 100%);
+      -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 18px, #000 calc(100% - 18px), transparent 100%);
+              mask-image:linear-gradient(to bottom, transparent 0%, #000 18px, #000 calc(100% - 18px), transparent 100%);
       box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);
+      filter:saturate(.95) brightness(.98);
     }
 
-    /* маркер и коннектор */
-    #time-rail .now-tag{ position:absolute; top:0; left:0; width:0; height:0; opacity:0; transition:none; }
+    /* маркер «сейчас» */
+    #time-rail .now-tag{ position:absolute; top:0; left:0; width:0; height:0; opacity:0 }
     .now-tag .dot{
       position:absolute; left:calc(var(--gutter)/2 - 5px); top:-5px;
-      width:10px; height:10px; border-radius:50%;
-      background:#f8f8f8;
+      width:10px; height:10px; border-radius:50%; background:#f2f2f2;
       animation:pulseClassic 2.6s cubic-bezier(.4,0,.2,1) infinite;
       box-shadow:0 0 0 0 rgba(255,255,255,.18), 0 0 10px rgba(255,255,255,.12);
-      will-change:transform, box-shadow;
     }
     .now-tag .ring{
       position:absolute; left:calc(var(--gutter)/2 - 9px); top:-9px;
       width:18px; height:18px; border-radius:50%;
-      border:1px solid rgba(255,255,255,.22);
+      border:1px solid rgba(255,255,255,.26);
       animation:ringFade 2.6s cubic-bezier(.4,0,.2,1) infinite;
     }
     .now-tag .connector{
-      position:absolute; top:-1px;
-      left:calc(var(--gutter)/2 - var(--conn-w));
-      width:var(--conn-w); height:1.5px;
-      background:linear-gradient(to left, rgba(255,255,255,.38), rgba(255,255,255,0));
+      position:absolute; top:-1px; left:calc(var(--gutter)/2 - var(--conn-w));
+      width:var(--conn-w); height:2px;
+      background:linear-gradient(to left, rgba(255,255,255,.45), rgba(255,255,255,0));
+      box-shadow:0 0 4px rgba(255,255,255,.12);
       transition:left .18s ease, width .18s ease, opacity .18s ease;
     }
     .now-tag .badge{
-      position:absolute; left:calc(-3px - var(--tag-nudge)); /* ближе к точке */
+      position:absolute; left:calc(-3px - var(--tag-nudge));
       top:calc(-1 * (var(--tag-h)/2) + .5px);
-      transform:translateX(-100%);
-      display:flex; align-items:center; justify-content:center;
-      min-width:54px; max-width:160px; height:var(--tag-h);
-      padding:0 var(--tag-pad-x); white-space:nowrap;
-      font-size:var(--fs-badge); color:var(--tag-text);
-      background:var(--tag-bg); border:1px solid var(--tag-br); border-radius:8px;
+      transform:translateX(-100%); min-width:54px; max-width:160px; height:var(--tag-h);
+      display:flex; align-items:center; justify-content:center; padding:0 var(--tag-pad-x); white-space:nowrap;
+      font-size:var(--fs-badge); color:var(--tag-text); background:var(--tag-bg); border:1px solid var(--tag-br); border-radius:8px;
       box-shadow:var(--tag-shadow); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
-      transition:left .18s ease, opacity .18s ease, height .28s ease, font-size .28s ease, padding .28s ease;
     }
-    #time-rail .now-tag.ready{ opacity:1; transition:top .12s linear, opacity .18s ease; }
+    #time-rail .now-tag.ready{ opacity:1; transition:top .12s linear, opacity .18s ease }
 
+    /* минимализм — без бейджа и кольца */
     body.view-minimal #time-rail .now-tag .badge,
-    body.view-minimal #time-rail .now-tag .ring,
-    body.view-minimal #time-rail .now-tag .connector{ display:none !important; }
-    body.view-minimal #time-rail .now-tag .dot{
-      animation:pulseMinimal 2.8s cubic-bezier(.4,0,.2,1) infinite;
-      box-shadow:0 0 0 0 rgba(255,255,255,.16), 0 0 8px rgba(255,255,255,.10);
-    }
+    body.view-minimal #time-rail .now-tag .ring{ display:none !important; }
+    body.view-minimal #time-rail .now-tag .connector{ height:1.5px; background:linear-gradient(to left, rgba(255,255,255,.38), rgba(255,255,255,0)); }
+    body.view-minimal #time-rail .now-tag .dot{ animation:pulseMinimal 2.8s cubic-bezier(.4,0,.2,1) infinite; box-shadow:0 0 0 0 rgba(255,255,255,.14), 0 0 8px rgba(255,255,255,.10) }
 
-    @keyframes pulseClassic{
-      0%   { transform:scale(.96); box-shadow:0 0 0 0 rgba(255,255,255,.18), 0 0 8px rgba(255,255,255,.14) }
-      50%  { transform:scale(1.08); box-shadow:0 0 0 4px rgba(255,255,255,.24), 0 0 18px rgba(255,255,255,.22) }
-      100% { transform:scale(.96); box-shadow:0 0 0 0 rgba(255,255,255,.18), 0 0 8px rgba(255,255,255,.14) }
-    }
-    @keyframes ringFade{ 0%,100%{ opacity:.45 } 50%{ opacity:.8 } }
-    @keyframes pulseMinimal{
-      0%   { transform:scale(.92); box-shadow:0 0 0 0 rgba(255,255,255,.16) }
-      50%  { transform:scale(1.10); box-shadow:0 0 0 3px rgba(255,255,255,.22) }
-      100% { transform:scale(.92); box-shadow:0 0 0 0 rgba(255,255,255,.16) }
-    }
-    @media (prefers-reduced-motion:reduce){
-      .now-tag .dot, .now-tag .ring{ animation:none }
-    }
+    @keyframes pulseClassic{ 0%{transform:scale(.96);box-shadow:0 0 0 0 rgba(255,255,255,.18),0 0 8px rgba(255,255,255,.12)}50%{transform:scale(1.08);box-shadow:0 0 0 5px rgba(255,255,255,.24),0 0 16px rgba(255,255,255,.18)}100%{transform:scale(.96);box-shadow:0 0 0 0 rgba(255,255,255,.18),0 0 8px rgba(255,255,255,.12)} }
+    @keyframes ringFade{ 0%,100%{opacity:.5} 50%{opacity:.85} }
+    @keyframes pulseMinimal{ 0%{transform:scale(.92);box-shadow:0 0 0 0 rgba(255,255,255,.14)}50%{transform:scale(1.10);box-shadow:0 0 0 3px rgba(255,255,255,.20)}100%{transform:scale(.92);box-shadow:0 0 0 0 rgba(255,255,255,.14)} }
+    @media (prefers-reduced-motion:reduce){ .now-tag .dot, .now-tag .ring{ animation:none } }
 
-    /* ==== КАСТОМНЫЕ SELECT (dropdown) ==== */
+    /* dropdown */
     .dd{ position:relative; width:100% }
     .dd-toggle{
-      width:100%;
-      background:#2a2a2a; color:#fff; border:1px solid #3a3a3a; border-radius:10px;
-      padding:10px 36px 10px 12px; font-size:14px; line-height:1; text-align:left;
-      display:flex; align-items:center; gap:8px; cursor:pointer;
+      width:100%; background:var(--ui-bg); color:#fff; border:1px solid var(--ui-br); border-radius:var(--btn-radius);
+      padding:10px 36px 10px 12px; font-size:14px; text-align:left; display:flex; align-items:center; gap:8px; cursor:pointer;
       transition:border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
     }
-    .dd-toggle:focus{ outline:none; border-color:#666; box-shadow:0 0 0 2px rgba(255,255,255,.06) }
-    .dd-chev{
-      position:absolute; right:10px; top:50%; transform:translateY(-50%);
-      width:14px; height:14px; pointer-events:none; opacity:.9;
-    }
+    .dd-toggle:focus{ outline:none; border-color:#666; box-shadow:0 0 0 2px var(--ui-ring) }
+    .dd-chev{ position:absolute; right:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; pointer-events:none; opacity:.9 }
     .dd-menu{
       position:absolute; left:0; right:0; top:calc(100% + 6px);
       background:#232323; border:1px solid #333; border-radius:12px; padding:6px;
       box-shadow:0 12px 30px rgba(0,0,0,.55); display:none; z-index:200;
-      transform:translateY(-6px); opacity:0;
-      transition:transform .22s cubic-bezier(.2,.6,.2,1), opacity .22s ease;
+      transform:translateY(-6px); opacity:0; transition:transform .22s cubic-bezier(.2,.6,.2,1), opacity .22s ease;
     }
-    .dd.open .dd-menu{ display:block }
-    .dd.open.visible .dd-menu{ transform:none; opacity:1 }
-    .dd-item{
-      width:100%; background:transparent; border:0; color:#ddd; text-align:left;
-      padding:9px 10px; border-radius:8px; cursor:pointer; font-size:14px;
-      transition:background-color .15s ease, color .15s ease;
-    }
-    .dd-item:hover{ background:#2f2f2f; color:#fff }
+    .dd.open .dd-menu{ display:block } .dd.open.visible .dd-menu{ transform:none; opacity:1 }
+    .dd-item{ width:100%; background:transparent; border:0; color:var(--ui-text); text-align:left; padding:9px 10px; border-radius:8px; cursor:pointer; font-size:14px; transition:background-color .15s ease, color .15s ease }
+    .dd-item:hover{ background:var(--ui-hover); color:#fff }
     .dd-item[aria-selected="true"]{ background:#3a3a3a; color:#fff }
 
-    /* ==== UTC± КОНТРОЛ (прячется, если не выбран) ==== */
-    .tz-collapsible{
-      overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px);
-      transition:max-height .28s cubic-bezier(.2,.6,.2,1), opacity .28s ease, transform .28s ease;
-    }
-    .tz-collapsible.open{ max-height:140px; opacity:1; transform:none }
-    .tz-inline{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
-    .tz-chip{ display:inline-flex; align-items:center; gap:8px; background:#2a2a2a; border:1px solid #3a3a3a; border-radius:12px; padding:8px 10px }
+    /* колонка селектора + пользовательский UTC в одной ячейке */
+    .stack{ display:flex; flex-direction:column; gap:0 }
+    .tz-collapsible{ overflow:hidden; max-height:0; opacity:0; transform:translateY(-4px); transition:max-height .28s cubic-bezier(.2,.6,.2,1), opacity .28s ease, transform .28s ease }
+    .tz-collapsible.open{ max-height:240px; opacity:1; transform:none; margin-top:8px }
+    .tz-inline{ display:flex; align-items:center; gap:4px; flex-wrap:nowrap; white-space:nowrap; overflow-x:auto }
+    .tz-chip{ display:flex; align-items:center; gap:6px; background:var(--ui-bg); border:1px solid var(--ui-br); border-radius:var(--chip-radius); padding:6px; flex-wrap:nowrap; white-space:nowrap }
     .tz-prefix{ color:#d9d9d9; font-size:14px }
-    .seg-mini{
-      position:relative; display:inline-flex;
-      background:#1f1f1f; border:1px solid #3a3a3a; border-radius:10px;
-      padding:3px; gap:3px;
-    }
-    /* thumb для тумблера — будет только внутри #clockSeg */
-    #clockSeg .seg-thumb{
-      position:absolute; top:3px; bottom:3px; left:3px;
-      width:calc(50% - 3px);
-      background:#333; border-radius:8px;
-      transition:left .22s cubic-bezier(.2,.6,.2,1), width .22s cubic-bezier(.2,.6,.2,1), background-color .18s ease;
-      z-index:0; pointer-events:none;
-    }
-    .seg-mini button{
-      position:relative; z-index:1;
-      background:#333; color:#dcdcdc; border:0; border-radius:8px; padding:6px 10px; cursor:pointer; font-size:14px;
-      transition:background-color .18s ease, color .18s ease;
-    }
-    .seg-mini button.off{ background:transparent; color:#bdbdbd }
-    .seg-mini button:hover{ transform:none } /* без подпрыгивания */
 
-    .input-mini{
-      width:60px; text-align:center; background:#2a2a2a; color:#fff; border:1px solid #3a3a3a; border-radius:10px; padding:8px 8px;
-      font-size:14px; font-variant-numeric:tabular-nums; outline:none; transition:border-color .18s ease, box-shadow .18s ease;
-      -moz-appearance:textfield;
-    }
-    .input-mini::-webkit-outer-spin-button,.input-mini::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0 }
-    .input-mini:focus{ border-color:#666; box-shadow:0 0 0 2px rgba(255,255,255,.06) }
+    .seg-mini{ position:relative; display:inline-flex; background:var(--ui-bg-weak); border:1px solid var(--ui-br); border-radius:10px; padding:3px; gap:3px }
+    #clockSeg .seg-thumb{ position:absolute; top:3px; bottom:3px; left:3px; width:calc(50% - 3px); background:#333; border-radius:8px; transition:left .22s cubic-bezier(.2,.6,.2,1), width .22s cubic-bezier(.2,.6,.2,1) }
+    .seg-mini button{ position:relative; z-index:1; background:#333; color:#dcdcdc; border:0; border-radius:8px; padding:6px 10px; cursor:pointer; font-size:14px; transition:background-color .18s ease, color .18s ease }
+    .seg-mini button.off{ background:transparent; color:var(--ui-text-weak) }
+
+    .stepper,.min-control{ display:inline-flex; align-items:center; background:var(--ui-bg-weak); border:1px solid var(--ui-br); border-radius:10px; overflow:hidden }
+    .btn-step{ width:22px; height:28px; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:0; color:#e0e0e0; cursor:pointer; transition:background-color .15s ease }
+    .btn-step:hover{ background:var(--ui-hover) }
+    .display-mini{ width:34px; height:28px; display:flex; align-items:center; justify-content:center; background:#2a2a2a; color:#fff; border-inline:1px solid var(--ui-br); font-size:14px; font-variant-numeric:tabular-nums; user-select:none }
     .colon{ color:#aaa; user-select:none }
-    .note{ font-size:12px; color:#9a9a9a }
-    .tz-inline .note{ width:100%; margin:4px 2px 0 2px } /* ближе к контролу */
 
     /* модалка */
     .modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:100; opacity:0; transition:opacity .2s ease }
     .modal-backdrop.show{ display:flex } .modal-backdrop.show.visible{ opacity:1 }
     .modal{
       background:#1e1e1e; color:#e6e6e6; border:1px solid #333; border-radius:14px; padding:16px;
-      width:min(560px, 92vw); box-shadow:0 12px 40px rgba(0,0,0,.55);
+      width:min(520px, 92vw); box-shadow:0 12px 40px rgba(0,0,0,.55);
       transform:translateY(8px); opacity:.98; transition:transform .24s cubic-bezier(.2,.6,.2,1), opacity .24s ease;
     }
     .modal-backdrop.visible .modal{ transform:none; opacity:1 }
     .modal h3{ margin:0 0 12px; font-size:18px; font-weight:600 }
-    .row{ display:grid; grid-template-columns:160px 1fr; gap:12px; align-items:center; margin:12px 0 }
+    .row{ display:grid; grid-template-columns:150px 1fr; gap:10px; align-items:center; margin:12px 0 }
     .row label{ font-size:14px; color:#bbb }
+    /* лейбл «Часовой пояс» всегда прижат вверх */
+    .row.tz-row{ align-items:flex-start; }
+    .row.tz-row > label{ align-self:flex-start; padding-top:2px }
 
-    /* измеритель ширины таймкода */
-    .time-measure{
-      position:absolute; visibility:hidden; left:-9999px; top:-9999px; display:inline-block;
-      padding:0 6px; border:1px solid transparent; border-radius:7px;
-      white-space:nowrap; font-family:'Open Sans',sans-serif; font-size:var(--fs-time);
-      font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1;
-    }
+    .time-measure{ position:absolute; visibility:hidden; left:-9999px; top:-9999px; display:inline-block; padding:0 6px; border:1px solid transparent; border-radius:7px; white-space:nowrap; font-family:'Open Sans',sans-serif; font-size:var(--fs-time); font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1; }
 
-    /* мобильные */
     @media (max-width:700px){
       :root{ --fs-h1:30px; --fs-h2:18px; --fs-title:15px; --fs-time:15px; --fs-meta:12px; --gutter:14px; --rail-w:2px }
       body.view-minimal{ --fs-h1:28px; --fs-h2:16px; --fs-title:15px; --fs-time:14px; --gutter:12px; --rail-w:2px }
       body{ padding:16px }
-      #schedule-wrap{ padding-left:calc(var(--gutter) + 10px) }
-      #time-rail{ left:6px }
-      body.view-minimal .schedule-item{ margin-bottom:3px; padding-left:10px; border-radius:6px }
+      #schedule-wrap{ padding-left:calc(var(--gutter)+10px) !important }
+      #time-rail{ left:6px !important }
+      .btn{ padding:9px 12px; font-size:13px }
       #button-container{ gap:8px }
       #gearButton{ width:36px; height:36px }
-      .btn{ padding:9px 12px; font-size:13px }
-      .modal{ width:min(560px, 96vw); padding:12px }
-      .row{ grid-template-columns:1fr; gap:8px; margin:10px 0 }
-      .row label{ font-size:13px }
+      .modal{ width:min(520px,96vw); padding:12px }
+      .row{ grid-template-columns:1fr; gap:8px; margin:12px 0 }
     }
   </style>
 </head>
 <body class="view-classic">
   <div id="button-container">
     <button id="scrollTodayButton" class="btn" aria-label="Прокрутить к сегодняшнему дню">На сегодня</button>
-    <button id="gearButton" class="btn" aria-label="Настройки" title="Настройки" style="cursor:pointer">
+    <button id="gearButton" class="btn" aria-label="Настройки" title="Настройки">
       <svg class="icon-gear" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="3"></circle>
         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 3.9l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.09a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
@@ -354,46 +285,55 @@
     <div id="time-rail" aria-hidden="true">
       <div class="rail-line"></div>
       <div class="now-tag">
-        <span class="ring"></span>
-        <span class="dot"></span>
-        <span class="connector"></span>
-        <span class="badge">00:00</span>
+        <span class="ring"></span><span class="dot"></span><span class="connector"></span><span class="badge">00:00</span>
       </div>
     </div>
     <div id="schedule-container"></div>
   </div>
 
-  <!-- настройки -->
+  <!-- НАСТРОЙКИ -->
   <div id="settings" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="settings-title">
     <div class="modal">
       <h3 id="settings-title">Настройки</h3>
 
-      <div class="row">
+      <!-- ВЫБОР ЧАСОВОГО ПОЯСА + пользовательский UTC в этой же строке -->
+      <div class="row tz-row">
         <label>Часовой пояс:</label>
-        <div id="dd-tzMode" class="dd" style="cursor:pointer">
-          <button class="dd-toggle"><span class="dd-label">Авто (системный)</span>
-            <svg class="dd-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="#cfcfcf" stroke-width="2" stroke-linecap="round"/></svg>
-          </button>
-          <div class="dd-menu" role="listbox"></div>
-        </div>
-      </div>
-
-      <div id="tzFixedWrap" class="tz-collapsible">
-        <div class="row" style="margin-top:0">
-          <label>Пользовательский UTC±:</label>
-          <div class="tz-inline">
-            <div class="tz-chip">
-              <span class="tz-prefix">UTC</span>
-              <div class="seg-mini" id="tzSign">
-                <button data-s="+" id="tzPlus">+</button>
-                <button data-s="-" id="tzMinus" class="off">−</button>
-              </div>
-              <input id="tzHH" class="input-mini" type="number" min="0" max="14" step="1" value="03" aria-label="Часы">
-              <span class="colon">:</span>
-              <input id="tzMM" class="input-mini" type="number" min="0" max="59" step="15" value="00" aria-label="Минуты (шаг 15)">
-            </div>
-            <div class="note">минуты округляются кратно 15</div>
+        <div class="stack">
+          <div id="dd-tzMode" class="dd">
+            <button class="dd-toggle"><span class="dd-label">Авто (системный)</span>
+              <svg class="dd-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="#cfcfcf" stroke-width="2" stroke-linecap="round"/></svg>
+            </button>
+            <div class="dd-menu" role="listbox"></div>
           </div>
+
+          <div id="tzFixedWrap" class="tz-collapsible">
+            <div class="tz-inline">
+              <div class="tz-chip" aria-label="Пользовательский UTC±">
+                <span class="tz-prefix">UTC</span>
+
+                <div class="seg-mini" id="tzSign">
+                  <button data-s="+" id="tzPlus">+</button>
+                  <button data-s="-" id="tzMinus" class="off">−</button>
+                </div>
+
+                <div class="stepper" aria-label="Часы">
+                  <button class="btn-step" id="hhDec" aria-label="Минус час">−</button>
+                  <span id="tzHH" class="display-mini">03</span>
+                  <button class="btn-step" id="hhInc" aria-label="Плюс час">+</button>
+                </div>
+
+                <span class="colon">:</span>
+
+                <div class="min-control" aria-label="Минуты">
+                  <button class="btn-step" id="mmDec" aria-label="Минус 15 минут">−</button>
+                  <span id="tzMM" class="display-mini">00</span>
+                  <button class="btn-step" id="mmInc" aria-label="Плюс 15 минут">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -408,7 +348,7 @@
 
       <div class="row">
         <label>Вид:</label>
-        <div id="dd-viewMode" class="dd" style="cursor:pointer">
+        <div id="dd-viewMode" class="dd">
           <button class="dd-toggle"><span class="dd-label">Классический</span>
             <svg class="dd-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="#cfcfcf" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
@@ -423,757 +363,518 @@
   </div>
 
   <script>
-    (function(){
-      if(!window.luxon){ console.error('Luxon не загрузился'); return; }
-      const { DateTime } = luxon;
-      const $ = (sel, root=document) => root.querySelector(sel);
+  (function(){
+    if(!window.luxon){ console.error('Luxon не загрузился'); return; }
+    const { DateTime } = luxon;
+    const $ = (s, r=document)=>r.querySelector(s);
 
-      /* ===== DATA ===== */
-      const days = [
-        { day: 'Понедельник', schedule: [
-          { time: '15:00', title: 'Ван-Пис' },
-          { time: '16:15', title: 'Увидимся завтра в ресторанном дворике' },
-          { time: '18:15', title: 'Карманы лета' },
-          { time: '19:45', title: 'Необъятный океан 2' },
-        ]},
-        { day: 'Вторник', schedule: [
-          { time: '16:45', title: 'Девушка на час 4' },
-          { time: '17:45', title: 'Сведённые кукушкой 2' },
-          { time: '18:15', title: 'С нынешними детективами ничего не поделаешь' },
-          { time: '18:30', title: 'Космическое шоу ужасов Некрономико' },
-          { time: '21:45', title: 'Тёрки!' },
-        ]},
-        { day: 'Среда', schedule: [
-          { time: '15:15', title: 'Клеватесс: Король демонических зверей, младенец и герой-нежить' },
-          { time: '15:45', title: 'Герой щита 4' },
-          { time: '17:45', title: 'Я переродился торговым автоматом и скитаюсь по лабиринту 2' },
-          { time: '20:15', title: 'Три сестры Микадоно оказались неожиданно простыми' },
-          { time: '20:40', title: 'Цикл оммёдзи: Перерождение' },
-          { time: '21:15', title: 'Стать сильнее! Новая сага' },
-        ]},
-        { day: 'Четверг', schedule: [
-          { time: '17:15', title: 'Доктор Стоун: Научное будущее. Часть 2' },
-          { time: '17:45', title: 'Добро пожаловать в дешёвый ресторан изгнанника!' },
-          { time: '19:15', title: 'Дандадан 2' },
-          { time: '20:45', title: 'Строящийся город Камицубаки' },
-          { time: '22:15', title: 'Маг воды' },
-        ]},
-        { day: 'Пятница', schedule: [
-          { time: '18:15', title: 'Аркнайтс: Восстание из пепла' },
-          { time: '18:45', title: 'Тёмный демон' },
-          { time: '19:45', title: 'Молчаливая ведьма: Тайна молчаливой колдуньи' },
-          { time: '20:45', title: 'За небрежной молодой девушкой ухаживает бывший жених её сестры' },
-        ]},
-        { day: 'Суббота', schedule: [
-          { time: '11:00', title: 'Повелитель тайн: Клоун' },
-          { time: '16:30', title: 'Энн Ширли' },
-          { time: '17:45', title: 'Кайдзю номер восемь 2' },
-          { time: '18:15', title: 'Герой, упавший в обморок, и принцессы-убийцы' },
-          { time: '18:45', title: 'Белого мага, изгнанного из команды героя, подобрал авантюрист ранга S: Этот белый маг слишком нестандартный' },
-          { time: '19:15', title: 'Этот глупый свин не понимает мечту Санта-Клауса' },
-          { time: '19:45', title: 'Эта фарфоровая кукла влюбилась 2' },
-          { time: '21:15', title: 'Дождь и ты' },
-        ]},
-        { day: 'Воскресенье', schedule: [
-          { time: '04:00', title: 'Быть героем Икс' },
-          { time: '11:45', title: 'Ведьмнадзор' },
-          { time: '12:15', title: 'Туалетный мальчик Ханако 2. Часть 2' },
-          { time: '16:45', title: 'Драгоценности Рури' },
-          { time: '17:00', title: 'Апокалипсис Миногры: Покорение другого мира начинается с разрушенной цивилизации' },
-          { time: '17:30', title: 'Ночь живых кошаков' },
-          { time: '18:00', title: 'Межкультурный обмен с девушкой у игровых автоматов' },
-          { time: '19:45', title: 'Отель для нелюдей' },
-        ]},
-        { day: 'Без графика', schedule: [
-          { title: 'Город (понедельник)' },
-          { title: 'Хроники людей и демонов (вторник)' },
-          { title: 'У меня нет любовницы! А может и есть?! (вторник)' },
-          { title: 'Дни Сакамото. Часть 2 (понедельник)' },
-          { title: 'Песнь ночных сов 2 (пятница)' },
-          { title: 'Благоухающий цветок расцветает с достоинством (суббота)' },
-          { title: 'Букет для гадкой девочки (суббота)' },
-          { title: 'Девять: Корона правителя (воскресенье)' },
-          { title: 'Плохая девочка (воскресенье)' },
-          { title: 'Лето, когда погас свет (воскресенье)' },
-          { title: 'Пуля/Пуля' },
-          { title: 'Нукитаси' },
-          { title: 'Сверхкуб' },
-          { title: 'Адский учитель Нубэ (2025)' },
-          { title: 'Мобильный воин Гандам: GQuuuuuuX' },
-          { title: 'Рок — женская скромность' },
-          { title: 'Старик из деревни становится Святым мечом' },
-          { title: 'Боевой отряд «Полный провал» 2' },
-          { title: 'Долги...' },
-        ]}
-      ];
+    /* ===== DATA ===== */
+    const days = [
+      { day:'Понедельник', schedule:[
+        { time:'15:00', title:'Ван-Пис' },
+        { time:'16:15', title:'Увидимся завтра в ресторанном дворике' },
+        { time:'18:15', title:'Карманы лета' },
+        { time:'19:45', title:'Необъятный океан 2' },
+      ]},
+      { day:'Вторник', schedule:[
+        { time:'16:45', title:'Девушка на час 4' },
+        { time:'17:45', title:'Сведённые кукушкой 2' },
+        { time:'18:15', title:'С нынешними детективами ничего не поделаешь' },
+        { time:'18:30', title:'Космическое шоу ужасов Некрономико' },
+        { time:'21:45', title:'Тёрки!' },
+      ]},
+      { day:'Среда', schedule:[
+        { time:'15:15', title:'Клеватесс: Король демонических зверей, младенец и герой-нежить' },
+        { time:'15:45', title:'Герой щита 4' },
+        { time:'17:45', title:'Я переродился торговым автоматом и скитаюсь по лабиринту 2' },
+        { time:'20:15', title:'Три сестры Микадоно оказались неожиданно простыми' },
+        { time:'20:40', title:'Цикл оммёдзи: Перерождение' },
+        { time:'21:15', title:'Стать сильнее! Новая сага' },
+      ]},
+      { day:'Четверг', schedule:[
+        { time:'17:15', title:'Доктор Стоун: Научное будущее. Часть 2' },
+        { time:'17:45', title:'Добро пожаловать в дешёвый ресторан изгнанника!' },
+        { time:'19:15', title:'Дандадан 2' },
+        { time:'20:45', title:'Строющийся город Камицубаки' },
+        { time:'22:15', title:'Маг воды' },
+      ]},
+      { day:'Пятница', schedule:[
+        { time:'18:15', title:'Аркнайтс: Восстание из пепла' },
+        { time:'18:45', title:'Тёмный демон' },
+        { time:'19:45', title:'Молчаливая ведьма: Тайна молчаливой колдуньи' },
+        { time:'20:45', title:'За небрежной молодой девушкой ухаживает бывший жених её сестры' },
+      ]},
+      { day:'Суббота', schedule:[
+        { time:'11:00', title:'Повелитель тайн: Клоун' },
+        { time:'16:30', title:'Энн Ширли' },
+        { time:'17:45', title:'Кайдзю номер восемь 2' },
+        { time:'18:15', title:'Герой, упавший в обморок, и принцессы-убийцы' },
+        { time:'18:45', title:'Белого мага, изгнанного из команды героя, подобрал авантюрист ранга S: Этот белый маг слишком нестандартный' },
+        { time:'19:15', title:'Этот глупый свин не понимает мечту Санта-Клауса' },
+        { time:'19:45', title:'Эта фарфоровая кукла влюбилась 2' },
+        { time:'21:15', title:'Дождь и ты' },
+      ]},
+      { day:'Воскресенье', schedule:[
+        { time:'04:00', title:'Быть героем Икс' },
+        { time:'11:45', title:'Ведьмнадзор' },
+        { time:'12:15', title:'Туалетный мальчик Ханако 2. Часть 2' },
+        { time:'16:45', title:'Драгоценности Рури' },
+        { time:'17:00', title:'Апокалипсис Миногры: Покорение другого мира начинается с разрушенной цивилизации' },
+        { time:'17:30', title:'Ночь живых кошаков' },
+        { time:'18:00', title:'Межкультурный обмен с девушкой у игровых автоматов' },
+        { time:'19:45', title:'Отель для нелюдей' },
+      ]},
+      { day:'Без графика', schedule:[
+        { title:'Город (понедельник)' },
+        { title:'Хроники людей и демонов (вторник)' },
+        { title:'У меня нет любовницы! А может и есть?! (вторник)' },
+        { title:'Дни Сакамото. Часть 2 (понедельник)' },
+        { title:'Песнь ночных сов 2 (пятница)' },
+        { title:'Благоухающий цветок расцветает с достоинством (суббота)' },
+        { title:'Букет для гадкой девочки (суббота)' },
+        { title:'Девять: Корона правителя (воскресенье)' },
+        { title:'Плохая девочка (воскресенье)' },
+        { title:'Лето, когда погас свет (воскресенье)' },
+        { title:'Пуля/Пуля' },
+        { title:'Нукитаси' },
+        { title:'Сверхкуб' },
+        { title:'Адский учитель Нубэ (2025)' },
+        { title:'Мобильный воин Гандам: GQuuuuuuX' },
+        { title:'Рок — женская скромность' },
+        { title:'Старик из деревни становится Святым мечом' },
+        { title:'Боевой отряд «Полный провал» 2' },
+        { title:'Долги...' },
+      ]},
+    ];
 
-      /* ===== STATE ===== */
-      const settings = {
-        tzMode: localStorage.getItem('tzMode') || 'system',
-        tzOffsetMin: parseInt(localStorage.getItem('tzOffsetMin') || '180', 10),
-        clock12: localStorage.getItem('clock12') === 'true',
-        viewMode: localStorage.getItem('viewMode') || 'classic'
+    /* ===== STATE ===== */
+    const settings = {
+      tzMode: localStorage.getItem('tzMode') || 'system',
+      tzOffsetMin: parseInt(localStorage.getItem('tzOffsetMin') || '180', 10),
+      clock12: localStorage.getItem('clock12') === 'true',
+      viewMode: localStorage.getItem('viewMode') || 'classic',
+    };
+
+    function zoneId(){
+      if(settings.tzMode==='system') return Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const m=settings.tzOffsetMin, sign=m>=0?'+':'-', abs=Math.abs(m);
+      const hh=String(Math.floor(abs/60)).padStart(2,'0'), mm=String(abs%60).padStart(2,'0');
+      return `UTC${sign}${hh}:${mm}`;
+    }
+    function offsetLabel(mins){
+      const sign=mins>=0?'+':'-', abs=Math.abs(mins);
+      const hh=String(Math.floor(abs/60)).padStart(2,'0'), mm=String(abs%60).padStart(2,'0');
+      return `UTC${sign}${hh}:${mm}`;
+    }
+    const fmt = dt => settings.clock12
+      ? dt.toFormat('hh:mm a').replace(' AM','\u202FAM').replace(' PM','\u202FPM')
+      : dt.toFormat('HH:mm');
+
+    function updateMeta(){
+      const z=zoneId(), off=DateTime.local().setZone(z).offset;
+      $('#meta-tz').textContent = `Текущий часовой пояс: ${settings.tzMode==='system' ? `${z} (${offsetLabel(off)})` : offsetLabel(settings.tzOffsetMin)}`;
+    }
+
+    /* конвертация Europe/Moscow -> выбранная зона */
+    function convertReferenceTimeToLocal(){
+      const referenceZone='Europe/Moscow', localZone=zoneId(), MON=1;
+      const refNow=DateTime.local().setZone(referenceZone);
+      const baseMondayRef=refNow.minus({days:refNow.weekday-MON}).startOf('day');
+      const newDays=days.map(d=>({ day:d.day, schedule:[] }));
+
+      days.forEach((day,idx)=>{
+        day.schedule.forEach(show=>{
+          if(show.time){
+            const [hh,mm]=show.time.split(':').map(Number);
+            const refDT=baseMondayRef.plus({days:idx}).set({hour:hh,minute:mm});
+            const locDT=refDT.setZone(localZone);
+            const newIdx=(locDT.weekday+6)%7;
+            newDays[newIdx].schedule.push({
+              ...show, time:fmt(locDT), mins:locDT.hour*60+locDT.minute
+            });
+          }else{
+            newDays[idx].schedule.push({ ...show, mins:Infinity });
+          }
+        });
+      });
+      newDays.forEach(d=> d.schedule.sort((a,b)=>(a.mins||Infinity)-(b.mins||Infinity)));
+      return newDays;
+    }
+
+    const NO_TIME='—';
+    const WD_ABBR={ 'понедельник':'Пн','вторник':'Вт','среда':'Ср','четверг':'Чт','пятница':'Пт','суббота':'Сб','воскресенье':'Вс',
+                    'пн':'Пн','вт':'Вт','ср':'Ср','чт':'Чт','пт':'Пт','сб':'Сб','вс':'Вс' };
+    function parseNoScheduleTitle(t){
+      const m=t.match(/\(([^)]+)\)\s*$/i);
+      if(!m) return { title:t, abbr:NO_TIME };
+      const key=m[1].trim().toLowerCase().replace(/\./g,'');
+      return { title:t.replace(/\s*\([^)]+\)\s*$/,'').trim(), abbr:WD_ABBR[key]||NO_TIME };
+    }
+
+    /* ===== RENDER ===== */
+    function scheduleItem(info, placeholder=false, placeholderLabel=NO_TIME){
+      const el=document.createElement('div'); el.className='schedule-item'; el.setAttribute('role','button'); el.tabIndex=0;
+
+      const time=document.createElement('span'); time.className='time';
+      if(placeholder) time.classList.add('is-placeholder');
+      const hasTime=typeof info.time==='string' && info.time.trim()!=='';
+      time.textContent = hasTime ? info.time : (placeholder ? (placeholderLabel||NO_TIME) : NO_TIME);
+      if(Number.isFinite(info.mins)) el.dataset.mins=String(info.mins);
+      if(!hasTime) time.setAttribute('aria-label', placeholder?'без времени, день выпуска':'без времени');
+
+      const title=document.createElement('span'); title.className='title'; title.textContent=info.title||'';
+
+      const open=()=>{
+        if(!info.title) return;
+        if(window.getSelection && window.getSelection().toString().length) return;
+        window.open('https://shikimori.one/animes?search='+encodeURIComponent(info.title),'_blank');
       };
+      el.addEventListener('click', open);
+      el.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); open(); } });
 
-      function zoneId(){
-        if(settings.tzMode === 'system') return Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const m = settings.tzOffsetMin, sign = m>=0 ? '+' : '-', abs = Math.abs(m);
-        const hh = String(Math.floor(abs/60)).padStart(2,'0'), mm = String(abs%60).padStart(2,'0');
-        return `UTC${sign}${hh}:${mm}`;
+      el.append(time, title);
+      return el;
+    }
+
+    function render(converted){
+      const c=$('#schedule-container'); c.innerHTML='';
+      for(let di=0; di<7; di++){
+        const day=converted[di], block=document.createElement('div'); block.className='day-block'; block.dataset.di=di;
+        const h2=document.createElement('h2'); h2.textContent=`${day.day}:`; block.appendChild(h2);
+        const ul=document.createElement('ul');
+        if(day.schedule.length){ day.schedule.forEach(show=> ul.appendChild(scheduleItem(show,false))); }
+        else{ const empty=document.createElement('div'); empty.className='empty-day'; empty.textContent='Пусто'; ul.appendChild(empty); }
+        block.appendChild(ul); c.appendChild(block);
       }
-      function offsetLabel(mins){
-        const sign = mins>=0 ? '+' : '-', abs = Math.abs(mins);
-        const hh = String(Math.floor(abs/60)).padStart(2,'0'), mm = String(abs%60).padStart(2,'0');
-        return `UTC${sign}${hh}:${mm}`;
+      const block=document.createElement('div'); block.className='day-block';
+      const h2=document.createElement('h2'); h2.textContent='Без графика:'; block.appendChild(h2);
+      const ul=document.createElement('ul');
+      days[7].schedule.forEach(x=>{ const p=parseNoScheduleTitle(x.title); ul.appendChild(scheduleItem({title:p.title},true,p.abbr)); });
+      block.appendChild(ul); c.appendChild(block);
+    }
+
+    /* ===== TIMELINE ===== */
+    const metrics={ railTop:0, railH:0, todayTopRel:0, todayH:0, todayAnchors:[] };
+
+    function layoutRail(){
+      const wrap=$('#schedule-wrap'), rail=$('#time-rail');
+      const blocks=[...document.querySelectorAll('#schedule-container > .day-block')].filter(b=>b.dataset.di!==undefined);
+      if(blocks.length<7) return;
+
+      const wrapTop=wrap.getBoundingClientRect().top + window.pageYOffset;
+      const first=blocks[0].getBoundingClientRect(), last=blocks[6].getBoundingClientRect();
+      const railTop=(first.top + window.pageYOffset) - wrapTop;
+      const railBottom=(last.bottom + window.pageYOffset) - wrapTop;
+
+      metrics.railTop=railTop; metrics.railH=Math.max(0, railBottom-railTop);
+      rail.style.top=`${railTop}px`; rail.style.height=`${metrics.railH}px`;
+
+      const now=DateTime.local().setZone(zoneId());
+      const todayIdx=(now.weekday+6)%7;
+      const todayBlock=document.querySelector(`.day-block[data-di="${todayIdx}"]`); if(!todayBlock) return;
+
+      const r=todayBlock.getBoundingClientRect();
+      const todayTop=(r.top + window.pageYOffset) - wrapTop;
+      const todayBottom=(r.bottom + window.pageYOffset) - wrapTop;
+
+      metrics.todayTopRel=todayTop-railTop; metrics.todayH=Math.max(1, todayBottom-todayTop);
+
+      buildTodayAnchors(todayBlock, r); updateConnector();
+    }
+
+    function buildTodayAnchors(blockEl, blockRect){
+      const ul=blockEl.querySelector('ul');
+      if(!ul){ metrics.todayAnchors=[{t:0,y:0},{t:1440,y:metrics.todayH}]; return; }
+      const all=[...ul.querySelectorAll('.schedule-item')];
+      const rows=all.filter(r=> Number.isFinite(parseFloat(r.dataset.mins)));
+      if(!rows.length){ metrics.todayAnchors=[{t:0,y:0},{t:1440,y:metrics.todayH}]; return; }
+
+      const R=el=>el.getBoundingClientRect();
+      const yTop=el=> (R(el).top    - blockRect.top);
+      const yBot=el=> (R(el).bottom - blockRect.top);
+      const yMid=el=> (yTop(el)+yBot(el))/2;
+
+      const anchors=[];
+      const first=rows[0], last=rows[rows.length-1];
+      const tFirst=parseFloat(first.dataset.mins), tLast=parseFloat(last.dataset.mins);
+
+      anchors.push({t:0, y:yTop(first)});
+      anchors.push({t:Math.max(0, tFirst-15), y:yTop(first)});
+      for(const row of rows){
+        const t=parseFloat(row.dataset.mins);
+        anchors.push({t:Math.max(0, t-15), y:yTop(row)});
+        anchors.push({t:t,               y:yMid(row)});
+        anchors.push({t:Math.min(1440, t+15), y:yBot(row)});
       }
-      function fmt(dt){
-        return settings.clock12
-          ? dt.toFormat('hh:mm a').replace(' AM','\u202FAM').replace(' PM','\u202FPM')
-          : dt.toFormat('HH:mm');
+      anchors.push({t:Math.min(1440, tLast+15), y:yBot(last)});
+      anchors.push({t:1440, y:yBot(last)});
+
+      anchors.sort((a,b)=>a.t-b.t);
+      for(let i=1;i<anchors.length;i++){ if(anchors[i].t<=anchors[i-1].t) anchors[i].t=anchors[i-1].t+0.001; }
+      metrics.todayAnchors=anchors;
+    }
+
+    const yFromAnchors=(anchors,t)=>{
+      if(!anchors || !anchors.length) return 0;
+      if(t<=anchors[0].t) return anchors[0].y;
+      for(let i=0;i<anchors.length-1;i++){
+        const a=anchors[i], b=anchors[i+1];
+        if(t<=b.t){ const k=(t-a.t)/Math.max(.001, b.t-a.t); return a.y + (b.y-a.y)*k; }
       }
+      return anchors[anchors.length-1].y;
+    };
+    const setNow=y=>{ const tag=$('#time-rail .now-tag'); const top=Math.max(0, Math.min(metrics.railH, y)); tag.style.top=`${top}px`; };
 
-      function updateMeta(){
-        const z = zoneId();
-        const off = DateTime.local().setZone(z).offset;
-        const label = (settings.tzMode === 'system') ? `${z} (${offsetLabel(off)})` : `${offsetLabel(settings.tzOffsetMin)}`;
-        $('#meta-tz').textContent = `Текущий часовой пояс: ${label}`;
-      }
-
-      /* конвертация Europe/Moscow -> выбранная зона */
-      function convertReferenceTimeToLocal(){
-        const referenceZone='Europe/Moscow';
-        const localZone = zoneId();
-        const MON=1;
-        const refNow=DateTime.local().setZone(referenceZone);
-        const baseMondayRef=refNow.minus({ days: refNow.weekday - MON }).startOf('day');
-        const newDays=days.map(d=>({ day:d.day, schedule:[] }));
-
-        days.forEach((day, index)=>{
-          day.schedule.forEach(show=>{
-            if(show.time){
-              const [hh,mm]=show.time.split(':').map(Number);
-              const refDT = baseMondayRef.plus({ days:index }).set({ hour:hh, minute:mm });
-              const locDT = refDT.setZone(localZone);
-              const newDayIndex = (locDT.weekday + 6) % 7;
-              newDays[newDayIndex].schedule.push({
-                ...show,
-                time: fmt(locDT),
-                mins: locDT.hour*60 + locDT.minute
-              });
-            }else{
-              newDays[index].schedule.push({ ...show, mins: Infinity });
-            }
-          });
-        });
-        newDays.forEach(day=> day.schedule.sort((a,b)=> (a.mins||Infinity) - (b.mins||Infinity)));
-        return newDays;
-      }
-
-      const NO_TIME = '—';
-      const WD_ABBR = { 'понедельник':'Пн','вторник':'Вт','среда':'Ср','четверг':'Чт','пятница':'Пт','суббота':'Сб','воскресенье':'Вс',
-                        'пн':'Пн','вт':'Вт','ср':'Ср','чт':'Чт','пт':'Пт','сб':'Сб','вс':'Вс' };
-      function parseNoScheduleTitle(title){
-        const m = title.match(/\(([^)]+)\)\s*$/i);
-        if(!m) return { title, abbr: NO_TIME };
-        const raw = m[1].trim().toLowerCase(); const key = raw.replace(/\./g,'');
-        const abbr = WD_ABBR[key] || NO_TIME;
-        return { title: title.replace(/\s*\([^)]+\)\s*$/,'').trim(), abbr };
-      }
-
-      /* ===== RENDER ===== */
-      function scheduleItem(info, placeholder=false, placeholderLabel=NO_TIME){
-        const el = document.createElement('div');
-        el.className = 'schedule-item';
-        el.setAttribute('role','button'); el.tabIndex = 0;
-
-        const t = document.createElement('span');
-        t.className = 'time';
-        if(placeholder) t.classList.add('is-placeholder');
-
-        const hasTime = typeof info.time === 'string' && info.time.trim() !== '';
-        t.textContent = hasTime ? info.time : placeholder ? (placeholderLabel || NO_TIME) : NO_TIME;
-
-        if (Number.isFinite(info.mins)) el.dataset.mins = String(info.mins);
-        if(!hasTime){ t.setAttribute('aria-label', placeholder ? 'без времени, день выпуска' : 'без времени'); }
-
-        const title = document.createElement('span');
-        title.className = 'title';
-        title.textContent = info.title || '';
-
-        const openLink = ()=>{
-          if(!info.title) return;
-          if (window.getSelection && window.getSelection().toString().length) return;
-          window.open('https://shikimori.one/animes?search=' + encodeURIComponent(info.title), '_blank');
-        };
-        el.addEventListener('click', openLink);
-        el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); openLink(); } });
-
-        el.appendChild(t);
-        el.appendChild(title);
-        return el;
-      }
-
-      function render(converted){
-        const c = $('#schedule-container');
-        c.innerHTML = '';
-
-        for(let di=0; di<7; di++){
-          const day = converted[di];
-          const block = document.createElement('div');
-          block.className = 'day-block'; block.dataset.di = di;
-
-          const h2 = document.createElement('h2');
-          h2.textContent = `${day.day}:`;
-          block.appendChild(h2);
-
-          const ul = document.createElement('ul');
-          if(day.schedule.length){
-            day.schedule.forEach(show => ul.appendChild(scheduleItem(show, false)));
-          } else {
-            const empty = document.createElement('div');
-            empty.className='empty-day';
-            empty.textContent='Пусто';
-            ul.appendChild(empty);
-          }
-          block.appendChild(ul);
-          c.appendChild(block);
-        }
-
-        // Без графика
-        const block = document.createElement('div');
-        block.className = 'day-block';
-        const h2 = document.createElement('h2');
-        h2.textContent = 'Без графика:';
-        block.appendChild(h2);
-        const ul = document.createElement('ul');
-        days[7].schedule.forEach(x => {
-          const parsed = parseNoScheduleTitle(x.title);
-          ul.appendChild(scheduleItem({ title: parsed.title }, true, parsed.abbr));
-        });
-        block.appendChild(ul);
-        c.appendChild(block);
-      }
-
-      /* ===== TIMELINE METRICS + ANCHORS ===== */
-      const metrics = { railTop:0, railH:0, todayTopRel:0, todayH:0, todayAnchors:[] };
-
-      function layoutRail(){
-        const wrap = $('#schedule-wrap');
-        const rail = $('#time-rail');
-        const blocks = [...document.querySelectorAll('#schedule-container > .day-block')]
-                        .filter(b => b.dataset.di !== undefined);
-        if(blocks.length < 7) return;
-
-        const wrapTop = wrap.getBoundingClientRect().top + window.pageYOffset;
-        const first = blocks[0].getBoundingClientRect();
-        const last  = blocks[6].getBoundingClientRect();
-
-        const railTop = (first.top + window.pageYOffset) - wrapTop;
-        const railBottom = (last.bottom + window.pageYOffset) - wrapTop;
-
-        metrics.railTop = railTop;
-        metrics.railH   = Math.max(0, railBottom - railTop);
-
-        rail.style.top = `${railTop}px`;
-        rail.style.height = `${metrics.railH}px`;
-
-        const now = DateTime.local().setZone(zoneId());
-        const todayIdx = (now.weekday + 6) % 7;
-        const todayBlock = document.querySelector(`.day-block[data-di="${todayIdx}"]`);
-        if(!todayBlock) return;
-
-        const todayRect = todayBlock.getBoundingClientRect();
-        const todayTop = (todayRect.top + window.pageYOffset) - wrapTop;
-        const todayBottom = (todayRect.bottom + window.pageYOffset) - wrapTop;
-
-        metrics.todayTopRel = todayTop - railTop;
-        metrics.todayH = Math.max(1, todayBottom - todayTop);
-
-        buildTodayAnchors(todayBlock, todayRect);
+    let lastSec=-1;
+    function updateNowLabel(force=false){
+      const now=DateTime.local().setZone(zoneId());
+      if(force || now.second!==lastSec){
+        lastSec=now.second;
+        $('#time-rail .badge').textContent = fmt(now);
         updateConnector();
       }
+    }
+    function clampTagIntoView(){
+      const badge=$('#time-rail .now-tag .badge'); if(!badge) return;
+      badge.style.setProperty('--tag-nudge','0px');
+      const r=badge.getBoundingClientRect(), minLeft=6;
+      if(r.left < minLeft){ const d=Math.ceil(minLeft-r.left); badge.style.setProperty('--tag-nudge', d+'px'); }
+      updateConnector();
+    }
+    function updateConnector(){
+      const dot=$('#time-rail .now-tag .dot'), badge=$('#time-rail .now-tag .badge'), tag=$('#time-rail .now-tag');
+      if(!dot || !badge || !tag) return;
+      const dr=dot.getBoundingClientRect(), br=badge.getBoundingClientRect();
+      const gap=Math.max(8, Math.min(160, dr.left - br.right));
+      tag.style.setProperty('--conn-w', gap+'px');
+    }
+    function animate(){
+      const now=DateTime.local().setZone(zoneId());
+      const t=now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
+      const di=(now.weekday+6)%7; const block=document.querySelector(`.day-block[data-di="${di}"]`);
+      if(block && (!metrics.todayAnchors || !metrics.todayAnchors.length)){ const r=block.getBoundingClientRect(); buildTodayAnchors(block, r); }
+      setNow(metrics.todayTopRel + yFromAnchors(metrics.todayAnchors, t));
+      updateNowLabel(); // обновляем текст «сейчас» каждую секунду
+      requestAnimationFrame(animate);
+    }
 
-      function buildTodayAnchors(blockEl, blockRect){
-        const ul = blockEl.querySelector('ul');
-        if (!ul){ metrics.todayAnchors = [{t:0,y:0},{t:1440,y:metrics.todayH}]; return; }
-
-        const ulRect = ul.getBoundingClientRect();
-        const topRel = (ulRect.top - blockRect.top);
-        const botRel = (ulRect.bottom - blockRect.top);
-
-        const allRows = [...ul.querySelectorAll('.schedule-item')];
-        const rows = allRows.filter(r => Number.isFinite(parseFloat(r.dataset.mins)));
-
-        if (!rows.length){
-          metrics.todayAnchors = [{t:0,y:topRel},{t:1440,y:botRel}];
-          return;
-        }
-
-        const rRect = el => el.getBoundingClientRect();
-        const midY  = el => (rRect(el).top + rRect(el).height/2) - blockRect.top;
-
-        const first = rows[0], last = rows[rows.length-1];
-        const yFirst = midY(first), yLast = midY(last);
-
-        let step;
-        if (rows.length >= 2){ step = Math.abs(midY(rows[1]) - yFirst); }
-        else { step = rRect(first).height * 0.9; }
-
-        const headSpace = Math.max(0, yFirst - topRel);
-        const tailSpace = Math.max(0, botRel  - yLast);
-
-        const preGap  = Math.min(headSpace, Math.max(12, Math.min(40, step * 0.66)));
-        const postGap = Math.min(tailSpace, Math.max(12, Math.min(40, step * 0.66)));
-
-        const anchors = [];
-        anchors.push({ t:   0, y: yFirst - preGap });
-        anchors.push({ t:1440, y: yLast  + postGap });
-
-        for (const row of rows){
-          const t = parseFloat(row.dataset.mins);
-          anchors.push({ t, y: midY(row) });
-        }
-
-        anchors.sort((a,b)=> a.t - b.t);
-        for (let i=1;i<anchors.length;i++){
-          if (anchors[i].t === anchors[i-1].t) anchors[i].t += 0.001;
-        }
-        metrics.todayAnchors = anchors;
+    /* ===== ширина/текст таймкодов (плавно) ===== */
+    let currentTimeW=90;
+    function measureTimeWidth(){
+      const sample=settings.clock12 ? '12:00\u202FPM' : '00:00';
+      const probe=document.createElement('span'); probe.className='time-measure'; probe.textContent=sample; document.body.appendChild(probe);
+      const w=Math.ceil(probe.getBoundingClientRect().width); probe.remove(); return Math.max(60, w+2);
+    }
+    function setTimeW(px){ currentTimeW=px; document.documentElement.style.setProperty('--time-w', String(Math.round(px))); }
+    function animateTimeW(to, dur=360){
+      const from=currentTimeW; if(Math.abs(to-from)<1){ setTimeW(to); return; }
+      const t0=performance.now(), ease=t=> t<.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
+      const step=now=>{ const p=Math.min(1,(now-t0)/dur), v=from+(to-from)*ease(p); setTimeW(v); if(p<1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }
+    function crossfadeText(el, newText){
+      if(el.textContent===newText) return;
+      el.style.opacity='0';
+      setTimeout(()=>{ el.textContent=newText; el.style.opacity='1'; }, 110);
+    }
+    function refreshTimesCrossfade(converted){
+      for(let di=0; di<7; di++){
+        const block=document.querySelector(`.day-block[data-di="${di}"]`); if(!block) continue;
+        const times=block.querySelectorAll('.schedule-item .time');
+        const rows=block.querySelectorAll('.schedule-item'); const list=converted[di].schedule;
+        times.forEach((node,i)=>{ const show=list[i]; if(show) crossfadeText(node, show.time||NO_TIME); });
+        rows.forEach((row,i)=>{ const show=list[i]; if(show && Number.isFinite(show.mins)) row.dataset.mins=String(show.mins); });
       }
+      updateNowLabel(true);
+      requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); });
+    }
+    function smoothFormatSwitch(){
+      animateTimeW(measureTimeWidth());
+      refreshTimesCrossfade(convertReferenceTimeToLocal());
+    }
 
-      function yFromAnchors(anchors, t){
-        if (!anchors || anchors.length === 0) return 0;
-        if (t <= anchors[0].t) return anchors[0].y;
-        for (let i=0; i<anchors.length-1; i++){
-          const a = anchors[i], b = anchors[i+1];
-          if (t <= b.t){
-            const span = Math.max(0.001, b.t - a.t);
-            const k = (t - a.t) / span;
-            return a.y + (b.y - a.y) * k;
-          }
-        }
-        return anchors[anchors.length-1].y;
-      }
-
-      function setNow(y){
-        const tag = document.querySelector('#time-rail .now-tag');
-        const top = Math.max(0, Math.min(metrics.railH, y));
-        tag.style.top = `${top}px`;
-      }
-
-      let lastMinute = -1;
-      function updateNowLabel(force=false){
-        const now = DateTime.local().setZone(zoneId());
-        if(force || now.minute !== lastMinute){
-          lastMinute = now.minute;
-          document.querySelector('#time-rail .badge').textContent = fmt(now);
-          updateConnector();
-        }
-      }
-
-      function clampTagIntoView(){
-        const badge = document.querySelector('#time-rail .now-tag .badge');
-        if(!badge) return;
-        badge.style.setProperty('--tag-nudge','0px');
-        const rect = badge.getBoundingClientRect();
-        const minLeft = 6;
-        if(rect.left < minLeft){
-          const delta = Math.ceil(minLeft - rect.left);
-          badge.style.setProperty('--tag-nudge', delta + 'px');
-        }
-        updateConnector();
-      }
-
-      function updateConnector(){
-        const dot = document.querySelector('#time-rail .now-tag .dot');
-        const badge = document.querySelector('#time-rail .now-tag .badge');
-        const tag = document.querySelector('#time-rail .now-tag');
-        if(!dot || !badge || !tag) return;
-        const dr = dot.getBoundingClientRect();
-        const br = badge.getBoundingClientRect();
-        const gap = Math.max(10, Math.min(140, dr.left - br.right));
-        tag.style.setProperty('--conn-w', gap + 'px');
-      }
-
-      function animate(){
-        const now = DateTime.local().setZone(zoneId());
-        const t = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
-
-        const diNow = (now.weekday + 6) % 7;
-        const currBlock = document.querySelector(`.day-block[data-di="${diNow}"]`);
-        if (currBlock && (!metrics.todayAnchors || metrics.todayAnchors.length === 0)){
-          const blockRect = currBlock.getBoundingClientRect();
-          buildTodayAnchors(currBlock, blockRect);
-        }
-
-        const yInside = yFromAnchors(metrics.todayAnchors, t);
-        const y = metrics.todayTopRel + yInside;
-
-        setNow(y);
-        requestAnimationFrame(animate);
-      }
-
-      /* ===== ШИРИНА ТАЙМКОДОВ ===== */
-      let currentTimeW = 90;
-      function measureTimeWidth(){
-        const sample = settings.clock12 ? '12:00\u202FPM' : '00:00';
-        const probe = document.createElement('span');
-        probe.className = 'time-measure';
-        probe.textContent = sample;
-        document.body.appendChild(probe);
-        const w = Math.ceil(probe.getBoundingClientRect().width);
-        probe.remove();
-        return Math.max(60, w + 2);
-      }
-      function setTimeW(px){ currentTimeW = px; document.documentElement.style.setProperty('--time-w', String(Math.round(px))); }
-      function animateTimeW(to, dur=360){
-        const from = currentTimeW;
-        if(Math.abs(to-from) < 1){ setTimeW(to); return; }
-        const t0 = performance.now();
-        const ease = t => (t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2);
-        function step(now){
-          const p = Math.min(1, (now - t0)/dur);
-          const v = from + (to - from) * ease(p);
-          setTimeW(v);
-          if(p<1) requestAnimationFrame(step);
-        }
-        requestAnimationFrame(step);
-      }
-
-      function smoothFormatSwitch(){
-        animateTimeW(measureTimeWidth());
-        const converted = convertReferenceTimeToLocal();
-        for(let di=0; di<7; di++){
-          const block = document.querySelector(`.day-block[data-di="${di}"]`); if(!block) continue;
-          const times = block.querySelectorAll('.schedule-item .time');
-          const rows  = block.querySelectorAll('.schedule-item');
-          const list = converted[di].schedule;
-          times.forEach((node, idx)=>{ const show = list[idx]; if(show) node.textContent = show.time || NO_TIME; });
-          rows.forEach((row, idx)=>{ const show = list[idx]; if(show && Number.isFinite(show.mins)) row.dataset.mins = String(show.mins); });
-        }
-        updateNowLabel(true);
-        requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); });
-      }
-
-      /* ===== КАСТОМНЫЕ DROPDOWN ===== */
-      function initDropdown(root, items, value, onChange){
-        const btn = root.querySelector('.dd-toggle');
-        const labelEl = root.querySelector('.dd-label');
-        const menu = root.querySelector('.dd-menu');
-        menu.innerHTML = '';
-        items.forEach(({value:v,label})=>{
-          const it = document.createElement('button');
-          it.className='dd-item';
-          it.type='button';
-          it.textContent=label;
-          it.setAttribute('role','option');
-          it.dataset.val=v;
-          if(v===value) it.setAttribute('aria-selected','true');
-          it.addEventListener('click', ()=>{
-            value=v;
-            labelEl.textContent=label;
-            [...menu.children].forEach(x=>x.removeAttribute('aria-selected'));
-            it.setAttribute('aria-selected','true');
-            close();
-            btn.blur();
-            onChange(v);
-          });
-          menu.appendChild(it);
-        });
-        function open(){
-          root.classList.add('open');
-          requestAnimationFrame(()=> root.classList.add('visible'));
-          window.addEventListener('click', outside, { once:true });
-        }
-        function close(){
-          root.classList.remove('visible');
-          setTimeout(()=> root.classList.remove('open'), 180);
-        }
-        function outside(e){ if(!root.contains(e.target)) close(); }
-        btn.addEventListener('click', (e)=>{ e.stopPropagation(); root.classList.contains('open') ? close() : open(); });
-        labelEl.textContent = (items.find(x=>x.value===value)||items[0]).label;
-        return { update(v){
-          value=v;
-          const item = items.find(x=>x.value===v);
-          if(item) labelEl.textContent=item.label;
-          [...menu.children].forEach(x=> x.dataset.val===v ? x.setAttribute('aria-selected','true') : x.removeAttribute('aria-selected'));
-        }};
-      }
-
-      /* ===== настройки / UI ===== */
-      const settingsModal = $('#settings');
-
-      const viewDD = initDropdown(
-        $('#dd-viewMode'),
-        [{value:'classic',label:'Классический'},{value:'wide',label:'Широкий (TV)'},{value:'minimal',label:'Минимализм'}],
-        settings.viewMode,
-        v=>{ settings.viewMode=v; applyViewMode(); setTimeout(persistAndRerender, 60); }
-      );
-
-      const tzDD = initDropdown(
-        $('#dd-tzMode'),
-        [{value:'system',label:'Авто (системный)'},{value:'fixed',label:'Пользовательский UTC±'}],
-        settings.tzMode,
-        v=>{ settings.tzMode=v; toggleTzFixed(v==='fixed'); persistAndRerender(); }
-      );
-
-      // Тумблер формата времени с «ползунком»
-      const seg = $('#clockSeg');
-      const segBtns = seg.querySelectorAll('button');
-      const thumb = seg.querySelector('.seg-thumb');
-
-      function moveThumb(mode){
-        const idx = (mode === '12') ? 1 : 0;
-        const btn = segBtns[idx];
-        // позиция и ширина ползунка — ровно под активной кнопкой
-        thumb.style.left  = btn.offsetLeft + 'px';
-        thumb.style.width = btn.offsetWidth + 'px';
-      }
-      function setSeg(mode){
-        segBtns.forEach(b=>{
-          const on = (b.dataset.mode===mode);
-          b.classList.toggle('off', !on);
-          b.classList.toggle('on', on);
-        });
-        moveThumb(mode);
-      }
-      setSeg(settings.clock12 ? '12':'24');
-      seg.addEventListener('click', (e)=>{
-        const btn = e.target.closest('button'); if(!btn) return;
-        const want12 = (btn.dataset.mode === '12');
-        if(settings.clock12 === want12) return;
-        settings.clock12 = want12;
-        localStorage.setItem('clock12', want12 ? 'true':'false');
-        setSeg(want12 ? '12':'24');
-        smoothFormatSwitch();
+    /* ===== dropdown helper ===== */
+    function initDropdown(root, items, value, onChange){
+      const btn=root.querySelector('.dd-toggle'), labelEl=root.querySelector('.dd-label'), menu=root.querySelector('.dd-menu');
+      menu.innerHTML='';
+      items.forEach(({value:v,label})=>{
+        const it=document.createElement('button'); it.className='dd-item'; it.type='button'; it.textContent=label; it.setAttribute('role','option'); it.dataset.val=v;
+        if(v===value) it.setAttribute('aria-selected','true');
+        it.addEventListener('click', ()=>{ value=v; labelEl.textContent=label; [...menu.children].forEach(x=>x.removeAttribute('aria-selected')); it.setAttribute('aria-selected','true'); close(); btn.blur(); onChange(v); });
+        menu.appendChild(it);
       });
-      window.addEventListener('resize', ()=> moveThumb(settings.clock12 ? '12':'24'), { passive:true });
+      function open(){ root.classList.add('open'); requestAnimationFrame(()=> root.classList.add('visible')); window.addEventListener('click', outside, { once:true }); }
+      function close(){ root.classList.remove('visible'); setTimeout(()=> root.classList.remove('open'),180); }
+      function outside(e){ if(!root.contains(e.target)) close(); }
+      btn.addEventListener('click', e=>{ e.stopPropagation(); root.classList.contains('open') ? close() : open(); });
+      labelEl.textContent = (items.find(x=>x.value===value)||items[0]).label;
+      return { update(v){ value=v; const item=items.find(x=>x.value===v); if(item) labelEl.textContent=item.label;
+        [...menu.children].forEach(x=> x.dataset.val===v ? x.setAttribute('aria-selected','true') : x.removeAttribute('aria-selected')); } };
+    }
 
-      // UTC± контрол
-      const tzFixedWrap = $('#tzFixedWrap');
-      const hh = $('#tzHH'), mm = $('#tzMM'), plus = $('#tzPlus'), minus = $('#tzMinus');
+    /* ===== SETTINGS ===== */
+    const viewDD=initDropdown($('#dd-viewMode'),
+      [{value:'classic',label:'Классический'},{value:'wide',label:'Широкий (TV)'},{value:'minimal',label:'Минимализм'}],
+      settings.viewMode,
+      v=>{ settings.viewMode=v; applyViewMode(true); }
+    );
+    const tzDD=initDropdown($('#dd-tzMode'),
+      [{value:'system',label:'Авто (системный)'},{value:'fixed',label:'Пользовательский UTC±'}],
+      settings.tzMode,
+      v=>{ settings.tzMode=v; toggleTzFixed(v==='fixed'); persistAndRerender(); }
+    );
 
-      function toggleTzFixed(open){
-        tzFixedWrap.classList.toggle('open', !!open);
-      }
-      function setSign(plusSign){
-        plus.classList.toggle('off', !plusSign);
-        minus.classList.toggle('off', plusSign);
-      }
-      function setFromMins(total){
-        const signPlus = total>=0; const abs = Math.abs(total);
-        const H = Math.min(14, Math.floor(abs/60));
-        const M = Math.min(59, Math.round((abs%60)/15)*15);
-        setSign(signPlus);
-        hh.value = String(H).padStart(2,'0');
-        mm.value = String(M).padStart(2,'0');
-      }
-      function currentMins(){
-        const signPlus = !plus.classList.contains('off'); // читаем состояние «+»
-        const H = Math.max(0, Math.min(14, parseInt(hh.value||'0',10)));
-        const Mraw = Math.max(0, Math.min(59, parseInt(mm.value||'0',10)));
-        const M = Math.round(Mraw/15)*15;
-        mm.value = String(M).padStart(2,'0');
-        return (signPlus?1:-1) * (H*60 + M);
-      }
-      plus.addEventListener('click', ()=>{ setSign(true);  settings.tzOffsetMin=currentMins(); persistAndRerender(); });
-      minus.addEventListener('click', ()=>{ setSign(false); settings.tzOffsetMin=currentMins(); persistAndRerender(); });
-      hh.addEventListener('input', ()=>{ settings.tzOffsetMin=currentMins(); persistAndRerender(); });
-      mm.addEventListener('input', ()=>{ settings.tzOffsetMin=currentMins(); persistAndRerender(); });
-      // шаг минут колёсиком/стрелками по 15
-      mm.addEventListener('keydown', (e)=>{
-        if(e.key==='ArrowUp' || e.key==='ArrowDown'){
-          e.preventDefault();
-          const v = parseInt(mm.value||'0',10);
-          const d = e.key==='ArrowUp' ? 15 : -15;
-          let nv = Math.max(0, Math.min(59, v + d));
-          nv = Math.round(nv/15)*15;
-          mm.value = String(nv).padStart(2,'0');
-          settings.tzOffsetMin=currentMins(); persistAndRerender();
-        }
-      });
-      mm.addEventListener('wheel', (e)=>{
-        e.preventDefault();
-        const dir = e.deltaY<0 ? 1 : -1;
-        const v = parseInt(mm.value||'0',10);
-        let nv = Math.max(0, Math.min(59, v + dir*15));
-        nv = Math.round(nv/15)*15;
-        mm.value = String(nv).padStart(2,'0');
-        settings.tzOffsetMin=currentMins(); persistAndRerender();
-      }, { passive:false });
+    // тумблер 12/24
+    const seg=$('#clockSeg'), segBtns=seg.querySelectorAll('button'), thumb=seg.querySelector('.seg-thumb');
+    function moveThumb(mode){ const idx=(mode==='12')?1:0; const btn=segBtns[idx]; thumb.style.left=btn.offsetLeft+'px'; thumb.style.width=btn.offsetWidth+'px'; }
+    function setSeg(mode){ segBtns.forEach(b=>{ const on=b.dataset.mode===mode; b.classList.toggle('off',!on); b.classList.toggle('on',on); }); moveThumb(mode); }
+    setSeg(settings.clock12?'12':'24');
+    seg.addEventListener('click', e=>{
+      const btn=e.target.closest('button'); if(!btn) return;
+      const want12=(btn.dataset.mode==='12'); if(settings.clock12===want12) return;
+      settings.clock12=want12; localStorage.setItem('clock12', want12?'true':'false'); setSeg(want12?'12':'24'); smoothFormatSwitch();
+    });
+    window.addEventListener('resize', ()=> moveThumb(settings.clock12?'12':'24'), { passive:true });
 
-      function applyViewMode(){
-        document.body.classList.toggle('view-classic', settings.viewMode==='classic');
-        document.body.classList.toggle('view-wide', settings.viewMode==='wide');
-        document.body.classList.toggle('view-minimal', settings.viewMode==='minimal');
-        animateTimeW(measureTimeWidth());
-        layoutRail(); clampTagIntoView();
-      }
+    // UTC± контрол (только кнопки)
+    const tzFixedWrap=$('#tzFixedWrap'),
+          plus=$('#tzPlus'), minus=$('#tzMinus'),
+          hhDec=$('#hhDec'), hhInc=$('#hhInc'),
+          mmDec=$('#mmDec'), mmInc=$('#mmInc'),
+          dispHH=$('#tzHH'),  dispMM=$('#tzMM');
 
-      function persistAndRerender(){
-        localStorage.setItem('tzMode', settings.tzMode);
-        localStorage.setItem('tzOffsetMin', String(settings.tzOffsetMin));
-        localStorage.setItem('clock12', settings.clock12 ? 'true' : 'false');
-        localStorage.setItem('viewMode', settings.viewMode);
+    let tzSignPlus=true, tzH=3, tzM=0;
+    function toggleTzFixed(open){ tzFixedWrap.classList.toggle('open', !!open); }
+    function setSign(isPlus){ tzSignPlus=!!isPlus; plus.classList.toggle('off',!tzSignPlus); minus.classList.toggle('off',tzSignPlus); }
+    function setFromMins(total){ setSign(total>=0); const abs=Math.abs(total); tzH=Math.min(14, Math.floor(abs/60)); tzM=Math.round((abs%60)/15)*15%60; updateDisplays(); }
+    function updateDisplays(){ dispHH.textContent=String(tzH).padStart(2,'0'); dispMM.textContent=String(tzM).padStart(2,'0'); }
+    function currentMins(){ return (tzSignPlus?1:-1)*(tzH*60+tzM); }
+    function applyTzChange(){ settings.tzOffsetMin=currentMins(); persistAndRerender(); }
 
-        updateMeta();
-        render(convertReferenceTimeToLocal());
-        applyViewMode();
-        updateNowLabel(true);
-      }
+    plus.addEventListener('click', ()=>{ setSign(true); applyTzChange(); });
+    minus.addEventListener('click', ()=>{ setSign(false); applyTzChange(); });
 
-      function openSettings(){
-        tzDD.update(settings.tzMode);
-        toggleTzFixed(settings.tzMode === 'fixed');
-        setFromMins(settings.tzOffsetMin);
-        setSeg(settings.clock12 ? '12':'24');
-        viewDD.update(settings.viewMode);
+    attachRepeater(hhDec, ()=>{ tzH=Math.max(0, tzH-1); updateDisplays(); applyTzChange(); });
+    attachRepeater(hhInc, ()=>{ tzH=Math.min(14, tzH+1); updateDisplays(); applyTzChange(); });
+    attachRepeater(mmDec, ()=>{ tzM=(tzM+60-15)%60; updateDisplays(); applyTzChange(); });
+    attachRepeater(mmInc, ()=>{ tzM=(tzM+15)%60; updateDisplays(); applyTzChange(); });
 
-        settingsModal.classList.add('show');
-        requestAnimationFrame(()=> settingsModal.classList.add('visible'));
-        // после открытия модалки пересчитаем позицию ползунка (точные размеры кнопок)
-        requestAnimationFrame(()=> moveThumb(settings.clock12 ? '12':'24'));
-      }
-      function closeSettings(){
-        settingsModal.classList.remove('visible');
-        setTimeout(()=> settingsModal.classList.remove('show'), 240);
-      }
+    function attachRepeater(btn, fn){
+      let id=null, t1=null;
+      const start=()=>{ fn(); t1=setTimeout(()=> id=setInterval(fn,70), 300); };
+      const stop =()=>{ clearTimeout(t1); t1=null; clearInterval(id); id=null; };
+      btn.addEventListener('mousedown', start);
+      btn.addEventListener('touchstart', e=>{ e.preventDefault(); start(); }, { passive:false });
+      window.addEventListener('mouseup', stop); window.addEventListener('mouseleave', stop);
+      window.addEventListener('touchend', stop); window.addEventListener('touchcancel', stop);
+    }
 
-      $('#gearButton').addEventListener('click', openSettings);
-      $('#closeSettings').addEventListener('click', closeSettings);
-      $('#settings').addEventListener('click', (e)=>{ if(e.target === $('#settings')) closeSettings(); });
+    function applyViewMode(withFade){
+      document.body.classList.toggle('view-classic', settings.viewMode==='classic');
+      document.body.classList.toggle('view-wide', settings.viewMode==='wide');
+      document.body.classList.toggle('view-minimal', settings.viewMode==='minimal');
+      localStorage.setItem('viewMode', settings.viewMode);
+      animateTimeW(measureTimeWidth());
+      if(withFade){ refreshTimesCrossfade(convertReferenceTimeToLocal()); } else { layoutRail(); }
+      clampTagIntoView();
+    }
 
-      /* «На сегодня» */
-      function scrollToToday(){
-        const now = DateTime.local().setZone(zoneId());
-        const di = (now.weekday + 6) % 7;
-        const block = document.querySelector(`.day-block[data-di="${di}"]`);
-        if(block){
-          const y = block.getBoundingClientRect().top + window.pageYOffset - 14;
-          window.scrollTo({ top:y, behavior:'smooth' });
-        }
-      }
-      $('#scrollTodayButton').addEventListener('click', scrollToToday);
+    function persistAndRerender(){
+      localStorage.setItem('tzMode', settings.tzMode);
+      localStorage.setItem('tzOffsetMin', String(settings.tzOffsetMin));
+      localStorage.setItem('clock12', settings.clock12?'true':'false');
+      updateMeta(); render(convertReferenceTimeToLocal()); applyViewMode(false); updateNowLabel(true);
+    }
 
-      /* прятать кнопки при скролле */
-      window.addEventListener('scroll', ()=>{
-        const hidden = window.pageYOffset > 40;
-        $('#scrollTodayButton').classList.toggle('hidden', hidden);
-        $('#gearButton').classList.toggle('hidden', hidden);
-      }, { passive:true });
+    function openSettings(){
+      tzDD.update(settings.tzMode); toggleTzFixed(settings.tzMode==='fixed'); setFromMins(settings.tzOffsetMin);
+      setSeg(settings.clock12?'12':'24'); viewDD.update(settings.viewMode);
+      $('#settings').classList.add('show'); requestAnimationFrame(()=> $('#settings').classList.add('visible')); requestAnimationFrame(()=> moveThumb(settings.clock12?'12':'24'));
+    }
+    function closeSettings(){ $('#settings').classList.remove('visible'); setTimeout(()=> $('#settings').classList.remove('show'), 240); }
+    $('#gearButton').addEventListener('click', openSettings);
+    $('#closeSettings').addEventListener('click', closeSettings);
+    $('#settings').addEventListener('click', e=>{ if(e.target===$('#settings')) closeSettings(); });
 
-      /* мобайл: скрыть wide в меню вида */
-      const mqMobile = window.matchMedia('(max-width:700px)');
-      function adjustForMobile(){
-        const isMobile = mqMobile.matches;
-        const viewMenu = $('#dd-viewMode .dd-menu');
-        if(viewMenu){
-          [...viewMenu.children].forEach(btn=>{
-            if(btn.dataset.val==='wide') btn.style.display = isMobile ? 'none' : 'block';
-          });
-        }
-        if(isMobile && settings.viewMode==='wide'){
-          settings.viewMode='classic'; localStorage.setItem('viewMode','classic'); applyViewMode(); viewDD.update('classic');
-        }
-      }
-      mqMobile.addEventListener ? mqMobile.addEventListener('change', adjustForMobile)
-                                : mqMobile.addListener(adjustForMobile);
+    /* «На сегодня» */
+    $('#scrollTodayButton').addEventListener('click', ()=>{
+      const now=DateTime.local().setZone(zoneId()); const di=(now.weekday+6)%7;
+      const block=document.querySelector(`.day-block[data-di="${di}"]`);
+      if(block){ const y=block.getBoundingClientRect().top + window.pageYOffset - 14; window.scrollTo({ top:y, behavior:'smooth' }); }
+    });
 
-      /* ResizeObserver */
-      let ro;
-      if('ResizeObserver' in window){
-        ro = new ResizeObserver(()=> requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); }));
-      }
-      window.addEventListener('resize', ()=>{ layoutRail(); animateTimeW(measureTimeWidth()); clampTagIntoView(); }, { passive:true });
+    /* прятать кнопки при скролле */
+    window.addEventListener('scroll', ()=>{
+      const hidden=window.pageYOffset>40;
+      $('#scrollTodayButton').classList.toggle('hidden', hidden);
+      $('#gearButton').classList.toggle('hidden', hidden);
+    }, { passive:true });
 
-      /* Копирование: только «время — тайтл» или целый день, формат — буллеты */
-      document.addEventListener('copy', (e)=>{
-        const sel = window.getSelection();
-        if(!sel || sel.rangeCount === 0) return;
+    /* мобайл — запретить «Широкий» */
+    const mqMobile=window.matchMedia('(max-width:700px)');
+    function adjustForMobile(){
+      const isMob=mqMobile.matches, menu=$('#dd-viewMode .dd-menu');
+      if(menu){ [...menu.children].forEach(b=>{ if(b.dataset && b.dataset.val==='wide') b.style.display=isMob?'none':'block'; }); }
+      if(isMob && settings.viewMode==='wide'){ settings.viewMode='classic'; localStorage.setItem('viewMode','classic'); applyViewMode(true); viewDD.update('classic'); }
+    }
+    mqMobile.addEventListener ? mqMobile.addEventListener('change', adjustForMobile) : mqMobile.addListener(adjustForMobile);
 
-        const range = sel.getRangeAt(0);
-        const items = [...document.querySelectorAll('.schedule-item')].filter(node => intersects(range, node));
-        let output = '';
+    /* ResizeObserver */
+    let ro; if('ResizeObserver' in window){ ro=new ResizeObserver(()=> requestAnimationFrame(()=>{ layoutRail(); clampTagIntoView(); })); }
+    window.addEventListener('resize', ()=>{ layoutRail(); animateTimeW(measureTimeWidth()); clampTagIntoView(); }, { passive:true });
 
-        const dayH2 = closestInRange(range, 'h2');
-        if(dayH2){
-          const dayBlock = dayH2.closest('.day-block');
-          if(dayBlock){
-            const title = dayH2.textContent.replace(/:\s*$/,'').trim();
-            const lines = [...dayBlock.querySelectorAll('.schedule-item')].map(item => lineText(item)).filter(Boolean);
-            output = `${title}\n` + lines.map(l => `• ${l}`).join('\n');
-          }
-        } else if(items.length){
-          output = items.map(item => `• ${lineText(item)}`).filter(Boolean).join('\n');
-        } else {
-          e.preventDefault();
-          return;
-        }
+    /* Копирование: всегда подменяем формат, если пересечение с расписанием */
+    document.addEventListener('copy', e=>{
+      const sel=window.getSelection(); if(!sel || sel.rangeCount===0) return;
+      const range=sel.getRangeAt(0);
+      const sched=$('#schedule-container'); if(!sched) return;
+      if(!rangeIntersects(range, sched)) return;
 
-        e.clipboardData.setData('text/plain', output);
-        e.preventDefault();
-      });
-      function lineText(item){
-        const t = (item.querySelector('.time')?.textContent || '').trim();
-        const name = (item.querySelector('.title')?.textContent || '').trim();
-        if(!name) return '';
-        return `${t} — ${name}`;
-      }
-      function intersects(range, node){
-        const r = document.createRange(); r.selectNodeContents(node);
-        return !(range.compareBoundaryPoints(Range.END_TO_START, r) <= 0 ||
-                 range.compareBoundaryPoints(Range.START_TO_END, r) >= 0);
-      }
-      function closestInRange(range, selector){
-        const nodes = [...document.querySelectorAll(selector)];
-        for(const n of nodes){
-          const r = document.createRange(); r.selectNodeContents(n);
-          if(!(range.compareBoundaryPoints(Range.END_TO_START, r) <= 0 ||
-               range.compareBoundaryPoints(Range.START_TO_END, r) >= 0)) return n;
-        }
-        return null;
-      }
+      const blocks=[...sched.querySelectorAll(':scope > .day-block')];
+      const text=blocks.map(block=>{
+        const title=(block.querySelector('h2')?.textContent||'').replace(/:\s*$/,'').trim();
+        const lines=[...block.querySelectorAll('.schedule-item')].map(lineText).filter(Boolean);
+        return `${title}\n${lines.map(l=>'• '+l).join('\n')}`;
+      }).join('\n\n');
 
-      /* INIT */
-      document.addEventListener('DOMContentLoaded', ()=>{
-        adjustForMobile();
+      e.clipboardData.setData('text/plain', text);
+      e.preventDefault();
+    });
+    function lineText(item){
+      const t=(item.querySelector('.time')?.textContent||'').trim();
+      const n=(item.querySelector('.title')?.textContent||'').trim();
+      if(!n) return ''; return `${t} — ${n}`;
+    }
+    function rangeIntersects(range, node){
+      const r=document.createRange(); r.selectNodeContents(node);
+      return !(range.compareBoundaryPoints(Range.END_TO_START, r)<=0 || range.compareBoundaryPoints(Range.START_TO_END, r)>=0);
+    }
 
-        document.body.classList.add(settings.viewMode==='wide'?'view-wide':(settings.viewMode==='minimal'?'view-minimal':'view-classic'));
-        updateMeta();
+    /* INIT */
+    document.addEventListener('DOMContentLoaded', ()=>{
+      adjustForMobile();
+      document.body.classList.add(settings.viewMode==='wide'?'view-wide':(settings.viewMode==='minimal'?'view-minimal':'view-classic'));
+      updateMeta(); toggleTzFixed(settings.tzMode==='fixed'); setFromMins(settings.tzOffsetMin);
+      setTimeW(measureTimeWidth()); render(convertReferenceTimeToLocal()); layoutRail();
+      if(ro){ ro.observe($('#schedule-container')); }
+      if(document.fonts && document.fonts.ready){ document.fonts.ready.then(()=>{ setTimeW(measureTimeWidth()); layoutRail(); clampTagIntoView(); moveThumb(settings.clock12?'12':'24'); }); }
 
-        // показать/спрятать UTC-блок по текущей настройке
-        toggleTzFixed(settings.tzMode === 'fixed');
-        // установить стартовые размеры таймкода
-        setTimeW(measureTimeWidth());
+      const now=DateTime.local().setZone(zoneId());
+      const t0=now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
+      setNow(metrics.todayTopRel + yFromAnchors(metrics.todayAnchors, t0));
+      $('#time-rail .badge').textContent = fmt(now);
+      clampTagIntoView();
+      requestAnimationFrame(()=> $('#time-rail .now-tag').classList.add('ready'));
 
-        render(convertReferenceTimeToLocal());
-        layoutRail();
+      requestAnimationFrame(animate);
 
-        if(ro){ ro.observe($('#schedule-container')); }
-        if(document.fonts && document.fonts.ready){
-          document.fonts.ready.then(()=>{ setTimeW(measureTimeWidth()); layoutRail(); clampTagIntoView(); moveThumb(settings.clock12 ? '12':'24'); });
-        }
-
-        // первичное позиционирование маркера
-        const now = DateTime.local().setZone(zoneId());
-        const t0 = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
-        const yInside0 = yFromAnchors(metrics.todayAnchors, t0);
-        setNow(metrics.todayTopRel + yInside0);
-        document.querySelector('#time-rail .badge').textContent = fmt(now);
-        clampTagIntoView();
-        requestAnimationFrame(()=> document.querySelector('#time-rail .now-tag').classList.add('ready'));
-
-        requestAnimationFrame(animate);
-
-        // минутная ресинхронизация (без перезагрузки)
-        const sync=()=>{
-          const n=new Date();
-          const ms=60000 - (n.getSeconds()*1000 + n.getMilliseconds());
-          setTimeout(()=>{ updateMeta(); render(convertReferenceTimeToLocal()); layoutRail(); clampTagIntoView(); sync(); }, Math.max(400, ms));
-        };
-        sync();
-      });
-    })();
+      const sync=()=>{
+        const n=new Date(); const ms=60000-(n.getSeconds()*1000+n.getMilliseconds());
+        setTimeout(()=>{ updateMeta(); render(convertReferenceTimeToLocal()); layoutRail(); clampTagIntoView(); sync(); }, Math.max(400, ms));
+      };
+      sync();
+    });
+  })();
   </script>
 </body>
 </html>
