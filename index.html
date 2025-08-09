@@ -24,6 +24,7 @@
 
       --gutter:20px; --rail-w:4px;
       --rail-c1: var(--time-bg); --rail-c2: var(--time-bg);
+      --rail-col: calc(var(--gutter) + 12px); /* ширина левой колонки для рейла */
 
       --tag-h:26px; --tag-pad-x:8px; --tag-nudge:0px;
       --tag-bg:rgba(255,255,255,.10); --tag-br:rgba(255,255,255,.22); --tag-text:#ececec;
@@ -45,6 +46,7 @@
       --time-bg-hover:rgba(255,255,255,.22);
       --time-border:rgba(255,255,255,.14);
       --tag-h:28px; --tag-pad-x:10px;
+      --rail-col: calc(var(--gutter) + 14px);
     }
     body.view-minimal{
       --fs-h1:34px; --fs-h2:20px; --fs-title:16px; --fs-time:16px;
@@ -55,6 +57,7 @@
       --time-color:#dcdcdc;
       --row-hover:rgba(255,255,255,.035);
       --tag-bg:transparent; --tag-br:transparent; --tag-shadow:none;
+      --rail-col: calc(var(--gutter) + 12px);
     }
 
     *{ box-sizing:border-box }
@@ -126,32 +129,45 @@
     .icon-gear{ width:20px; height:20px; display:block }
     .icon-gear path, .icon-gear circle{ fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round }
 
-    /* === ключ: контент всегда оставляет место под рейл === */
+    /* === GRID: слева колонка для таймлайна, справа контент === */
     #schedule-wrap{
       position:relative;
       width:100%;
-      padding-left:calc(var(--gutter) + 12px) !important; /* место под таймлайн слева */
+      display:grid;
+      grid-template-columns: var(--rail-col) 1fr;
+      column-gap:0;
+      padding-left:0 !important; /* больше не нужен внутренний отступ */
       transition:padding-left .28s ease;
     }
 
-    /* тайм-рейл */
+    /* тайм-рейл в своей колонке */
     #time-rail{
-      position:absolute;
-      left:8px !important;
-      top:0;
+      grid-column:1;
+      justify-self:center;
       width:var(--gutter);
-      height:0; /* выставляется из JS */
+      position:relative;      /* вертикаль сдвигаем через margin-top из JS */
+      left:auto !important;   /* перебиваем прошлые позиционирования */
+      top:auto !important;
+      height:auto;            /* высота ставится из JS */
       pointer-events:none;
-      z-index:0; /* под контентом */
+      z-index:0;
     }
     #time-rail .rail-line{
-      position:absolute; top:0; bottom:0; left:calc(var(--gutter)/2 - var(--rail-w)/2);
+      position:absolute; top:0; bottom:0;
+      left:calc(var(--gutter)/2 - var(--rail-w)/2);
       width:var(--rail-w); border-radius:3px;
       background:linear-gradient(180deg, var(--rail-c1), var(--rail-c2));
       -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 18px, #000 calc(100% - 18px), transparent 100%);
               mask-image:linear-gradient(to bottom, transparent 0%, #000 18px, #000 calc(100% - 18px), transparent 100%);
       box-shadow:inset 0 0 0 .5px rgba(0,0,0,.25);
       filter:saturate(.95) brightness(.98);
+    }
+
+    /* контент расписания — во второй колонке */
+    #schedule-container{
+      grid-column:2;
+      position:relative;
+      z-index:1;
     }
 
     /* маркер «сейчас» */
@@ -254,11 +270,9 @@
     .time-measure{ position:absolute; visibility:hidden; left:-9999px; top:-9999px; display:inline-block; padding:0 6px; border:1px solid transparent; border-radius:7px; white-space:nowrap; font-family:'Open Sans',sans-serif; font-size:var(--fs-time); font-variant-numeric:tabular-nums; font-feature-settings:'tnum' 1; }
 
     @media (max-width:700px){
-      :root{ --fs-h1:30px; --fs-h2:18px; --fs-title:15px; --fs-time:15px; --fs-meta:12px; --gutter:14px; --rail-w:2px }
-      body.view-minimal{ --fs-h1:28px; --fs-h2:16px; --fs-title:15px; --fs-time:14px; --gutter:12px; --rail-w:2px }
+      :root{ --fs-h1:30px; --fs-h2:18px; --fs-title:15px; --fs-time:15px; --fs-meta:12px; --gutter:14px; --rail-w:2px; --rail-col: calc(var(--gutter) + 10px); }
+      body.view-minimal{ --fs-h1:28px; --fs-h2:16px; --fs-title:15px; --fs-time:14px; --gutter:12px; --rail-w:2px; --rail-col: calc(var(--gutter) + 10px); }
       body{ padding:16px }
-      #schedule-wrap{ padding-left:calc(var(--gutter)+10px) !important }
-      #time-rail{ left:6px !important }
       .btn{ padding:9px 12px; font-size:13px }
       #button-container{ gap:8px }
       #gearButton{ width:36px; height:36px }
@@ -567,7 +581,8 @@
       const railBottom=(last.bottom + window.pageYOffset) - wrapTop;
 
       metrics.railTop=railTop; metrics.railH=Math.max(0, railBottom-railTop);
-      rail.style.top=`${railTop}px`; rail.style.height=`${metrics.railH}px`;
+      rail.style.marginTop = `${railTop}px`;   // ВАЖНО: вертикальный сдвиг через margin, не left/top
+      rail.style.height = `${metrics.railH}px`;
 
       const now=DateTime.local().setZone(zoneId());
       const todayIdx=(now.weekday+6)%7;
