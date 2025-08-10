@@ -863,22 +863,42 @@
 
     function animate(){
       const now = DateTime.local().setZone(zoneId());
+      updateNowLabel(); // обновляем текст «сейчас» без мигания
+    
       const t = now.hour*60 + now.minute + now.second/60 + now.millisecond/60000;
-
+    
+      // гарантируем, что якоря на сегодня построены
       const diNow = (now.weekday + 6) % 7;
       const currBlock = document.querySelector(`.day-block[data-di="${diNow}"]`);
       if (currBlock && (!metrics.todayAnchors || metrics.todayAnchors.length === 0)){
         const blockRect = currBlock.getBoundingClientRect();
         buildTodayAnchors(currBlock, blockRect);
       }
-
+    
       const yInside = yFromAnchors(metrics.todayAnchors, t);
       const y = metrics.todayTopRel + yInside;
-
       setNow(y);
+    
       requestAnimationFrame(animate);
     }
+    
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        // форс-обновляем текст и раскладку при возврате из фона
+        updateNowLabel(true);
+        layoutRail();
+        clampTagIntoView();
+      }
+    });
 
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) { // возвращение из bfcache
+        updateNowLabel(true);
+        layoutRail();
+        clampTagIntoView();
+      }
+    });
+    
     /* ===== ШИРИНА ТАЙМКОДОВ + плавный пересчёт рейла во время анимации ===== */
     let currentTimeW = 90;
     function measureTimeWidth(){
